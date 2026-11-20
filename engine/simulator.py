@@ -5,7 +5,7 @@ Python reference implementation of the model behind the browser prototype
 team would own and extend: pure functions, no UI, every assumption read from
 config/assumptions.json.
 
-Model, in one paragraph: each simulated year, PESTEL shocks, competitor moves
+Model, in one paragraph: each simulated year, PESTEL shocks, moves by 109 competitors
 and startup archetypes fire with set probabilities. Each one cuts (or lifts)
 segment operating income by a set fraction for a set number of years. The
 chosen Disney playbook sets each segment's base growth and how exposed it is
@@ -60,7 +60,8 @@ def build_events(cfg: dict, settings: dict) -> list[Event]:
                             e["imp"], e["dur"], e["tag"]))
     for p in cfg["players"]:
         a = settings["player_aggression"][p["id"]]
-        events.append(Event(p["id"], p["label"], p["name"], p["p"] * a / 50,
+        arena = settings["arena_aggression"][p["arena"]]
+        events.append(Event(p["id"], p["label"], p["name"], p["p"] * a / 50 * arena / 50,
                             p["imp"], p["dur"], p["tag"]))
     for a in cfg["archetypes"]:
         r = settings["archetype_arrival_pct"][a["id"]]

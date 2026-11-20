@@ -65,6 +65,8 @@ button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-v
 .btnrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .btnrow button { flex: 1; font-size: 12px; padding: 6px 8px; }
 details { border-top: 1px solid var(--rule); padding: 10px 0; }
+details details { border-top: 1px dashed var(--rule); padding: 8px 0 8px 8px; }
+details details summary { font-size: 12px; }
 summary { cursor: pointer; font-weight: 600; font-size: 13px; list-style: none; display: flex; justify-content: space-between; }
 summary::after { content: "+"; color: var(--ink-3); }
 details[open] summary::after { content: "−"; }
@@ -116,7 +118,7 @@ footer p { margin: 0 0 6px; }
 <header>
   <div class="tag">Prototype · strategic early warning system</div>
   <h1>Disney Strategy War Game</h1>
-  <p>Simulates Disney against 12 competitors and 4 startup archetypes over FY27–FY36, thousands of times, then surfaces the themes that keep showing up in the bad futures. Every assumption is a slider for the team to argue with. Illustrative draft assumptions, not a forecast.</p>
+  <p>Simulates Disney against 109 companies across Experiences, Entertainment and Sports, plus 4 startup archetypes, over FY27–FY36, thousands of times, then surfaces the themes that keep showing up in the bad futures. Every assumption is a slider for the team to argue with. Illustrative draft assumptions, not a forecast.</p>
 </header>
 <div class="layout">
   <aside>
@@ -140,8 +142,8 @@ footer p { margin: 0 0 6px; }
       <div id="pestel"></div>
     </details>
     <details>
-      <summary>Competitor aggression</summary>
-      <p class="hint">How likely each player is to make its threatening move in a given year. 50 = draft baseline.</p>
+      <summary>Competitor aggression · 109 companies</summary>
+      <p class="hint">How likely each player is to make its threatening move in a given year. 50 = draft baseline. Set a whole arena at once, or open it to tune single players.</p>
       <div id="players"></div>
     </details>
     <details>
@@ -189,7 +191,8 @@ footer p { margin: 0 0 6px; }
     <section class="card">
       <h2>Themes that keep showing up in bad futures</h2>
       <p class="sub">Sorted by what each event costs when it hits: median FY36 segment OI in futures where it happened, minus futures where it did not. "Bad futures" = the worst 20% of runs. The costliest events are the candidate signposts to monitor.</p>
-      <div class="tablewrap"><table id="themes"><thead><tr><th>Event</th><th>Source</th><th class="num">All futures</th><th class="num">Bad futures</th><th class="num">Cost when it hits</th><th>Read</th></tr></thead><tbody></tbody></table></div>
+      <div class="tablewrap"><table id="themes"><thead><tr><th>Event</th><th>Source</th><th>Hits</th><th class="num">All futures</th><th class="num">Bad futures</th><th class="num">Cost when it hits</th><th>Read</th></tr></thead><tbody></tbody></table></div>
+      <div class="btnrow" style="max-width:260px"><button type="button" id="moreThemes">Show all events</button></div>
     </section>
 
     <footer>
@@ -209,7 +212,7 @@ const IMPACT = 1.5; // global severity dial on every shock (draft calibration)
 
 const PLAYBOOKS = [
   { id: 'A', name: 'A. Current course', desc: '~$60B parks plan, ~$9B buybacks, ~$26B content, capital-light international.', g: { exp: .050, ent: .050, spt: .040 }, sens: {} },
-  { id: 'B', name: 'B. Experiences-heavy', desc: 'Accelerate parks and cruise capex, funded by fewer buybacks. More exposed to recessions, better defended against rival parks.', g: { exp: .065, ent: .040, spt: .035 }, sens: { econ: 1.6, rivalpark: .7, asia: 1.3, climate: 1.3, ai: 1.05 } },
+  { id: 'B', name: 'B. Experiences-heavy', desc: 'Accelerate parks and cruise capex, funded by fewer buybacks. More exposed to recessions, better defended against rival parks.', g: { exp: .065, ent: .040, spt: .035 }, sens: { econ: 1.6, rivalpark: .7, cruise: .8, asia: 1.3, climate: 1.3, ai: 1.05 } },
   { id: 'C', name: 'C. Streaming-first', desc: 'More content spend, Disney+ as the portal for everything, aggressive pricing. Gains if streaming wins, most exposed to AI content.', g: { exp: .045, ent: .075, spt: .035 }, sens: { ai: 1.6, attention: .8, econ: .9, distribution: .7, legal: 1.2 } },
   { id: 'D', name: 'D. Sports fortress', desc: 'Lock up long rights deals and league equity partnerships. Protected from rights raids, pays for it in lower Entertainment growth.', g: { exp: .048, ent: .040, spt: .060 }, sens: { rights: .45, distribution: .9, attention: 1.15 } },
   { id: 'E', name: 'E. Asset-light pivot', desc: 'License more parks, sell or spin linear networks. Lower growth, lower downside.', g: { exp: .040, ent: .042, spt: .025 }, sens: { econ: .6, asia: .5, climate: .7, rivalpark: .9, rights: 1.15 } },
@@ -237,20 +240,132 @@ const EVENTS = [
   { id: 'antitrust', src: 'L', label: 'Antitrust limits bundling', p: .05, imp: { ent: -.03, spt: -.03 }, dur: 3, tag: 'legal' },
 ];
 
-const PLAYERS = [
-  { id: 'netflix', name: 'Netflix', label: 'Netflix wins a top-tier live sports package', p: .12, imp: { spt: -.06, ent: -.02 }, dur: 4, tag: 'rights', def: 60 },
-  { id: 'comcast', name: 'Comcast / Universal', label: 'Universal opens a new park near a Disney market', p: .08, imp: { exp: -.05 }, dur: 4, tag: 'rivalpark', def: 55 },
-  { id: 'youtube', name: 'Alphabet / YouTube', label: 'YouTube carriage fight or creator share gain', p: .12, imp: { spt: -.03, ent: -.03 }, dur: 2, tag: 'distribution', def: 60 },
-  { id: 'amazon', name: 'Amazon', label: 'Amazon outbids Disney for a sports package', p: .10, imp: { spt: -.06 }, dur: 4, tag: 'rights', def: 55 },
-  { id: 'apple', name: 'Apple', label: 'Apple takes a premium sports or film franchise', p: .06, imp: { spt: -.03, ent: -.02 }, dur: 3, tag: 'rights', def: 35 },
-  { id: 'wbd', name: 'Warner Bros. Discovery', label: 'WBD combines into a bigger studio rival', p: .07, imp: { ent: -.04, spt: -.01 }, dur: 5, tag: 'consolidation', def: 50 },
-  { id: 'paramount', name: 'Paramount Skydance', label: 'Paramount buys a studio or network', p: .06, imp: { ent: -.02 }, dur: 4, tag: 'consolidation', def: 50 },
-  { id: 'sony', name: 'Sony', label: 'Sony anime and game IP takes family share', p: .06, imp: { ent: -.02 }, dur: 4, tag: 'attention', def: 40 },
-  { id: 'epic', name: 'Epic / Roblox', label: 'Virtual worlds capture Gen Alpha time', p: .09, imp: { ent: -.03, exp: -.01 }, dur: 4, tag: 'attention', def: 55 },
-  { id: 'tiktok', name: 'TikTok / ByteDance', label: 'Short video takes more youth attention', p: .10, imp: { ent: -.02 }, dur: 3, tag: 'attention', def: 55 },
-  { id: 'china', name: 'Chinese parks and media', label: 'Chinese parks and IP take local share', p: .10, imp: { exp: -.03 }, dur: 4, tag: 'asia', def: 50 },
-  { id: 'leagues', name: 'Leagues (NFL, NBA, others)', label: 'Leagues push rights inflation or go direct', p: .12, imp: { spt: -.07 }, dur: 4, tag: 'rights', def: 55 },
+// Competitor roster: [id, name, arena, tier, threatening move, threat type]
+// arena: exp = Experiences, ent = Entertainment, spt = Sports / ESPN
+// tier 1 = can move a whole segment, 2 = meaningful in its niche, 3 = early or narrow
+const TIERS = { 1: { p: .09, imp: .025 }, 2: { p: .07, imp: .007 }, 3: { p: .05, imp: .003 } };
+const ARENAS = [
+  { id: 'exp', name: 'Experiences (parks, cruise, resorts)' },
+  { id: 'ent', name: 'Entertainment (streaming, studios, games, creators)' },
+  { id: 'spt', name: 'Sports and ESPN' },
 ];
+const ROSTER = [
+  // ---- Experiences ----
+  ['universal', 'Universal Destinations & Experiences', 'exp', 1, 'Universal opens or expands a park near a Disney market', 'rivalpark'],
+  ['merlin', 'Merlin Entertainments (Legoland)', 'exp', 2, 'Legoland adds a resort in a Disney catchment', 'rivalpark'],
+  ['royalcaribbean', 'Royal Caribbean Group', 'exp', 1, 'Royal Caribbean adds family mega-ships and private islands', 'cruise'],
+  ['carnival', 'Carnival Corp', 'exp', 2, 'Carnival undercuts on family cruise pricing', 'cruise'],
+  ['nclh', 'Norwegian Cruise Line Holdings', 'exp', 2, 'NCLH launches a family-focused ship class', 'cruise'],
+  ['msc', 'MSC Cruises', 'exp', 2, 'MSC adds Caribbean capacity and a private island', 'cruise'],
+  ['virginvoyages', 'Virgin Voyages', 'exp', 3, 'Virgin Voyages wins the adult-cruise segment', 'cruise'],
+  ['viking', 'Viking', 'exp', 3, 'Viking grows premium cruising for older travelers', 'cruise'],
+  ['sixflags', 'Six Flags Entertainment', 'exp', 2, 'Six Flags reinvests and takes regional day trips', 'rivalpark'],
+  ['unitedparks', 'United Parks & Resorts (SeaWorld)', 'exp', 2, 'SeaWorld Orlando adds major attractions', 'rivalpark'],
+  ['herschend', 'Herschend (Dollywood)', 'exp', 3, 'Herschend expands regional family resorts', 'rivalpark'],
+  ['greatwolf', 'Great Wolf Resorts', 'exp', 3, 'Great Wolf adds indoor water-park resorts', 'rivalpark'],
+  ['europapark', 'Europa-Park', 'exp', 3, 'Europa-Park expands its resort hotels', 'rivalpark'],
+  ['portaventura', 'PortAventura World', 'exp', 3, 'PortAventura adds a new themed land', 'rivalpark'],
+  ['parquesreunidos', 'Parques Reunidos', 'exp', 3, 'Parques Reunidos buys IP-themed parks in Europe', 'rivalpark'],
+  ['cda', 'Compagnie des Alpes (Parc Astérix)', 'exp', 3, 'Parc Astérix expands near Paris', 'rivalpark'],
+  ['chimelong', 'Chimelong Group', 'exp', 2, 'Chimelong opens new resorts in southern China', 'asia'],
+  ['fantawild', 'Fantawild', 'exp', 2, 'Fantawild rolls out IP parks across China', 'asia'],
+  ['oct', 'OCT Group (Happy Valley)', 'exp', 3, 'OCT expands Happy Valley parks in China', 'asia'],
+  ['lotteworld', 'Lotte World', 'exp', 3, 'Lotte World expands in Korea and Southeast Asia', 'asia'],
+  ['everland', 'Everland (Samsung C&T)', 'exp', 3, 'Everland upgrades and draws regional tourists', 'asia'],
+  ['miral', 'Miral (Yas Island)', 'exp', 3, 'Yas Island adds rival IP parks next to Disney Abu Dhabi', 'rivalpark'],
+  ['qiddiya', 'Qiddiya (Saudi Arabia)', 'exp', 2, 'Qiddiya opens giga-parks for Gulf tourists', 'rivalpark'],
+  ['kerzner', 'Kerzner (Atlantis)', 'exp', 3, 'Atlantis adds family resorts in new markets', 'rivalpark'],
+  ['genting', 'Genting (Resorts World)', 'exp', 3, 'Resorts World adds family attractions in Asia', 'asia'],
+  ['lvs', 'Las Vegas Sands', 'exp', 3, 'Integrated resorts add family entertainment', 'rivalpark'],
+  ['vail', 'Vail Resorts', 'exp', 3, 'Epic Pass bundles win family vacation budgets', 'rivalpark'],
+  ['mvw', 'Marriott Vacations Worldwide', 'exp', 3, 'Orlando timeshares pull guests off property', 'rivalpark'],
+  ['hgv', 'Hilton Grand Vacations', 'exp', 3, 'Hilton bundles Orlando stays with rival parks', 'rivalpark'],
+  ['meowwolf', 'Meow Wolf', 'exp', 3, 'Meow Wolf opens immersive venues in Disney markets', 'rivalpark'],
+  ['sphere', 'Sphere Entertainment', 'exp', 3, 'Sphere-style venues set a new bar for immersive shows', 'rivalpark'],
+  ['teamlab', 'teamLab', 'exp', 3, 'teamLab opens digital art museums worldwide', 'rivalpark'],
+  ['netflixhouse', 'Netflix House', 'exp', 2, 'Netflix House scales IP experiences to many cities', 'rivalpark'],
+  ['villageroadshow', 'Village Roadshow Theme Parks', 'exp', 3, 'Village Roadshow licenses rival IP parks in Asia-Pacific', 'asia'],
+  // ---- Entertainment ----
+  ['netflix', 'Netflix', 'ent', 1, 'Netflix out-spends Disney on family and kids content', 'attention'],
+  ['youtube', 'Alphabet / YouTube', 'ent', 1, 'YouTube takes more family viewing time on TVs', 'attention'],
+  ['amazon', 'Amazon (Prime Video, MGM)', 'ent', 1, 'Amazon bundles video with Prime and buys franchises', 'consolidation'],
+  ['apple', 'Apple (Apple TV)', 'ent', 2, 'Apple spends big on prestige film and series', 'attention'],
+  ['wbd', 'Warner Bros. Discovery', 'ent', 1, 'Warner Bros. merges into a bigger studio rival', 'consolidation'],
+  ['paramount', 'Paramount Skydance', 'ent', 1, 'Paramount buys a studio or network', 'consolidation'],
+  ['nbcu', 'NBCUniversal (Peacock, Universal Pictures)', 'ent', 1, 'Universal and Illumination win the family box office', 'attention'],
+  ['sony', 'Sony (Pictures, Crunchyroll, PlayStation)', 'ent', 1, 'Sony turns anime and game IP into family franchises', 'attention'],
+  ['tiktok', 'TikTok / ByteDance', 'ent', 1, 'Short video takes more youth attention', 'attention'],
+  ['tencent', 'Tencent', 'ent', 2, 'Tencent IP and games lock up Chinese youth', 'asia'],
+  ['epic', 'Epic Games (Fortnite)', 'ent', 2, 'Fortnite becomes the main venue for other studios\' IP', 'attention'],
+  ['roblox', 'Roblox', 'ent', 1, 'Roblox becomes the main hangout for Gen Alpha', 'attention'],
+  ['meta', 'Meta (Instagram, Reels, Quest)', 'ent', 2, 'Reels and VR take more evening hours', 'attention'],
+  ['snap', 'Snap', 'ent', 3, 'Snap takes teen attention', 'attention'],
+  ['msgaming', 'Microsoft Gaming (Xbox, Activision)', 'ent', 2, 'Game franchises move into film and TV', 'attention'],
+  ['nintendo', 'Nintendo', 'ent', 2, 'Nintendo films and theme lands compete for families', 'attention'],
+  ['ea', 'Electronic Arts', 'ent', 3, 'EA sports and life sims take youth time', 'attention'],
+  ['taketwo', 'Take-Two Interactive', 'ent', 3, 'Mega game launches pull time from film and TV', 'attention'],
+  ['lionsgate', 'Lionsgate', 'ent', 3, 'Lionsgate franchises take box office share', 'attention'],
+  ['starz', 'Starz', 'ent', 3, 'Starz cuts streaming prices', 'attention'],
+  ['a24', 'A24', 'ent', 3, 'A24 wins young-adult film audiences', 'attention'],
+  ['legendary', 'Legendary Entertainment', 'ent', 3, 'Legendary scales a monster franchise universe', 'attention'],
+  ['fox', 'Fox Corp (Tubi)', 'ent', 2, 'Tubi grows free ad-supported streaming', 'distribution'],
+  ['roku', 'Roku', 'ent', 2, 'Roku controls TV home screens and ad terms', 'distribution'],
+  ['spotify', 'Spotify', 'ent', 3, 'Spotify video podcasts take younger viewers', 'attention'],
+  ['umg', 'Universal Music Group', 'ent', 3, 'Music licensing costs rise for film and parks', 'legal'],
+  ['hasbro', 'Hasbro', 'ent', 3, 'Hasbro brands win family film and games', 'attention'],
+  ['mattel', 'Mattel', 'ent', 3, 'Mattel follows Barbie with more toy-brand films', 'attention'],
+  ['toho', 'Toho', 'ent', 3, 'Godzilla and anime films take global share', 'attention'],
+  ['toei', 'Toei Animation', 'ent', 3, 'Toei anime grows with Western kids', 'attention'],
+  ['bandai', 'Bandai Namco', 'ent', 3, 'Bandai Namco turns anime IP into games and toys', 'attention'],
+  ['cjenm', 'CJ ENM', 'ent', 3, 'K-content takes share in Asian streaming', 'asia'],
+  ['hybe', 'HYBE', 'ent', 3, 'K-pop fandoms take teen spending', 'attention'],
+  ['iqiyi', 'iQIYI', 'ent', 3, 'iQIYI dominates Chinese streaming', 'asia'],
+  ['bilibili', 'Bilibili', 'ent', 3, 'Bilibili owns Chinese youth animation fandom', 'asia'],
+  ['beast', 'Beast Industries (MrBeast)', 'ent', 2, 'MrBeast becomes a Gen Alpha franchise and brand', 'attention'],
+  ['moonbug', 'Moonbug (CoComelon)', 'ent', 3, 'CoComelon owns the preschool hours', 'attention'],
+  ['amc', 'AMC Networks', 'ent', 3, 'AMC licenses franchises to rival streamers', 'attention'],
+  ['televisa', 'TelevisaUnivision', 'ent', 3, 'ViX wins Spanish-language streaming', 'attention'],
+  ['angel', 'Angel Studios', 'ent', 3, 'Crowdfunded family films take faith and family audiences', 'attention'],
+  ['skybound', 'Skybound', 'ent', 3, 'Creator-owned comics IP becomes franchises', 'attention'],
+  ['openai', 'OpenAI (Sora)', 'ent', 2, 'Sora makes cheap film-quality video for anyone', 'ai'],
+  ['runway', 'Runway', 'ent', 3, 'Runway tools let small studios match big ones', 'ai'],
+  ['luma', 'Luma AI', 'ent', 3, 'AI video floods kids\' content', 'ai'],
+  ['characterai', 'Character.AI', 'ent', 3, 'AI character companions replace passive viewing', 'ai'],
+  // ---- Sports ----
+  ['nfl', 'NFL', 'spt', 1, 'NFL raises rights fees or sells more games direct', 'rights'],
+  ['nba', 'NBA', 'spt', 1, 'NBA shifts more games to big-tech partners', 'rights'],
+  ['mlb', 'MLB', 'spt', 2, 'MLB moves packages to streamers', 'rights'],
+  ['nhl', 'NHL', 'spt', 3, 'NHL rights go to a rival at renewal', 'rights'],
+  ['college', 'College conferences and CFP', 'spt', 1, 'Conference realignment raises college rights costs', 'rights'],
+  ['fifa', 'FIFA', 'spt', 2, 'FIFA sells World Cup rights to a streamer', 'rights'],
+  ['uefa', 'UEFA', 'spt', 3, 'Champions League US rights go elsewhere', 'rights'],
+  ['epl', 'Premier League', 'spt', 3, 'Premier League goes direct to fans', 'rights'],
+  ['f1', 'Formula 1 (Liberty Media)', 'spt', 2, 'F1 grows on a rival platform', 'rights'],
+  ['tko', 'TKO (UFC, WWE)', 'spt', 2, 'TKO pushes rights inflation at renewal', 'rights'],
+  ['nascar', 'NASCAR', 'spt', 3, 'NASCAR shifts races to streamers', 'rights'],
+  ['pga', 'PGA Tour', 'spt', 3, 'PGA Tour rights go to a rival', 'rights'],
+  ['pif', 'Saudi PIF sports (LIV and others)', 'spt', 3, 'Saudi money bids up rights and talent', 'rights'],
+  ['mls', 'MLS', 'spt', 3, 'MLS deepens its streaming-only model', 'rights'],
+  ['wnba', 'WNBA', 'spt', 3, 'WNBA rights jump in value at renewal', 'rights'],
+  ['netflixsports', 'Netflix (sports)', 'spt', 1, 'Netflix wins a top-tier live sports package', 'rights'],
+  ['amazonsports', 'Amazon (sports)', 'spt', 1, 'Amazon outbids ESPN for a sports package', 'rights'],
+  ['applesports', 'Apple (sports)', 'spt', 2, 'Apple takes a premium sports package', 'rights'],
+  ['youtubesports', 'YouTube (sports)', 'spt', 1, 'YouTube carriage fight or a new sports package', 'distribution'],
+  ['foxsports', 'Fox Sports', 'spt', 2, 'Fox Sports wins a package ESPN wanted', 'rights'],
+  ['nbcsports', 'NBC Sports', 'spt', 2, 'NBC bundles sports into Peacock', 'rights'],
+  ['cbssports', 'CBS Sports', 'spt', 2, 'CBS keeps or adds major packages', 'rights'],
+  ['tntsports', 'TNT Sports', 'spt', 3, 'TNT bids hard to rebuild its sports lineup', 'rights'],
+  ['dazn', 'DAZN', 'spt', 3, 'DAZN buys global rights packages', 'rights'],
+  ['fanatics', 'Fanatics', 'spt', 3, 'Fanatics builds a fan-media and commerce platform', 'distribution'],
+  ['fanduel', 'FanDuel (Flutter)', 'spt', 3, 'Betting apps become the main sports-content hub', 'distribution'],
+  ['draftkings', 'DraftKings', 'spt', 3, 'DraftKings adds live video and content', 'distribution'],
+  ['athletic', 'The Athletic (NYT)', 'spt', 3, 'The Athletic takes sports journalism readers', 'attention'],
+  ['overtime', 'Overtime', 'spt', 3, 'Overtime owns Gen Z sports fans', 'attention'],
+  ['cosm', 'Cosm', 'spt', 3, 'Cosm domes create live-sports venues outside ESPN', 'distribution'],
+];
+const PLAYERS = ROSTER.map(([id, name, arena, tier, label, tag]) => ({
+  id, name, arena, tier, label, tag, p: TIERS[tier].p, imp: { [arena]: -TIERS[tier].imp }, dur: 4, def: 50,
+}));
 
 const ARCHETYPES = [
   { id: 'aistudio', name: 'AI-native studio', label: 'AI-native studio makes film-quality content at a fraction of the cost', imp: { ent: -.06 }, tag: 'ai', def: 10 },
@@ -265,6 +380,7 @@ function defaults() {
   return {
     playbook: 'A', runs: 1000, seed: 2026, triggers: true,
     pestel: Object.fromEntries(PESTEL.map(c => [c.id, 3])),
+    arena: { exp: 50, ent: 50, spt: 50 },
     players: Object.fromEntries(PLAYERS.map(p => [p.id, p.def])),
     arch: Object.fromEntries(ARCHETYPES.map(a => [a.id, a.def])),
   };
@@ -279,7 +395,7 @@ function gauss(rng) { let u = 0, v = 0; while (u === 0) u = rng(); v = rng(); re
 function eventList(s) {
   const list = [];
   EVENTS.forEach(e => list.push({ ...e, kind: 'pestel', srcName: SRC_NAME[e.src], prob: e.p * (s.pestel[e.src] / 3) }));
-  PLAYERS.forEach(p => list.push({ ...p, kind: 'player', srcName: p.name, prob: p.p * (s.players[p.id] / 50) }));
+  PLAYERS.forEach(p => list.push({ ...p, kind: 'player', srcName: p.name, prob: p.p * (s.players[p.id] / 50) * (s.arena[p.arena] / 50) }));
   ARCHETYPES.forEach(a => list.push({ ...a, kind: 'arch', srcName: 'Startup: ' + a.name, prob: s.arch[a.id] / 100, dur: YEARS, once: true }));
   return list;
 }
@@ -350,8 +466,17 @@ function buildControls() {
   $('seed').value = S.seed;
   $('trig').checked = S.triggers;
   $('pestel').innerHTML = ''; $('players').innerHTML = ''; $('arch').innerHTML = '';
+  ARENAS.forEach(ar => {
+    const d = document.createElement('details');
+    const list = PLAYERS.filter(p => p.arena === ar.id);
+    d.innerHTML = `<summary>${ar.name} · ${list.length}</summary>`;
+    $('players').appendChild(d);
+    const box = document.createElement('div'); d.appendChild(box);
+    slider(box, 'ar-' + ar.id, 'All ' + ar.name.split(' (')[0] + ' competitors', 0, 100, 5, S.arena[ar.id], '', v => { S.arena[ar.id] = v; schedule(); });
+    const sub = document.createElement('p'); sub.className = 'hint'; sub.textContent = 'Individual players. Tier 1 can move a whole segment; tier 3 is early or narrow.'; box.appendChild(sub);
+    list.forEach(p => slider(box, 'a-' + p.id, `${p.name} <span style="color:var(--ink-3)">· T${p.tier}</span>`, 0, 100, 5, S.players[p.id], '', v => { S.players[p.id] = v; schedule(); }));
+  });
   PESTEL.forEach(c => slider($('pestel'), 'w-' + c.id, c.name, 1, 5, 1, S.pestel[c.id], '', v => { S.pestel[c.id] = v; schedule(); }));
-  PLAYERS.forEach(p => slider($('players'), 'a-' + p.id, p.name, 0, 100, 5, S.players[p.id], '', v => { S.players[p.id] = v; schedule(); }));
   ARCHETYPES.forEach(a => slider($('arch'), 'r-' + a.id, a.name, 0, 30, 1, S.arch[a.id], '%', v => { S.arch[a.id] = v; schedule(); }));
 }
 
@@ -372,7 +497,7 @@ $('copycfg').addEventListener('click', async () => {
 $('loadcfg').addEventListener('click', () => {
   try {
     const d = defaults(), j = JSON.parse($('cfg').value);
-    S = { ...d, ...j, pestel: { ...d.pestel, ...(j.pestel || {}) }, players: { ...d.players, ...(j.players || {}) }, arch: { ...d.arch, ...(j.arch || {}) } };
+    S = { ...d, ...j, arena: { ...d.arena, ...(j.arena || {}) }, pestel: { ...d.pestel, ...(j.pestel || {}) }, players: { ...d.players, ...(j.players || {}) }, arch: { ...d.arch, ...(j.arch || {}) } };
     buildControls(); runAll(); $('cfgmsg').textContent = 'Loaded.';
   } catch { $('cfgmsg').textContent = 'That text is not valid settings. Copy it again from "Copy settings".'; }
 });
@@ -498,7 +623,9 @@ function renderPlaybooks(comp, sel) {
   });
 }
 
+let SHOW_ALL = false, LAST = null;
 function renderThemes(main) {
+  LAST = main;
   const n = main.length;
   const sorted = main.map((r, i) => ({ i, f: r.totals[YEARS] })).sort((a, b) => a.f - b.f);
   const badSet = new Set(sorted.slice(0, Math.max(1, Math.floor(n * 0.2))).map(o => o.i));
@@ -510,7 +637,10 @@ function renderThemes(main) {
     return { e, pAll: all / n, pBad: bad / badSet.size, cost: (hit.length && miss.length) ? med(hit) - med(miss) : 0, upside: Object.values(e.imp).some(v => v > 0) };
   }).filter(r => r.pAll >= 0.03 && r.pAll <= 0.97).sort((a, b) => a.cost - b.cost);
   const neg = rows.filter(r => !r.upside);
-  $('themes').querySelector('tbody').innerHTML = rows.map(r => {
+  const SEG = { exp: 'Experiences', ent: 'Entertainment', spt: 'Sports' };
+  const shown = SHOW_ALL ? rows : rows.slice(0, 20);
+  $('moreThemes').textContent = SHOW_ALL ? 'Show top 20' : `Show all ${rows.length} events`;
+  $('themes').querySelector('tbody').innerHTML = shown.map(r => {
     const rank = neg.indexOf(r);
     let pill;
     if (r.upside) pill = '<span class="pill good">Upside</span>';
@@ -518,7 +648,7 @@ function renderThemes(main) {
     else if (rank > -1 && rank < 10) pill = '<span class="pill neutral">Watch</span>';
     else pill = '<span class="pill neutral" style="opacity:.7">Lower priority</span>';
     const c = r.cost;
-    return `<tr><td>${r.e.label}</td><td>${r.e.srcName}</td><td class="num">${(r.pAll * 100).toFixed(0)}%</td><td class="num">${(r.pBad * 100).toFixed(0)}%</td><td class="num">${c >= 0 ? '+' : '−'}$${Math.abs(c).toFixed(1)}B</td><td>${pill}</td></tr>`;
+    return `<tr><td>${r.e.label}</td><td>${r.e.srcName}</td><td>${Object.keys(r.e.imp).map(k => SEG[k]).join(', ')}</td><td class="num">${(r.pAll * 100).toFixed(0)}%</td><td class="num">${(r.pBad * 100).toFixed(0)}%</td><td class="num">${c >= 0 ? '+' : '−'}$${Math.abs(c).toFixed(1)}B</td><td>${pill}</td></tr>`;
   }).join('');
 }
 
@@ -533,6 +663,7 @@ function renderStory(main, pb) {
   $('story').innerHTML = items.length ? items.join('') : '<li><span class="yr">–</span><span>No shocks in this run.</span></li>';
 }
 
+$('moreThemes').addEventListener('click', () => { SHOW_ALL = !SHOW_ALL; renderThemes(LAST); });
 buildControls();
 runAll();
 </script>

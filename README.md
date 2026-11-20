@@ -1,8 +1,8 @@
 # Strategy War Game
 
-**A strategic early warning system built on war gaming.** It simulates Disney against 12 competitors and 4 startup archetypes over FY27–FY36, thousands of times, then surfaces the threats that keep showing up in the bad futures.
+**A strategic early warning system built on war gaming.** It simulates Disney against 109 companies across Experiences, Entertainment and Sports, plus 4 startup archetypes, over FY27–FY36, thousands of times, then surfaces the threats that keep showing up in the bad futures.
 
-**[Open the live simulator →](https://USERNAME.github.io/strategy-war-game/)** Runs in your browser, no login.
+**[Open the live simulator →](https://jrs10039-code.github.io/strategy-war-game/)** Runs in your browser, no login.
 
 > Prototype by Jake Schmidt. All assumptions are illustrative drafts built from public information, designed to be overwritten with a strategy team's own views and data. It is a risk-preparedness tool, not a forecast.
 
@@ -17,7 +17,7 @@
 1. **Starting point:** FY26 segment operating income from Disney's FY26 Q4 8-K: Experiences $11.19B, Entertainment $5.44B, Sports $3.09B.
 2. **Each simulated year**, events fire with set annual probabilities:
    - **PESTEL shocks** (recession, AI content flood, hurricanes, copyright rulings, and so on), weighted by category
-   - **Competitor moves** (Netflix wins a sports package, Universal opens a nearby park, and so on), scaled by each player's aggression
+   - **Competitor moves** by 109 companies (Netflix wins a sports package, Universal opens a nearby park, Qiddiya opens Gulf giga-parks, and so on). Each company has a tier that sets how much it can hurt: tier 1 can move a whole segment, tier 3 is early or narrow. Aggression can be set per arena or per company. Full list: [`docs/competitors.md`](docs/competitors.md)
    - **Startup archetypes** (AI-native studio, personalized AI media, and so on), which arrive once and stay
 3. Each event cuts or lifts segment OI by a set fraction for a set number of years.
 4. **The playbook** sets each segment's base growth and its exposure to each threat type.
@@ -33,6 +33,7 @@ Every number lives in [`config/assumptions.json`](config/assumptions.json). Disa
 | `engine/simulator.py` | Python reference engine: same model, no UI, reads the assumptions file. |
 | `run.py` | Command-line runner: playbook comparison plus the costliest events. |
 | `config/assumptions.json` | Every assumption: players, events, impacts, probabilities, playbooks. |
+| `docs/competitors.md` | The 109-company roster by arena and tier, with each one's threatening move. |
 | `tests/` | Checks for reproducibility, the starting point, trigger value, and pure compounding. |
 
 ```bash

@@ -9,6 +9,34 @@
   "impact_scale": 1.5,
   "noise_sd": 0.02,
   "trigger_mitigation": 0.7,
+  "tiers": {
+    "1": {
+      "p": 0.09,
+      "imp": 0.025
+    },
+    "2": {
+      "p": 0.07,
+      "imp": 0.007
+    },
+    "3": {
+      "p": 0.05,
+      "imp": 0.003
+    }
+  },
+  "arenas": [
+    {
+      "id": "exp",
+      "name": "Experiences (parks, cruise, resorts)"
+    },
+    {
+      "id": "ent",
+      "name": "Entertainment (streaming, studios, games, creators)"
+    },
+    {
+      "id": "spt",
+      "name": "Sports and ESPN"
+    }
+  ],
   "playbooks": [
     {
       "id": "A",
@@ -33,6 +61,7 @@
       "sens": {
         "econ": 1.6,
         "rivalpark": 0.7,
+        "cruise": 0.8,
         "asia": 1.3,
         "climate": 1.3,
         "ai": 1.05
@@ -272,153 +301,1421 @@
   ],
   "players": [
     {
-      "id": "netflix",
-      "name": "Netflix",
-      "label": "Netflix wins a top-tier live sports package",
-      "p": 0.12,
+      "id": "universal",
+      "name": "Universal Destinations & Experiences",
+      "arena": "exp",
+      "tier": 1,
+      "label": "Universal opens or expands a park near a Disney market",
+      "tag": "rivalpark",
+      "p": 0.09,
       "imp": {
-        "spt": -0.06,
-        "ent": -0.02
+        "exp": -0.025
       },
-      "dur": 4,
-      "tag": "rights",
-      "def": 60
+      "dur": 4
     },
     {
-      "id": "comcast",
-      "name": "Comcast / Universal",
-      "label": "Universal opens a new park near a Disney market",
-      "p": 0.08,
-      "imp": {
-        "exp": -0.05
-      },
-      "dur": 4,
+      "id": "merlin",
+      "name": "Merlin Entertainments (Legoland)",
+      "arena": "exp",
+      "tier": 2,
+      "label": "Legoland adds a resort in a Disney catchment",
       "tag": "rivalpark",
-      "def": 55
+      "p": 0.07,
+      "imp": {
+        "exp": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "royalcaribbean",
+      "name": "Royal Caribbean Group",
+      "arena": "exp",
+      "tier": 1,
+      "label": "Royal Caribbean adds family mega-ships and private islands",
+      "tag": "cruise",
+      "p": 0.09,
+      "imp": {
+        "exp": -0.025
+      },
+      "dur": 4
+    },
+    {
+      "id": "carnival",
+      "name": "Carnival Corp",
+      "arena": "exp",
+      "tier": 2,
+      "label": "Carnival undercuts on family cruise pricing",
+      "tag": "cruise",
+      "p": 0.07,
+      "imp": {
+        "exp": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "nclh",
+      "name": "Norwegian Cruise Line Holdings",
+      "arena": "exp",
+      "tier": 2,
+      "label": "NCLH launches a family-focused ship class",
+      "tag": "cruise",
+      "p": 0.07,
+      "imp": {
+        "exp": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "msc",
+      "name": "MSC Cruises",
+      "arena": "exp",
+      "tier": 2,
+      "label": "MSC adds Caribbean capacity and a private island",
+      "tag": "cruise",
+      "p": 0.07,
+      "imp": {
+        "exp": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "virginvoyages",
+      "name": "Virgin Voyages",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Virgin Voyages wins the adult-cruise segment",
+      "tag": "cruise",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "viking",
+      "name": "Viking",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Viking grows premium cruising for older travelers",
+      "tag": "cruise",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "sixflags",
+      "name": "Six Flags Entertainment",
+      "arena": "exp",
+      "tier": 2,
+      "label": "Six Flags reinvests and takes regional day trips",
+      "tag": "rivalpark",
+      "p": 0.07,
+      "imp": {
+        "exp": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "unitedparks",
+      "name": "United Parks & Resorts (SeaWorld)",
+      "arena": "exp",
+      "tier": 2,
+      "label": "SeaWorld Orlando adds major attractions",
+      "tag": "rivalpark",
+      "p": 0.07,
+      "imp": {
+        "exp": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "herschend",
+      "name": "Herschend (Dollywood)",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Herschend expands regional family resorts",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "greatwolf",
+      "name": "Great Wolf Resorts",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Great Wolf adds indoor water-park resorts",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "europapark",
+      "name": "Europa-Park",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Europa-Park expands its resort hotels",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "portaventura",
+      "name": "PortAventura World",
+      "arena": "exp",
+      "tier": 3,
+      "label": "PortAventura adds a new themed land",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "parquesreunidos",
+      "name": "Parques Reunidos",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Parques Reunidos buys IP-themed parks in Europe",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "cda",
+      "name": "Compagnie des Alpes (Parc Astérix)",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Parc Astérix expands near Paris",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "chimelong",
+      "name": "Chimelong Group",
+      "arena": "exp",
+      "tier": 2,
+      "label": "Chimelong opens new resorts in southern China",
+      "tag": "asia",
+      "p": 0.07,
+      "imp": {
+        "exp": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "fantawild",
+      "name": "Fantawild",
+      "arena": "exp",
+      "tier": 2,
+      "label": "Fantawild rolls out IP parks across China",
+      "tag": "asia",
+      "p": 0.07,
+      "imp": {
+        "exp": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "oct",
+      "name": "OCT Group (Happy Valley)",
+      "arena": "exp",
+      "tier": 3,
+      "label": "OCT expands Happy Valley parks in China",
+      "tag": "asia",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "lotteworld",
+      "name": "Lotte World",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Lotte World expands in Korea and Southeast Asia",
+      "tag": "asia",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "everland",
+      "name": "Everland (Samsung C&T)",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Everland upgrades and draws regional tourists",
+      "tag": "asia",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "miral",
+      "name": "Miral (Yas Island)",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Yas Island adds rival IP parks next to Disney Abu Dhabi",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "qiddiya",
+      "name": "Qiddiya (Saudi Arabia)",
+      "arena": "exp",
+      "tier": 2,
+      "label": "Qiddiya opens giga-parks for Gulf tourists",
+      "tag": "rivalpark",
+      "p": 0.07,
+      "imp": {
+        "exp": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "kerzner",
+      "name": "Kerzner (Atlantis)",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Atlantis adds family resorts in new markets",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "genting",
+      "name": "Genting (Resorts World)",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Resorts World adds family attractions in Asia",
+      "tag": "asia",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "lvs",
+      "name": "Las Vegas Sands",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Integrated resorts add family entertainment",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "vail",
+      "name": "Vail Resorts",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Epic Pass bundles win family vacation budgets",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "mvw",
+      "name": "Marriott Vacations Worldwide",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Orlando timeshares pull guests off property",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "hgv",
+      "name": "Hilton Grand Vacations",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Hilton bundles Orlando stays with rival parks",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "meowwolf",
+      "name": "Meow Wolf",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Meow Wolf opens immersive venues in Disney markets",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "sphere",
+      "name": "Sphere Entertainment",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Sphere-style venues set a new bar for immersive shows",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "teamlab",
+      "name": "teamLab",
+      "arena": "exp",
+      "tier": 3,
+      "label": "teamLab opens digital art museums worldwide",
+      "tag": "rivalpark",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "netflixhouse",
+      "name": "Netflix House",
+      "arena": "exp",
+      "tier": 2,
+      "label": "Netflix House scales IP experiences to many cities",
+      "tag": "rivalpark",
+      "p": 0.07,
+      "imp": {
+        "exp": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "villageroadshow",
+      "name": "Village Roadshow Theme Parks",
+      "arena": "exp",
+      "tier": 3,
+      "label": "Village Roadshow licenses rival IP parks in Asia-Pacific",
+      "tag": "asia",
+      "p": 0.05,
+      "imp": {
+        "exp": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "netflix",
+      "name": "Netflix",
+      "arena": "ent",
+      "tier": 1,
+      "label": "Netflix out-spends Disney on family and kids content",
+      "tag": "attention",
+      "p": 0.09,
+      "imp": {
+        "ent": -0.025
+      },
+      "dur": 4
     },
     {
       "id": "youtube",
       "name": "Alphabet / YouTube",
-      "label": "YouTube carriage fight or creator share gain",
-      "p": 0.12,
+      "arena": "ent",
+      "tier": 1,
+      "label": "YouTube takes more family viewing time on TVs",
+      "tag": "attention",
+      "p": 0.09,
       "imp": {
-        "spt": -0.03,
-        "ent": -0.03
+        "ent": -0.025
       },
-      "dur": 2,
-      "tag": "distribution",
-      "def": 60
+      "dur": 4
     },
     {
       "id": "amazon",
-      "name": "Amazon",
-      "label": "Amazon outbids Disney for a sports package",
-      "p": 0.1,
+      "name": "Amazon (Prime Video, MGM)",
+      "arena": "ent",
+      "tier": 1,
+      "label": "Amazon bundles video with Prime and buys franchises",
+      "tag": "consolidation",
+      "p": 0.09,
       "imp": {
-        "spt": -0.06
+        "ent": -0.025
       },
-      "dur": 4,
-      "tag": "rights",
-      "def": 55
+      "dur": 4
     },
     {
       "id": "apple",
-      "name": "Apple",
-      "label": "Apple takes a premium sports or film franchise",
-      "p": 0.06,
+      "name": "Apple (Apple TV)",
+      "arena": "ent",
+      "tier": 2,
+      "label": "Apple spends big on prestige film and series",
+      "tag": "attention",
+      "p": 0.07,
       "imp": {
-        "spt": -0.03,
-        "ent": -0.02
+        "ent": -0.007
       },
-      "dur": 3,
-      "tag": "rights",
-      "def": 35
+      "dur": 4
     },
     {
       "id": "wbd",
       "name": "Warner Bros. Discovery",
-      "label": "WBD combines into a bigger studio rival",
-      "p": 0.07,
-      "imp": {
-        "ent": -0.04,
-        "spt": -0.01
-      },
-      "dur": 5,
+      "arena": "ent",
+      "tier": 1,
+      "label": "Warner Bros. merges into a bigger studio rival",
       "tag": "consolidation",
-      "def": 50
+      "p": 0.09,
+      "imp": {
+        "ent": -0.025
+      },
+      "dur": 4
     },
     {
       "id": "paramount",
       "name": "Paramount Skydance",
+      "arena": "ent",
+      "tier": 1,
       "label": "Paramount buys a studio or network",
-      "p": 0.06,
-      "imp": {
-        "ent": -0.02
-      },
-      "dur": 4,
       "tag": "consolidation",
-      "def": 50
+      "p": 0.09,
+      "imp": {
+        "ent": -0.025
+      },
+      "dur": 4
+    },
+    {
+      "id": "nbcu",
+      "name": "NBCUniversal (Peacock, Universal Pictures)",
+      "arena": "ent",
+      "tier": 1,
+      "label": "Universal and Illumination win the family box office",
+      "tag": "attention",
+      "p": 0.09,
+      "imp": {
+        "ent": -0.025
+      },
+      "dur": 4
     },
     {
       "id": "sony",
-      "name": "Sony",
-      "label": "Sony anime and game IP takes family share",
-      "p": 0.06,
-      "imp": {
-        "ent": -0.02
-      },
-      "dur": 4,
+      "name": "Sony (Pictures, Crunchyroll, PlayStation)",
+      "arena": "ent",
+      "tier": 1,
+      "label": "Sony turns anime and game IP into family franchises",
       "tag": "attention",
-      "def": 40
-    },
-    {
-      "id": "epic",
-      "name": "Epic / Roblox",
-      "label": "Virtual worlds capture Gen Alpha time",
       "p": 0.09,
       "imp": {
-        "ent": -0.03,
-        "exp": -0.01
+        "ent": -0.025
       },
-      "dur": 4,
-      "tag": "attention",
-      "def": 55
+      "dur": 4
     },
     {
       "id": "tiktok",
       "name": "TikTok / ByteDance",
+      "arena": "ent",
+      "tier": 1,
       "label": "Short video takes more youth attention",
-      "p": 0.1,
-      "imp": {
-        "ent": -0.02
-      },
-      "dur": 3,
       "tag": "attention",
-      "def": 55
+      "p": 0.09,
+      "imp": {
+        "ent": -0.025
+      },
+      "dur": 4
     },
     {
-      "id": "china",
-      "name": "Chinese parks and media",
-      "label": "Chinese parks and IP take local share",
-      "p": 0.1,
-      "imp": {
-        "exp": -0.03
-      },
-      "dur": 4,
+      "id": "tencent",
+      "name": "Tencent",
+      "arena": "ent",
+      "tier": 2,
+      "label": "Tencent IP and games lock up Chinese youth",
       "tag": "asia",
-      "def": 50
+      "p": 0.07,
+      "imp": {
+        "ent": -0.007
+      },
+      "dur": 4
     },
     {
-      "id": "leagues",
-      "name": "Leagues (NFL, NBA, others)",
-      "label": "Leagues push rights inflation or go direct",
-      "p": 0.12,
+      "id": "epic",
+      "name": "Epic Games (Fortnite)",
+      "arena": "ent",
+      "tier": 2,
+      "label": "Fortnite becomes the main venue for other studios' IP",
+      "tag": "attention",
+      "p": 0.07,
       "imp": {
-        "spt": -0.07
+        "ent": -0.007
       },
-      "dur": 4,
+      "dur": 4
+    },
+    {
+      "id": "roblox",
+      "name": "Roblox",
+      "arena": "ent",
+      "tier": 1,
+      "label": "Roblox becomes the main hangout for Gen Alpha",
+      "tag": "attention",
+      "p": 0.09,
+      "imp": {
+        "ent": -0.025
+      },
+      "dur": 4
+    },
+    {
+      "id": "meta",
+      "name": "Meta (Instagram, Reels, Quest)",
+      "arena": "ent",
+      "tier": 2,
+      "label": "Reels and VR take more evening hours",
+      "tag": "attention",
+      "p": 0.07,
+      "imp": {
+        "ent": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "snap",
+      "name": "Snap",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Snap takes teen attention",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "msgaming",
+      "name": "Microsoft Gaming (Xbox, Activision)",
+      "arena": "ent",
+      "tier": 2,
+      "label": "Game franchises move into film and TV",
+      "tag": "attention",
+      "p": 0.07,
+      "imp": {
+        "ent": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "nintendo",
+      "name": "Nintendo",
+      "arena": "ent",
+      "tier": 2,
+      "label": "Nintendo films and theme lands compete for families",
+      "tag": "attention",
+      "p": 0.07,
+      "imp": {
+        "ent": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "ea",
+      "name": "Electronic Arts",
+      "arena": "ent",
+      "tier": 3,
+      "label": "EA sports and life sims take youth time",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "taketwo",
+      "name": "Take-Two Interactive",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Mega game launches pull time from film and TV",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "lionsgate",
+      "name": "Lionsgate",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Lionsgate franchises take box office share",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "starz",
+      "name": "Starz",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Starz cuts streaming prices",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "a24",
+      "name": "A24",
+      "arena": "ent",
+      "tier": 3,
+      "label": "A24 wins young-adult film audiences",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "legendary",
+      "name": "Legendary Entertainment",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Legendary scales a monster franchise universe",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "fox",
+      "name": "Fox Corp (Tubi)",
+      "arena": "ent",
+      "tier": 2,
+      "label": "Tubi grows free ad-supported streaming",
+      "tag": "distribution",
+      "p": 0.07,
+      "imp": {
+        "ent": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "roku",
+      "name": "Roku",
+      "arena": "ent",
+      "tier": 2,
+      "label": "Roku controls TV home screens and ad terms",
+      "tag": "distribution",
+      "p": 0.07,
+      "imp": {
+        "ent": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "spotify",
+      "name": "Spotify",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Spotify video podcasts take younger viewers",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "umg",
+      "name": "Universal Music Group",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Music licensing costs rise for film and parks",
+      "tag": "legal",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "hasbro",
+      "name": "Hasbro",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Hasbro brands win family film and games",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "mattel",
+      "name": "Mattel",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Mattel follows Barbie with more toy-brand films",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "toho",
+      "name": "Toho",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Godzilla and anime films take global share",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "toei",
+      "name": "Toei Animation",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Toei anime grows with Western kids",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "bandai",
+      "name": "Bandai Namco",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Bandai Namco turns anime IP into games and toys",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "cjenm",
+      "name": "CJ ENM",
+      "arena": "ent",
+      "tier": 3,
+      "label": "K-content takes share in Asian streaming",
+      "tag": "asia",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "hybe",
+      "name": "HYBE",
+      "arena": "ent",
+      "tier": 3,
+      "label": "K-pop fandoms take teen spending",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "iqiyi",
+      "name": "iQIYI",
+      "arena": "ent",
+      "tier": 3,
+      "label": "iQIYI dominates Chinese streaming",
+      "tag": "asia",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "bilibili",
+      "name": "Bilibili",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Bilibili owns Chinese youth animation fandom",
+      "tag": "asia",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "beast",
+      "name": "Beast Industries (MrBeast)",
+      "arena": "ent",
+      "tier": 2,
+      "label": "MrBeast becomes a Gen Alpha franchise and brand",
+      "tag": "attention",
+      "p": 0.07,
+      "imp": {
+        "ent": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "moonbug",
+      "name": "Moonbug (CoComelon)",
+      "arena": "ent",
+      "tier": 3,
+      "label": "CoComelon owns the preschool hours",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "amc",
+      "name": "AMC Networks",
+      "arena": "ent",
+      "tier": 3,
+      "label": "AMC licenses franchises to rival streamers",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "televisa",
+      "name": "TelevisaUnivision",
+      "arena": "ent",
+      "tier": 3,
+      "label": "ViX wins Spanish-language streaming",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "angel",
+      "name": "Angel Studios",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Crowdfunded family films take faith and family audiences",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "skybound",
+      "name": "Skybound",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Creator-owned comics IP becomes franchises",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "openai",
+      "name": "OpenAI (Sora)",
+      "arena": "ent",
+      "tier": 2,
+      "label": "Sora makes cheap film-quality video for anyone",
+      "tag": "ai",
+      "p": 0.07,
+      "imp": {
+        "ent": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "runway",
+      "name": "Runway",
+      "arena": "ent",
+      "tier": 3,
+      "label": "Runway tools let small studios match big ones",
+      "tag": "ai",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "luma",
+      "name": "Luma AI",
+      "arena": "ent",
+      "tier": 3,
+      "label": "AI video floods kids' content",
+      "tag": "ai",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "characterai",
+      "name": "Character.AI",
+      "arena": "ent",
+      "tier": 3,
+      "label": "AI character companions replace passive viewing",
+      "tag": "ai",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "nfl",
+      "name": "NFL",
+      "arena": "spt",
+      "tier": 1,
+      "label": "NFL raises rights fees or sells more games direct",
       "tag": "rights",
-      "def": 55
+      "p": 0.09,
+      "imp": {
+        "spt": -0.025
+      },
+      "dur": 4
+    },
+    {
+      "id": "nba",
+      "name": "NBA",
+      "arena": "spt",
+      "tier": 1,
+      "label": "NBA shifts more games to big-tech partners",
+      "tag": "rights",
+      "p": 0.09,
+      "imp": {
+        "spt": -0.025
+      },
+      "dur": 4
+    },
+    {
+      "id": "mlb",
+      "name": "MLB",
+      "arena": "spt",
+      "tier": 2,
+      "label": "MLB moves packages to streamers",
+      "tag": "rights",
+      "p": 0.07,
+      "imp": {
+        "spt": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "nhl",
+      "name": "NHL",
+      "arena": "spt",
+      "tier": 3,
+      "label": "NHL rights go to a rival at renewal",
+      "tag": "rights",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "college",
+      "name": "College conferences and CFP",
+      "arena": "spt",
+      "tier": 1,
+      "label": "Conference realignment raises college rights costs",
+      "tag": "rights",
+      "p": 0.09,
+      "imp": {
+        "spt": -0.025
+      },
+      "dur": 4
+    },
+    {
+      "id": "fifa",
+      "name": "FIFA",
+      "arena": "spt",
+      "tier": 2,
+      "label": "FIFA sells World Cup rights to a streamer",
+      "tag": "rights",
+      "p": 0.07,
+      "imp": {
+        "spt": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "uefa",
+      "name": "UEFA",
+      "arena": "spt",
+      "tier": 3,
+      "label": "Champions League US rights go elsewhere",
+      "tag": "rights",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "epl",
+      "name": "Premier League",
+      "arena": "spt",
+      "tier": 3,
+      "label": "Premier League goes direct to fans",
+      "tag": "rights",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "f1",
+      "name": "Formula 1 (Liberty Media)",
+      "arena": "spt",
+      "tier": 2,
+      "label": "F1 grows on a rival platform",
+      "tag": "rights",
+      "p": 0.07,
+      "imp": {
+        "spt": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "tko",
+      "name": "TKO (UFC, WWE)",
+      "arena": "spt",
+      "tier": 2,
+      "label": "TKO pushes rights inflation at renewal",
+      "tag": "rights",
+      "p": 0.07,
+      "imp": {
+        "spt": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "nascar",
+      "name": "NASCAR",
+      "arena": "spt",
+      "tier": 3,
+      "label": "NASCAR shifts races to streamers",
+      "tag": "rights",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "pga",
+      "name": "PGA Tour",
+      "arena": "spt",
+      "tier": 3,
+      "label": "PGA Tour rights go to a rival",
+      "tag": "rights",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "pif",
+      "name": "Saudi PIF sports (LIV and others)",
+      "arena": "spt",
+      "tier": 3,
+      "label": "Saudi money bids up rights and talent",
+      "tag": "rights",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "mls",
+      "name": "MLS",
+      "arena": "spt",
+      "tier": 3,
+      "label": "MLS deepens its streaming-only model",
+      "tag": "rights",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "wnba",
+      "name": "WNBA",
+      "arena": "spt",
+      "tier": 3,
+      "label": "WNBA rights jump in value at renewal",
+      "tag": "rights",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "netflixsports",
+      "name": "Netflix (sports)",
+      "arena": "spt",
+      "tier": 1,
+      "label": "Netflix wins a top-tier live sports package",
+      "tag": "rights",
+      "p": 0.09,
+      "imp": {
+        "spt": -0.025
+      },
+      "dur": 4
+    },
+    {
+      "id": "amazonsports",
+      "name": "Amazon (sports)",
+      "arena": "spt",
+      "tier": 1,
+      "label": "Amazon outbids ESPN for a sports package",
+      "tag": "rights",
+      "p": 0.09,
+      "imp": {
+        "spt": -0.025
+      },
+      "dur": 4
+    },
+    {
+      "id": "applesports",
+      "name": "Apple (sports)",
+      "arena": "spt",
+      "tier": 2,
+      "label": "Apple takes a premium sports package",
+      "tag": "rights",
+      "p": 0.07,
+      "imp": {
+        "spt": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "youtubesports",
+      "name": "YouTube (sports)",
+      "arena": "spt",
+      "tier": 1,
+      "label": "YouTube carriage fight or a new sports package",
+      "tag": "distribution",
+      "p": 0.09,
+      "imp": {
+        "spt": -0.025
+      },
+      "dur": 4
+    },
+    {
+      "id": "foxsports",
+      "name": "Fox Sports",
+      "arena": "spt",
+      "tier": 2,
+      "label": "Fox Sports wins a package ESPN wanted",
+      "tag": "rights",
+      "p": 0.07,
+      "imp": {
+        "spt": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "nbcsports",
+      "name": "NBC Sports",
+      "arena": "spt",
+      "tier": 2,
+      "label": "NBC bundles sports into Peacock",
+      "tag": "rights",
+      "p": 0.07,
+      "imp": {
+        "spt": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "cbssports",
+      "name": "CBS Sports",
+      "arena": "spt",
+      "tier": 2,
+      "label": "CBS keeps or adds major packages",
+      "tag": "rights",
+      "p": 0.07,
+      "imp": {
+        "spt": -0.007
+      },
+      "dur": 4
+    },
+    {
+      "id": "tntsports",
+      "name": "TNT Sports",
+      "arena": "spt",
+      "tier": 3,
+      "label": "TNT bids hard to rebuild its sports lineup",
+      "tag": "rights",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "dazn",
+      "name": "DAZN",
+      "arena": "spt",
+      "tier": 3,
+      "label": "DAZN buys global rights packages",
+      "tag": "rights",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "fanatics",
+      "name": "Fanatics",
+      "arena": "spt",
+      "tier": 3,
+      "label": "Fanatics builds a fan-media and commerce platform",
+      "tag": "distribution",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "fanduel",
+      "name": "FanDuel (Flutter)",
+      "arena": "spt",
+      "tier": 3,
+      "label": "Betting apps become the main sports-content hub",
+      "tag": "distribution",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "draftkings",
+      "name": "DraftKings",
+      "arena": "spt",
+      "tier": 3,
+      "label": "DraftKings adds live video and content",
+      "tag": "distribution",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "athletic",
+      "name": "The Athletic (NYT)",
+      "arena": "spt",
+      "tier": 3,
+      "label": "The Athletic takes sports journalism readers",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "overtime",
+      "name": "Overtime",
+      "arena": "spt",
+      "tier": 3,
+      "label": "Overtime owns Gen Z sports fans",
+      "tag": "attention",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
+    },
+    {
+      "id": "cosm",
+      "name": "Cosm",
+      "arena": "spt",
+      "tier": 3,
+      "label": "Cosm domes create live-sports venues outside ESPN",
+      "tag": "distribution",
+      "p": 0.05,
+      "imp": {
+        "spt": -0.003
+      },
+      "dur": 4
     }
   ],
   "archetypes": [
@@ -476,19 +1773,121 @@
       "En": 3,
       "L": 3
     },
+    "arena_aggression": {
+      "exp": 50,
+      "ent": 50,
+      "spt": 50
+    },
     "player_aggression": {
-      "netflix": 60,
-      "comcast": 55,
-      "youtube": 60,
-      "amazon": 55,
-      "apple": 35,
+      "universal": 50,
+      "merlin": 50,
+      "royalcaribbean": 50,
+      "carnival": 50,
+      "nclh": 50,
+      "msc": 50,
+      "virginvoyages": 50,
+      "viking": 50,
+      "sixflags": 50,
+      "unitedparks": 50,
+      "herschend": 50,
+      "greatwolf": 50,
+      "europapark": 50,
+      "portaventura": 50,
+      "parquesreunidos": 50,
+      "cda": 50,
+      "chimelong": 50,
+      "fantawild": 50,
+      "oct": 50,
+      "lotteworld": 50,
+      "everland": 50,
+      "miral": 50,
+      "qiddiya": 50,
+      "kerzner": 50,
+      "genting": 50,
+      "lvs": 50,
+      "vail": 50,
+      "mvw": 50,
+      "hgv": 50,
+      "meowwolf": 50,
+      "sphere": 50,
+      "teamlab": 50,
+      "netflixhouse": 50,
+      "villageroadshow": 50,
+      "netflix": 50,
+      "youtube": 50,
+      "amazon": 50,
+      "apple": 50,
       "wbd": 50,
       "paramount": 50,
-      "sony": 40,
-      "epic": 55,
-      "tiktok": 55,
-      "china": 50,
-      "leagues": 55
+      "nbcu": 50,
+      "sony": 50,
+      "tiktok": 50,
+      "tencent": 50,
+      "epic": 50,
+      "roblox": 50,
+      "meta": 50,
+      "snap": 50,
+      "msgaming": 50,
+      "nintendo": 50,
+      "ea": 50,
+      "taketwo": 50,
+      "lionsgate": 50,
+      "starz": 50,
+      "a24": 50,
+      "legendary": 50,
+      "fox": 50,
+      "roku": 50,
+      "spotify": 50,
+      "umg": 50,
+      "hasbro": 50,
+      "mattel": 50,
+      "toho": 50,
+      "toei": 50,
+      "bandai": 50,
+      "cjenm": 50,
+      "hybe": 50,
+      "iqiyi": 50,
+      "bilibili": 50,
+      "beast": 50,
+      "moonbug": 50,
+      "amc": 50,
+      "televisa": 50,
+      "angel": 50,
+      "skybound": 50,
+      "openai": 50,
+      "runway": 50,
+      "luma": 50,
+      "characterai": 50,
+      "nfl": 50,
+      "nba": 50,
+      "mlb": 50,
+      "nhl": 50,
+      "college": 50,
+      "fifa": 50,
+      "uefa": 50,
+      "epl": 50,
+      "f1": 50,
+      "tko": 50,
+      "nascar": 50,
+      "pga": 50,
+      "pif": 50,
+      "mls": 50,
+      "wnba": 50,
+      "netflixsports": 50,
+      "amazonsports": 50,
+      "applesports": 50,
+      "youtubesports": 50,
+      "foxsports": 50,
+      "nbcsports": 50,
+      "cbssports": 50,
+      "tntsports": 50,
+      "dazn": 50,
+      "fanatics": 50,
+      "fanduel": 50,
+      "draftkings": 50,
+      "athletic": 50,
+      "overtime": 50,
+      "cosm": 50
     },
     "archetype_arrival_pct": {
       "aistudio": 10,
