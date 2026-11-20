@@ -1,10 +1,30 @@
-# Strategy War Game
+<p align="center"><a href="https://jrs10039-code.github.io/strategy-war-game/"><img src="docs/img/banner.jpg" alt="Disney Strategy War Game" width="100%"></a></p>
 
-**A strategic early warning system built on war gaming.** It simulates Disney against 109 companies across Experiences, Entertainment and Sports, plus 4 startup archetypes, over FY27–FY36, thousands of times, then surfaces the threats that keep showing up in the bad futures.
+<p align="center"><a href="https://jrs10039-code.github.io/strategy-war-game/"><img src="docs/img/launch.png" alt="Launch the simulator" height="56"></a></p>
 
-**[Open the live simulator →](https://jrs10039-code.github.io/strategy-war-game/)** Runs in your browser, no login.
+<p align="center"><b>Runs in your browser. No login, no install.</b><br>Prototype by Jake Schmidt · November 2026 · Illustrative draft assumptions, not a forecast</p>
 
-> Prototype by Jake Schmidt. All assumptions are illustrative drafts built from public information, designed to be overwritten with a strategy team's own views and data. It is a risk-preparedness tool, not a forecast.
+---
+
+### The short answer it gives
+
+<img src="docs/img/answer.png" alt="Short answer" width="100%">
+
+### Three low-cost actions, tested across 1,000 futures
+
+<img src="docs/img/actions.png" alt="Three low-cost actions" width="100%">
+
+### Would it have worked in 2019?
+
+The model starts in FY19 with only what was knowable then, and is compared with what Disney actually reported.
+
+<img src="docs/img/backtest.png" alt="Backtest against FY19–FY26 actuals" width="100%">
+
+### Which strategy holds up in a bad decade?
+
+<img src="docs/img/strategies.png" alt="Strategy comparison" width="100%">
+
+---
 
 ## What it answers
 
