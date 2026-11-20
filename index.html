@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Disney Strategy War Game</title>
+<meta name="description" content="Prototype strategic early warning system: simulates Disney against 109 competitors over FY27–FY36 and surfaces the threats that keep showing up in bad futures. By Jake Schmidt.">
+<meta name="author" content="Jake Schmidt">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Disney Strategy War Game">
+<meta property="og:description" content="10-year Monte Carlo of Disney vs. 109 competitors, with a 2019 backtest. Every assumption is adjustable. Prototype by Jake Schmidt.">
+<meta property="og:url" content="https://jrs10039-code.github.io/strategy-war-game/">
+<meta property="og:image" content="https://jrs10039-code.github.io/strategy-war-game/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M6 22 L12 15 L17 19 L26 9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -46,14 +55,24 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.5; }
-header { padding: 24px 24px 16px; border-bottom: 1px solid var(--rule); background: var(--surface); }
+header { display: flex; gap: 24px; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; padding: 24px 24px 16px; border-bottom: 1px solid var(--rule); background: var(--surface); }
 header h1 { font-family: var(--font-display); font-weight: 600; font-size: 26px; margin: 0 0 4px; text-wrap: balance; }
 header p { margin: 0; color: var(--ink-2); max-width: 78ch; }
+.byline { font-size: 12px; color: var(--ink-2); text-align: right; display: grid; gap: 4px; }
+.byline b { color: var(--ink); font-weight: 600; }
+.byline a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.byline a:hover { text-decoration: underline; }
+@media (max-width: 700px) { .byline { text-align: left; } }
+.howto { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+@media (max-width: 900px) { .howto { grid-template-columns: 1fr; } }
+.howto div { display: grid; grid-template-columns: 28px 1fr; gap: 8px; font-size: 13px; color: var(--ink-2); }
+.howto b { color: var(--ink); display: block; }
+.howto .num { width: 24px; height: 24px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 12px; display: grid; place-items: center; }
 .tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
 .layout { display: grid; grid-template-columns: 320px 1fr; gap: 0; align-items: start; }
 aside { border-right: 1px solid var(--rule); background: var(--surface); padding: 16px; position: sticky; top: 0; max-height: 100vh; overflow-y: auto; }
 main { padding: 20px 24px 48px; display: grid; gap: 20px; min-width: 0; }
-@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } aside { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--rule); } main { padding: 16px; } }
+@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } aside { order: 2; border-top: 1px solid var(--rule); position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--rule); } main { padding: 16px; } }
 .ctl { display: grid; gap: 4px; margin-bottom: 12px; }
 .ctl label, .lbl { font-size: 12px; font-weight: 600; color: var(--ink-2); }
 select, input[type=number], textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 8px; width: 100%; }
@@ -75,6 +94,13 @@ details[open] summary::after { content: "−"; }
 .slider span.name { font-size: 12px; color: var(--ink); grid-column: 1 / -1; }
 .slider input[type=range] { width: 100%; accent-color: var(--accent); }
 .slider output { font-family: var(--font-mono); font-size: 12px; text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.seg label { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 6px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink-2); text-align: center; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label:has(input:checked) { background: var(--accent); color: #fff; }
+.seg label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
+.lessons { margin: 12px 0 0; padding-left: 18px; display: grid; gap: 6px; }
+[hidden] { display: none !important; }
 .toggle { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; margin: 4px 0 12px; }
 .toggle input { margin-top: 3px; accent-color: var(--accent); }
 .card { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; min-width: 0; }
@@ -116,13 +142,26 @@ footer p { margin: 0 0 6px; }
 </head>
 <body>
 <header>
-  <div class="tag">Prototype · strategic early warning system</div>
-  <h1>Disney Strategy War Game</h1>
-  <p>Simulates Disney against 109 companies across Experiences, Entertainment and Sports, plus 4 startup archetypes, over FY27–FY36, thousands of times, then surfaces the themes that keep showing up in the bad futures. Every assumption is a slider for the team to argue with. Illustrative draft assumptions, not a forecast.</p>
+  <div>
+    <div class="tag">Prototype · strategic early warning system</div>
+    <h1>Disney Strategy War Game</h1>
+    <p>Simulates Disney against 109 companies across Experiences, Entertainment and Sports, plus 4 startup archetypes, thousands of times. It surfaces the threats that keep showing up in the bad futures, and backtests itself against FY19–FY26. Illustrative draft assumptions, not a forecast.</p>
+  </div>
+  <div class="byline">
+    <div>Prototype by <b>Jake Schmidt</b> · November 2026</div>
+    <div><a href="https://github.com/jrs10039-code/strategy-war-game#readme">Methodology</a> · <a href="https://github.com/jrs10039-code/strategy-war-game/blob/main/docs/competitors.md">Competitor list</a> · <a href="https://github.com/jrs10039-code/strategy-war-game">Source code</a></div>
+  </div>
 </header>
 <div class="layout">
   <aside>
     <div class="ctl">
+      <span class="lbl" id="mode-lbl">Mode</span>
+      <div class="seg" role="radiogroup" aria-labelledby="mode-lbl">
+        <label><input type="radio" name="mode" value="forward" checked>Look forward</label>
+        <label><input type="radio" name="mode" value="backtest">Backtest FY19–26</label>
+      </div>
+    </div>
+    <div class="ctl" id="pbctl">
       <label for="pb">Disney playbook</label>
       <select id="pb"></select>
       <div class="hint" id="pbdesc"></div>
@@ -133,6 +172,7 @@ footer p { margin: 0 0 6px; }
       <div class="ctl"><label for="seed">Random seed</label><input id="seed" type="number" value="2026" min="1"></div>
     </div>
     <label class="toggle"><input type="checkbox" id="trig" checked><span><b>Early-warning triggers on.</b> Once a threat appears, Disney responds and later hits of the same kind land 30% softer.</span></label>
+    <label class="toggle"><input type="checkbox" id="tail" checked><span><b>Include a pandemic-class tail event.</b> 1.5% a year. Rare, but it closes parks for two years.</span></label>
     <button class="primary" id="runbtn" type="button">Run simulation</button>
     <div id="status"></div>
 
@@ -161,24 +201,36 @@ footer p { margin: 0 0 6px; }
   </aside>
 
   <main>
+    <section class="card howto" aria-label="How to use this">
+      <div><span class="num">1</span><span><b>Pick a playbook or run the backtest</b>Six Disney strategies, each run against the same simulated futures. Backtest mode starts in FY19 and checks the model against what really happened.</span></div>
+      <div><span class="num">2</span><span><b>Argue with the assumptions</b>Every probability is a slider: PESTEL shocks, 109 competitors and 4 startup archetypes. Results update as you move them.</span></div>
+      <div><span class="num">3</span><span><b>Read the themes</b>The table at the bottom ranks threats by what they cost when they hit. The top ones are the signposts worth monitoring.</span></div>
+    </section>
     <section class="tiles" aria-label="Headline results">
-      <div class="tile"><div class="k">Median FY36 segment OI</div><div class="v" id="t-med">–</div><div class="n" id="t-med-n"></div></div>
-      <div class="tile risk"><div class="k">Bad case (10th percentile) FY36</div><div class="v" id="t-p10">–</div><div class="n" id="t-p10-n"></div></div>
-      <div class="tile risk"><div class="k">Futures below FY26 profit in FY31</div><div class="v" id="t-below">–</div><div class="n">Share of runs where 5-year OI is under $19.7B</div></div>
+      <div class="tile"><div class="k" id="t-med-k">Median FY36 segment OI</div><div class="v" id="t-med">–</div><div class="n" id="t-med-n"></div></div>
+      <div class="tile risk"><div class="k" id="t-p10-k">Bad case (10th percentile) FY36</div><div class="v" id="t-p10">–</div><div class="n" id="t-p10-n"></div></div>
+      <div class="tile risk"><div class="k" id="t-below-k">Futures below FY26 profit in FY31</div><div class="v" id="t-below">–</div><div class="n" id="t-below-n">Share of runs where 5-year OI is under $19.7B</div></div>
       <div class="tile goodt"><div class="k">Value of early-warning triggers</div><div class="v" id="t-trig">–</div><div class="n" id="t-trig-n">Bad-case FY36 OI, triggers on vs off</div></div>
     </section>
 
     <section class="card">
       <h2 id="fan-title">The range of futures</h2>
-      <p class="sub">Total segment operating income, $B, fiscal years. Shaded band covers the middle 80% of simulated futures; the line is the median.</p>
+      <p class="sub" id="fan-sub">Total segment operating income, $B, fiscal years. Shaded band covers the middle 80% of simulated futures; the line is the median.</p>
       <div class="chartwrap" id="fanwrap"><svg id="fan" viewBox="0 0 720 300" width="100%" role="img" aria-label="Fan chart of simulated Disney operating income"></svg><div class="tip" id="fantip"></div></div>
-      <div class="legend"><span><i style="background:var(--band)"></i>10th–90th percentile</span><span><i style="background:var(--accent);height:3px;vertical-align:3px"></i>Median</span><span><i style="background:var(--ink-3);height:1px;vertical-align:4px"></i>FY26 actual ($19.7B)</span></div>
+      <div class="legend"><span><i style="background:var(--band)"></i>10th–90th percentile</span><span><i style="background:var(--accent);height:3px;vertical-align:3px"></i>Median</span><span id="leg-base"><i style="background:var(--ink-3);height:1px;vertical-align:4px"></i>FY26 actual ($19.7B)</span><span id="leg-actual" hidden><i style="background:var(--ink);height:3px;vertical-align:3px"></i>What actually happened</span></div>
     </section>
 
     <div class="two">
-      <section class="card">
+      <section class="card" id="btcard" hidden>
+        <h2>Backtest scorecard</h2>
+        <p class="sub">Threats a 2019 strategist could have listed, checked against what happened through FY26.</p>
+        <div class="tablewrap"><table><thead><tr><th>Modeled threat</th><th>In 2019 deck</th><th>Happened by FY26</th></tr></thead><tbody id="bt-rows"></tbody></table></div>
+        <h2 style="margin-top:16px">What the backtest teaches</h2>
+        <ol class="lessons" id="bt-lessons"></ol>
+      </section>
+      <section class="card" id="pbcard">
         <h2>Which playbook holds up</h2>
-        <p class="sub">FY36 segment OI by playbook, same futures for each. Dot = median, whisker = 10th to 90th percentile. Robust playbooks keep the left whisker high.</p>
+        <p class="sub" id="pb-sub">FY36 segment OI by playbook, same futures for each. Dot = median, whisker = 10th to 90th percentile. Robust playbooks keep the left whisker high.</p>
         <div class="chartwrap" id="pbwrap"><svg id="pbchart" viewBox="0 0 430 300" width="100%" role="img" aria-label="Playbook comparison"></svg><div class="tip" id="pbtip"></div></div>
       </section>
       <section class="card">
@@ -190,7 +242,7 @@ footer p { margin: 0 0 6px; }
 
     <section class="card">
       <h2>Themes that keep showing up in bad futures</h2>
-      <p class="sub">Sorted by what each event costs when it hits: median FY36 segment OI in futures where it happened, minus futures where it did not. "Bad futures" = the worst 20% of runs. The costliest events are the candidate signposts to monitor.</p>
+      <p class="sub">Sorted by what each event costs when it hits: median final-year segment OI in futures where it happened, minus futures where it did not. "Bad futures" = the worst 20% of runs. The costliest events are the candidate signposts to monitor.</p>
       <div class="tablewrap"><table id="themes"><thead><tr><th>Event</th><th>Source</th><th>Hits</th><th class="num">All futures</th><th class="num">Bad futures</th><th class="num">Cost when it hits</th><th>Read</th></tr></thead><tbody></tbody></table></div>
       <div class="btnrow" style="max-width:260px"><button type="button" id="moreThemes">Show all events</button></div>
     </section>
@@ -198,16 +250,32 @@ footer p { margin: 0 0 6px; }
     <footer>
       <p><b>Starting point:</b> FY26 actuals from Disney's FY26 Q4 8-K: Experiences $11.19B, Entertainment $5.44B, Sports $3.09B segment operating income (total $19.7B).</p>
       <p><b>How it works:</b> each simulated year, shocks and competitor moves fire with the probabilities set on the left. Each one cuts (or lifts) segment profit for a set number of years. The chosen playbook sets base growth and how exposed each segment is to each kind of threat. All impacts, probabilities and playbook settings are draft assumptions by Jake Schmidt, built to be overwritten with the team's own views and data.</p>
-      <p><b>Not modeled yet:</b> balance sheet, M&amp;A by Disney, 2019 backtest mode. Built as a prototype for discussion.</p>
+      <p><b>Backtest:</b> starts from FY19 total segment OI of $14.85B (as recast in Disney's FY20 release). ESPN was not broken out in FY19, so the Sports starting value is an approximation. Threats no one could have listed in 2019, such as generative AI, are left out of the backtest deck.</p>
+      <p><b>Not modeled yet:</b> balance sheet limits, M&amp;A by Disney, rebound dynamics after a shock, streaming margin as its own variable. Built as a prototype for discussion. <a href="https://github.com/jrs10039-code/strategy-war-game" style="color:var(--accent)">Source and methodology on GitHub</a>.</p>
     </footer>
   </main>
 </div>
 
 <script>
 // ---------- Model data (draft assumptions) ----------
-const START = { exp: 11.19, ent: 5.44, spt: 3.09 };
+// Two modes. Forward: FY26 actuals, 10 years out. Backtest: FY19, 7 years to FY26, compared with what actually happened.
+const MODES = {
+  forward: { start: { exp: 11.19, ent: 5.44, spt: 3.09 }, years: 10, base: 26 },
+  // FY19 split is approximate: Parks, Experiences & Products $6.76B (FY19 10-K); ESPN was not broken out, so Sports is an
+  // assumed ~$3.0B of Media Networks; Entertainment is the remainder of FY19 total segment OI ($14.85B as recast in the FY20 release).
+  backtest: { start: { exp: 6.76, ent: 5.09, spt: 3.00 }, years: 7, base: 19 },
+};
+// Total segment OI as reported (FY20, FY21 and FY23 brought segment recasts; FY20 and FY26 had 53 weeks).
+const ACTUAL = { 19: 14.85, 20: 8.11, 21: 7.77, 22: 12.12, 23: 12.86, 24: 15.6, 25: 17.6, 26: 19.7 };
+// Threats a 2019 strategist could not have listed. Left out of the backtest deck to avoid hindsight.
+const NOT_IN_2019 = new Set(['aiflood', 'aicopy', 'aistudio', 'aimedia', 'openai', 'runway', 'luma', 'characterai', 'netflixhouse', 'qiddiya', 'cosm']);
+let MODE = 'forward';
+let START = MODES.forward.start;
+let BASE_FY = 26;
+const startTotal = () => START.exp + START.ent + START.spt;
+const MID = () => Math.floor(YEARS / 2);
 const SEGS = ['exp', 'ent', 'spt'];
-const YEARS = 10; // FY27..FY36
+let YEARS = 10; // forward: FY27..FY36
 const IMPACT = 1.5; // global severity dial on every shock (draft calibration)
 
 const PLAYBOOKS = [
@@ -218,6 +286,9 @@ const PLAYBOOKS = [
   { id: 'E', name: 'E. Asset-light pivot', desc: 'License more parks, sell or spin linear networks. Lower growth, lower downside.', g: { exp: .040, ent: .042, spt: .025 }, sens: { econ: .6, asia: .5, climate: .7, rivalpark: .9, rights: 1.15 } },
   { id: 'F', name: 'F. AI-forward', desc: 'Early AI production tools, AI-built franchises, physical AI in parks. Turns AI from threat to tool, adds legal and brand risk.', g: { exp: .048, ent: .048, spt: .040 }, sens: { ai: .45, legal: 1.5, physai: 1.6, brand: 1.5 } },
 ];
+
+// Backtest playbook: what Disney's plan implied in late 2019 (parks growth, heavy DTC investment, slow linear decline).
+const PLAN_2019 = { id: 'P19', name: '2019 plan', desc: 'As of late 2019: parks growth, heavy Disney+ investment, slow linear decline. Draft growth assumptions.', g: { exp: .06, ent: .03, spt: .02 }, sens: {} };
 
 const PESTEL = [
   { id: 'P', name: 'Political' }, { id: 'E', name: 'Economic' }, { id: 'S', name: 'Social' },
@@ -234,6 +305,7 @@ const EVENTS = [
   { id: 'boycott', src: 'S', label: 'Culture-war boycott hits the brand', p: .07, imp: { ent: -.04, exp: -.02 }, dur: 1, tag: 'brand' },
   { id: 'aiflood', src: 'T', label: 'AI-generated content floods supply', p: .10, imp: { ent: -.08 }, dur: 4, tag: 'ai' },
   { id: 'physai', src: 'T', label: 'Physical AI cuts ride and show costs (upside)', p: .08, imp: { exp: .04 }, dur: 5, tag: 'physai' },
+  { id: 'pandemic', src: 'En', label: 'Pandemic-class shutdown closes parks and halts production', p: .015, imp: { exp: -.6, ent: -.12, spt: -.2 }, dur: 2, tag: 'pandemic' },
   { id: 'hurricane', src: 'En', label: 'Major Florida hurricane season', p: .15, imp: { exp: -.05 }, dur: 1, tag: 'climate' },
   { id: 'heat', src: 'En', label: 'Extreme heat seasons cut attendance', p: .06, imp: { exp: -.03 }, dur: 3, tag: 'climate' },
   { id: 'aicopy', src: 'L', label: 'AI copyright ruling weakens IP protection', p: .06, imp: { ent: -.05 }, dur: 5, tag: 'legal' },
@@ -378,7 +450,7 @@ const SRC_NAME = { P: 'Political', E: 'Economic', S: 'Social', T: 'Technological
 
 function defaults() {
   return {
-    playbook: 'A', runs: 1000, seed: 2026, triggers: true,
+    playbook: 'A', runs: 1000, seed: 2026, triggers: true, tail: true,
     pestel: Object.fromEntries(PESTEL.map(c => [c.id, 3])),
     arena: { exp: 50, ent: 50, spt: 50 },
     players: Object.fromEntries(PLAYERS.map(p => [p.id, p.def])),
@@ -397,7 +469,7 @@ function eventList(s) {
   EVENTS.forEach(e => list.push({ ...e, kind: 'pestel', srcName: SRC_NAME[e.src], prob: e.p * (s.pestel[e.src] / 3) }));
   PLAYERS.forEach(p => list.push({ ...p, kind: 'player', srcName: p.name, prob: p.p * (s.players[p.id] / 50) * (s.arena[p.arena] / 50) }));
   ARCHETYPES.forEach(a => list.push({ ...a, kind: 'arch', srcName: 'Startup: ' + a.name, prob: s.arch[a.id] / 100, dur: YEARS, once: true }));
-  return list;
+  return list.filter(e => (s.tail || e.id !== 'pandemic') && (MODE !== 'backtest' || !NOT_IN_2019.has(e.id)));
 }
 
 // ---------- One simulated future ----------
@@ -427,7 +499,7 @@ function simulateOne(pb, evs, rng, triggers) {
     let tot = 0;
     for (const k of SEGS) {
       base[k] *= 1 + pb.g[k] + 0.02 * gauss(rng);
-      tot += base[k] * Math.max(0.3, factor[k]);
+      tot += base[k] * Math.max(0.05, factor[k]);
     }
     totals.push(tot);
   }
@@ -465,6 +537,7 @@ function buildControls() {
   $('runs').value = String(S.runs);
   $('seed').value = S.seed;
   $('trig').checked = S.triggers;
+  $('tail').checked = S.tail;
   $('pestel').innerHTML = ''; $('players').innerHTML = ''; $('arch').innerHTML = '';
   ARENAS.forEach(ar => {
     const d = document.createElement('details');
@@ -487,6 +560,18 @@ $('pb').addEventListener('change', e => { S.playbook = e.target.value; $('pbdesc
 $('runs').addEventListener('change', e => { S.runs = +e.target.value; schedule(); });
 $('seed').addEventListener('change', e => { S.seed = Math.max(1, +e.target.value || 1); schedule(); });
 $('trig').addEventListener('change', e => { S.triggers = e.target.checked; schedule(); });
+$('tail').addEventListener('change', e => { S.tail = e.target.checked; schedule(); });
+document.querySelectorAll('input[name=mode]').forEach(r => r.addEventListener('change', e => setMode(e.target.value)));
+function setMode(m) {
+  MODE = m; START = MODES[m].start; YEARS = MODES[m].years; BASE_FY = MODES[m].base;
+  const bt = m === 'backtest';
+  $('pb').hidden = bt;
+  $('pbctl').querySelector('label').textContent = bt ? 'Disney playbook: 2019 plan' : 'Disney playbook';
+  $('pbdesc').textContent = bt ? PLAN_2019.desc : PLAYBOOKS.find(p => p.id === S.playbook).desc;
+  $('btcard').hidden = !bt; $('pbcard').hidden = bt;
+  $('leg-actual').hidden = !bt;
+  runAll();
+}
 $('runbtn').addEventListener('click', runAll);
 $('copycfg').addEventListener('click', async () => {
   const txt = JSON.stringify(S);
@@ -506,13 +591,33 @@ $('reset').addEventListener('click', () => { S = defaults(); buildControls(); ru
 // ---------- Run everything ----------
 function runAll() {
   const t0 = performance.now();
-  const pb = PLAYBOOKS.find(p => p.id === S.playbook);
+  const bt = MODE === 'backtest';
+  const pb = bt ? PLAN_2019 : PLAYBOOKS.find(p => p.id === S.playbook);
   const main = runSet(pb, S, S.triggers);
   const alt = runSet(pb, S, !S.triggers);
+  const end = BASE_FY + YEARS, mid = BASE_FY + MID();
+  $('t-med-k').textContent = `Median FY${end} segment OI`;
+  $('t-p10-k').textContent = `Bad case (10th percentile) FY${end}`;
+  $('t-below-k').textContent = `Futures below FY${BASE_FY} profit in FY${mid}`;
+  $('t-below-n').textContent = `Share of runs where FY${mid} OI is under ${fmtB(startTotal())}`;
+  $('leg-base').lastChild.textContent = `FY${BASE_FY} actual (${fmtB(startTotal())})`;
+  $('pb-sub').textContent = `FY${end} segment OI by playbook, same futures for each. Dot = median, whisker = 10th to 90th percentile. Robust playbooks keep the left whisker high.`;
+  $('fan-sub').textContent = bt
+    ? 'Total segment operating income, $B. Simulated from FY19 with only a 2019 view of the world, then compared with what Disney actually reported (dark line).'
+    : 'Total segment operating income, $B, fiscal years. Shaded band covers the middle 80% of simulated futures; the line is the median.';
+  if (bt) {
+    renderTiles(main, alt);
+    renderFan(main, pb);
+    renderBacktest(main);
+    renderThemes(main);
+    renderStory(main, pb);
+    $('status').textContent = `${(S.runs * 2).toLocaleString()} futures simulated in ${Math.round(performance.now() - t0)} ms`;
+    return;
+  }
   const comp = PLAYBOOKS.map(p => {
     const r = p.id === pb.id ? main : runSet(p, S, S.triggers);
     const fin = r.map(x => x.totals[YEARS]).sort((a, b) => a - b);
-    return { pb: p, p10: pct(fin, .1), p50: pct(fin, .5), p90: pct(fin, .9), below: r.filter(x => x.totals[5] < 19.72).length / r.length };
+    return { pb: p, p10: pct(fin, .1), p50: pct(fin, .5), p90: pct(fin, .9), below: r.filter(x => x.totals[MID()] < startTotal()).length / r.length };
   });
   renderTiles(main, alt);
   renderFan(main, pb);
@@ -527,10 +632,10 @@ function renderTiles(main, alt) {
   const finAlt = alt.map(x => x.totals[YEARS]).sort((a, b) => a - b);
   const med = pct(fin, .5), p10 = pct(fin, .1);
   $('t-med').textContent = fmtB(med);
-  $('t-med-n').textContent = `${med >= 19.72 ? '+' : ''}${((med / 19.72 - 1) * 100).toFixed(0)}% vs FY26`;
+  $('t-med-n').textContent = `${med >= startTotal() ? '+' : ''}${((med / startTotal() - 1) * 100).toFixed(0)}% vs FY${BASE_FY}`;
   $('t-p10').textContent = fmtB(p10);
-  $('t-p10-n').textContent = `${((p10 / 19.72 - 1) * 100).toFixed(0)}% vs FY26`;
-  const below = main.filter(x => x.totals[5] < 19.72).length / main.length;
+  $('t-p10-n').textContent = `${p10 >= startTotal() ? '+' : ''}${((p10 / startTotal() - 1) * 100).toFixed(0)}% vs FY${BASE_FY}`;
+  const below = main.filter(x => x.totals[MID()] < startTotal()).length / main.length;
   $('t-below').textContent = (below * 100).toFixed(0) + '%';
   const on = S.triggers ? p10 : pct(finAlt, .1), off = S.triggers ? pct(finAlt, .1) : p10;
   $('t-trig').textContent = (on - off >= 0 ? '+' : '−') + fmtB(Math.abs(on - off));
@@ -549,20 +654,21 @@ function niceTicks(lo, hi, n) {
 
 function renderFan(main, pb) {
   const svg = $('fan'); svg.innerHTML = '';
-  const W = 720, H = 300, L = 52, R = 70, T = 16, B = 34;
+  const W = 720, H = 300, L = 52, R = 104, T = 16, B = 34;
   const stats = [];
   for (let y = 0; y <= YEARS; y++) {
     const v = main.map(x => x.totals[y]).sort((a, b) => a - b);
     stats.push({ y, p10: pct(v, .1), p50: pct(v, .5), p90: pct(v, .9) });
   }
-  const lo = Math.min(...stats.map(s => s.p10), 19.72) * 0.92, hi = Math.max(...stats.map(s => s.p90)) * 1.04;
+  const actualVals = MODE === 'backtest' ? Object.values(ACTUAL) : [];
+  const lo = Math.min(...stats.map(s => s.p10), startTotal(), ...actualVals) * 0.92, hi = Math.max(...stats.map(s => s.p90), ...actualVals) * 1.04;
   const ticks = niceTicks(lo, hi, 5);
   const y0 = ticks[0], y1 = Math.max(hi, ticks.at(-1));
   const X = i => L + (i / YEARS) * (W - L - R), Y = v => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
   const css = getComputedStyle(document.documentElement);
   ticks.forEach(t => { el('line', { x1: L, x2: W - R, y1: Y(t), y2: Y(t), stroke: 'var(--rule)' }, svg); el('text', { x: L - 8, y: Y(t) + 4, 'text-anchor': 'end', 'font-size': 11, fill: 'var(--ink-3)' }, svg, '$' + t + 'B'); });
-  for (let i = 0; i <= YEARS; i += 2) el('text', { x: X(i), y: H - 12, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--ink-3)' }, svg, 'FY' + (26 + i));
-  el('line', { x1: L, x2: W - R, y1: Y(19.72), y2: Y(19.72), stroke: 'var(--ink-3)', 'stroke-dasharray': '3 4' }, svg);
+  for (let i = 0; i <= YEARS; i += 2) el('text', { x: X(i), y: H - 12, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--ink-3)' }, svg, 'FY' + (BASE_FY + i));
+  el('line', { x1: L, x2: W - R, y1: Y(startTotal()), y2: Y(startTotal()), stroke: 'var(--ink-3)', 'stroke-dasharray': '3 4' }, svg);
   let band = 'M' + stats.map(s => `${X(s.y)},${Y(s.p90)}`).join('L') + 'L' + stats.slice().reverse().map(s => `${X(s.y)},${Y(s.p10)}`).join('L') + 'Z';
   el('path', { d: band, fill: 'var(--band)' }, svg);
   el('path', { d: 'M' + stats.map(s => `${X(s.y)},${Y(s.p50)}`).join('L'), fill: 'none', stroke: 'var(--accent)', 'stroke-width': 2, 'stroke-linejoin': 'round' }, svg);
@@ -571,7 +677,14 @@ function renderFan(main, pb) {
   el('text', { x: X(YEARS) + 8, y: Y(last.p50) + 4, 'font-size': 12, 'font-weight': 600, fill: 'var(--ink)' }, svg, fmtB(last.p50));
   el('text', { x: X(YEARS) + 8, y: Y(last.p90) + 4, 'font-size': 11, fill: 'var(--ink-2)' }, svg, fmtB(last.p90));
   el('text', { x: X(YEARS) + 8, y: Y(last.p10) + 4, 'font-size': 11, fill: 'var(--ink-2)' }, svg, fmtB(last.p10));
-  $('fan-title').textContent = `The range of futures under ${pb.name.slice(3)}`;
+  $('fan-title').textContent = MODE === 'backtest' ? 'Backtest: the 2019 view of the future vs. what happened' : `The range of futures under ${pb.name.replace(/^[A-F]\. /, '')}`;
+  if (MODE === 'backtest') {
+    const pts = Object.keys(ACTUAL).map(Number).filter(fy => fy - BASE_FY <= YEARS).map(fy => [X(fy - BASE_FY), Y(ACTUAL[fy])]);
+    el('path', { d: 'M' + pts.map(p => p.join(',')).join('L'), fill: 'none', stroke: 'var(--ink)', 'stroke-width': 2, 'stroke-linejoin': 'round' }, svg);
+    pts.forEach(p => el('circle', { cx: p[0], cy: p[1], r: 3.5, fill: 'var(--ink)', stroke: 'var(--surface)', 'stroke-width': 1.5 }, svg));
+    const lastA = ACTUAL[BASE_FY + YEARS];
+    el('text', { x: X(YEARS) + 8, y: Y(lastA) - 8, 'font-size': 11, 'font-weight': 600, fill: 'var(--ink)' }, svg, 'Actual ' + fmtB(lastA));
+  }
   // hover
   const cross = el('line', { y1: T, y2: H - B, stroke: 'var(--ink-3)', 'stroke-width': 1, visibility: 'hidden' }, svg);
   const dot = el('circle', { r: 5, fill: 'var(--accent)', stroke: 'var(--surface)', 'stroke-width': 2, visibility: 'hidden' }, svg);
@@ -584,7 +697,8 @@ function renderFan(main, pb) {
     const s = stats[i];
     cross.setAttribute('x1', X(i)); cross.setAttribute('x2', X(i)); cross.setAttribute('visibility', 'visible');
     dot.setAttribute('cx', X(i)); dot.setAttribute('cy', Y(s.p50)); dot.setAttribute('visibility', 'visible');
-    tip.innerHTML = `<div><b>FY${26 + i}</b></div><div>90th pct <b>${fmtB(s.p90)}</b></div><div>Median <b>${fmtB(s.p50)}</b></div><div>10th pct <b>${fmtB(s.p10)}</b></div>`;
+    const act = MODE === 'backtest' ? ACTUAL[BASE_FY + i] : undefined;
+    tip.innerHTML = `<div><b>FY${BASE_FY + i}</b></div><div>90th pct <b>${fmtB(s.p90)}</b></div><div>Median <b>${fmtB(s.p50)}</b></div><div>10th pct <b>${fmtB(s.p10)}</b></div>` + (act !== undefined ? `<div>Actual <b>${fmtB(act)}</b> · ${ordinal(rankOf(main, i, act))} percentile</div>` : '');
     tip.style.display = 'block';
     const box = $('fanwrap').getBoundingClientRect();
     let left = ev.clientX - box.left + 14; if (left > box.width - 150) left -= 170;
@@ -598,11 +712,11 @@ function renderPlaybooks(comp, sel) {
   const svg = $('pbchart'); svg.innerHTML = '';
   const W = 430, rowH = 36, T = 10, L = 150, R = 20, B = 30, H = T + comp.length * rowH + B;
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  const lo = Math.min(...comp.map(c => c.p10), 19.72) * 0.95, hi = Math.max(...comp.map(c => c.p90)) * 1.03;
+  const lo = Math.min(...comp.map(c => c.p10), startTotal()) * 0.95, hi = Math.max(...comp.map(c => c.p90)) * 1.03;
   const ticks = niceTicks(lo, hi, 4); const x0 = ticks[0], x1 = Math.max(hi, ticks.at(-1));
   const X = v => L + (v - x0) / (x1 - x0) * (W - L - R);
   ticks.forEach(t => { el('line', { x1: X(t), x2: X(t), y1: T, y2: H - B, stroke: 'var(--rule)' }, svg); el('text', { x: X(t), y: H - 12, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--ink-3)' }, svg, '$' + t + 'B'); });
-  el('line', { x1: X(19.72), x2: X(19.72), y1: T, y2: H - B, stroke: 'var(--ink-3)', 'stroke-dasharray': '3 4' }, svg);
+  el('line', { x1: X(startTotal()), x2: X(startTotal()), y1: T, y2: H - B, stroke: 'var(--ink-3)', 'stroke-dasharray': '3 4' }, svg);
   const tip = $('pbtip');
   comp.forEach((c, i) => {
     const cy = T + i * rowH + rowH / 2, on = c.pb.id === sel.id, col = on ? 'var(--accent)' : 'var(--ink-3)';
@@ -611,7 +725,7 @@ function renderPlaybooks(comp, sel) {
     el('circle', { cx: X(c.p50), cy, r: on ? 6 : 5, fill: col, stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
     const hit = el('rect', { x: 0, y: cy - rowH / 2, width: W, height: rowH, fill: 'transparent' }, svg);
     hit.addEventListener('pointermove', ev => {
-      tip.innerHTML = `<div><b>${c.pb.name}</b></div><div>10th pct <b>${fmtB(c.p10)}</b> · median <b>${fmtB(c.p50)}</b> · 90th <b>${fmtB(c.p90)}</b></div><div>Below FY26 profit in FY31: <b>${(c.below * 100).toFixed(0)}%</b> of futures</div>`;
+      tip.innerHTML = `<div><b>${c.pb.name}</b></div><div>10th pct <b>${fmtB(c.p10)}</b> · median <b>${fmtB(c.p50)}</b> · 90th <b>${fmtB(c.p90)}</b></div><div>Below FY${BASE_FY} profit in FY${BASE_FY + MID()}: <b>${(c.below * 100).toFixed(0)}%</b> of futures</div>`;
       tip.style.display = 'block';
       const box = $('pbwrap').getBoundingClientRect();
       let left = ev.clientX - box.left + 14; if (left > box.width - 280) left = Math.max(0, left - 300);
@@ -621,6 +735,54 @@ function renderPlaybooks(comp, sel) {
     hit.addEventListener('click', () => { S.playbook = c.pb.id; $('pb').value = c.pb.id; $('pbdesc').textContent = c.pb.desc; runAll(); });
     hit.style.cursor = 'pointer';
   });
+}
+
+function rankOf(runs, yIdx, value) { return Math.round(100 * runs.filter(r => r.totals[yIdx] <= value).length / runs.length); }
+function ordinal(n) { const v = n % 100; return n + (v >= 11 && v <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'); }
+
+const SCORECARD = [
+  ['Pandemic-class shutdown', 'Tail event, 1.5% a year', 'Yes, FY20–FY21. COVID-19 closed the parks from March 2020; total segment OI fell 45% to $8.1B in FY20 and $7.8B in FY21.'],
+  ['Universal opens or expands a park near a Disney market', 'Yes', 'Yes, FY25. Epic Universe opened in Orlando in May 2025, and Disney cited it as a domestic attendance headwind.'],
+  ['Warner Bros. merges into a bigger studio rival', 'Yes', 'Yes, FY22. Discovery and WarnerMedia combined in April 2022.'],
+  ['Paramount buys or is bought', 'Yes', 'Yes, FY25. Skydance completed its merger with Paramount in August 2025.'],
+  ['Amazon outbids for a sports package', 'Yes', 'Yes. Exclusive Thursday Night Football from 2022, and an NBA package from the 2025–26 season.'],
+  ['Netflix wins a top-tier live sports package', 'Yes', 'Yes, FY25. NFL Christmas Day games in 2024 and WWE Raw from January 2025.'],
+  ['YouTube carriage fight or sports package', 'Yes', 'Yes. NFL Sunday Ticket moved to YouTube in 2023; the YouTube TV blackout cost Sports about $110M in Q1 FY26.'],
+  ['NBA shifts games to big-tech partners', 'Yes', 'Yes, FY24. The 2024 NBA deals split games across ESPN/ABC, NBC and Amazon.'],
+  ['Asia parks slump', 'Yes', 'Yes, FY25–FY26. Shanghai and Hong Kong weakened, with pressure expected into FY27.'],
+  ['Major Florida hurricane season', 'Yes', 'Yes. Hurricane Ian in 2022 and two hurricanes in Q1 FY25 hit results.'],
+  ['US recession (outside the pandemic)', 'Yes', 'No. Apart from the 2020 COVID shock, no US recession hit Disney in FY19–FY26.'],
+  ['AI-generated content floods supply', 'No, not knowable in 2019', 'Emerging. OpenAI previewed Sora in February 2024; not yet visible in Disney\'s results.'],
+];
+
+function renderBacktest(main) {
+  $('bt-rows').innerHTML = SCORECARD.map(([t, d, h]) => {
+    const yes = h.startsWith('Yes'), no = h.startsWith('No');
+    const pill = yes ? '<span class="pill crit">Happened</span>' : no ? '<span class="pill neutral">Did not</span>' : '<span class="pill neutral">Emerging</span>';
+    return `<tr><td>${t}</td><td>${d}</td><td>${pill} ${h.replace(/^(Yes|No|Emerging)[,.]?\s*/, '')}</td></tr>`;
+  }).join('');
+  const trough = Math.min(...[1, 2].map(i => rankOf(main, i, ACTUAL[BASE_FY + i])));
+  const endRank = rankOf(main, YEARS, ACTUAL[BASE_FY + YEARS]);
+  const med = pct(main.map(r => r.totals[YEARS]).sort((a, b) => a - b), .5);
+  const listed = SCORECARD.filter(r => r[1] !== 'No, not knowable in 2019').length;
+  const happened = SCORECARD.filter(r => r[1] !== 'No, not knowable in 2019' && r[2].startsWith('Yes')).length;
+  $('bt-lessons').innerHTML = [
+    `<li><b>The deck had the right threats.</b> ${happened} of the ${listed} threats a 2019 team could have listed happened by FY26. Most were rivals moving into sports rights and distribution.</li>`,
+    S.tail
+      ? `<li><b>Tail events matter.</b> With a 1.5%-a-year pandemic-class event, the COVID trough lands at the ${ordinal(trough)} percentile of simulated futures. Turn the tail event off and it falls outside nearly every simulated future.</li>`
+      : `<li><b>Tail events matter.</b> Without a pandemic-class event, the COVID trough lands at the ${ordinal(trough)} percentile, outside nearly every simulated future. Turn the tail event back on to see the difference.</li>`,
+    `<li><b>The recovery outran the model.</b> Actual FY26 OI of ${fmtB(ACTUAL[26])} landed at the ${ordinal(endRank)} percentile (simulated median ${fmtB(med)}). The model has no rebound dynamics and no streaming turnaround, from roughly $4B of DTC losses in FY22 to profit. Next fix: model streaming margin as its own variable.</li>`,
+  ].join('');
+  $('t-med-k').textContent = `Where actual FY${BASE_FY + YEARS} landed`;
+  $('t-med').textContent = ordinal(endRank) + ' pct';
+  $('t-med-n').textContent = `Actual ${fmtB(ACTUAL[BASE_FY + YEARS])} vs simulated median ${fmtB(med)}`;
+  $('t-p10-k').textContent = 'Where the COVID trough landed';
+  $('t-p10').textContent = ordinal(trough) + ' pct';
+  $('t-p10-n').textContent = `Actual FY21 ${fmtB(ACTUAL[21])} vs a ${fmtB(startTotal())} FY19 start`;
+  const deep = main.filter(r => Math.min(...r.totals) <= 0.6 * startTotal()).length / main.length;
+  $('t-below-k').textContent = 'Futures with a COVID-scale drop';
+  $('t-below').textContent = (deep * 100).toFixed(0) + '%';
+  $('t-below-n').textContent = 'Share of runs where OI fell 40% or more below FY19';
 }
 
 let SHOW_ALL = false, LAST = null;
@@ -655,10 +817,10 @@ function renderThemes(main) {
 function renderStory(main, pb) {
   const sorted = main.map((r, i) => ({ r, f: r.totals[YEARS] })).sort((a, b) => a.f - b.f);
   const pick = sorted[Math.floor(sorted.length * 0.1)].r;
-  $('story-sub').textContent = `The run at the 10th percentile under ${pb.name.slice(3)}: FY36 segment OI of ${fmtB(pick.totals[YEARS])}.`;
+  $('story-sub').textContent = `The run at the 10th percentile under the ${pb.name.replace(/^[A-F]\. /, '')}: FY${BASE_FY + YEARS} segment OI of ${fmtB(pick.totals[YEARS])}.`;
   const items = pick.log.map(l => {
     const neg = Object.values(l.e.imp).some(v => v < 0);
-    return `<li><span class="yr">FY${26 + l.y}</span><span>${neg ? '' : '<span class="pill good">Upside</span> '}${l.e.label} <span style="color:var(--ink-3)">· ${l.e.srcName}</span></span></li>`;
+    return `<li><span class="yr">FY${BASE_FY + l.y}</span><span>${neg ? '' : '<span class="pill good">Upside</span> '}${l.e.label} <span style="color:var(--ink-3)">· ${l.e.srcName}</span></span></li>`;
   });
   $('story').innerHTML = items.length ? items.join('') : '<li><span class="yr">–</span><span>No shocks in this run.</span></li>';
 }

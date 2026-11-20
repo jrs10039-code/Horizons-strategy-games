@@ -4,11 +4,12 @@
     python run.py --runs 5000 --seed 7
     python run.py --playbook D --no-triggers
     python run.py --config my_assumptions.json
+    python run.py --backtest           # start in FY19, compare with what actually happened
 """
 
 import argparse
 
-from engine.simulator import load_config, run_set, summarize, themes, DEFAULT_CONFIG
+from engine.simulator import load_config, run_set, summarize, themes, backtest_config, percentile, DEFAULT_CONFIG
 
 
 def main() -> None:
@@ -18,6 +19,8 @@ def main() -> None:
     ap.add_argument("--runs", type=int, default=None)
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--no-triggers", action="store_true")
+    ap.add_argument("--no-tail", action="store_true", help="Drop the pandemic-class tail event")
+    ap.add_argument("--backtest", action="store_true", help="Run FY19-FY26 and compare with actuals")
     args = ap.parse_args()
 
     cfg = load_config(args.config)
@@ -29,6 +32,11 @@ def main() -> None:
     if args.playbook:
         settings["playbook"] = args.playbook
     settings["triggers"] = not args.no_triggers
+    settings["tail"] = not args.no_tail
+
+    if args.backtest:
+        backtest(cfg, settings)
+        return
 
     end_fy = cfg["start_fy"] + cfg["years"]
     mid_fy = cfg["start_fy"] + cfg["years"] // 2
@@ -46,6 +54,23 @@ def main() -> None:
     print(f"\nCostliest events under {pb['name']} (median FY{end_fy % 100} OI, hit vs not hit)")
     for r in themes(cfg, runs, settings)[:10]:
         print(f"  {r['cost_when_hits_busd']:+6.1f}B  {r['event']}  ({r['source']})")
+    print()
+
+
+def backtest(cfg: dict, settings: dict) -> None:
+    bt = backtest_config(cfg)
+    actual = {int(k): v for k, v in cfg["backtest"]["actual_total_segment_oi_busd"].items()}
+    runs = run_set(bt, "P19", settings)
+    print(f"\nBacktest: {settings['runs']:,} futures from FY19 with a 2019 view of the world "
+          f"(tail event {'on' if settings['tail'] else 'off'})\n")
+    print(f"{'Year':<6}{'P10':>7}{'Median':>8}{'P90':>7}{'Actual':>8}   Actual percentile")
+    for y in range(bt["years"] + 1):
+        vals = [r.totals[y] for r in runs]
+        fy = bt["start_fy"] + y
+        a = actual[fy % 100]
+        rank = 100 * sum(v <= a for v in vals) / len(vals)
+        print(f"FY{fy % 100:<4}{percentile(vals, .1):>7.1f}{percentile(vals, .5):>8.1f}{percentile(vals, .9):>7.1f}"
+              f"{a:>8.1f}   {rank:>5.0f}")
     print()
 
 

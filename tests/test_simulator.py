@@ -1,4 +1,4 @@
-from engine.simulator import load_config, run_set, summarize
+from engine.simulator import load_config, run_set, summarize, backtest_config
 
 
 def _settings(cfg, runs=300):
@@ -39,3 +39,18 @@ def test_no_shocks_means_pure_compounding():
     g = next(p for p in cfg["playbooks"] if p["id"] == "A")["g"]
     expected = sum(v * (1 + g[k]) ** cfg["years"] for k, v in cfg["start_segment_oi_busd"].items())
     assert abs(r.totals[-1] - expected) < 1e-9
+
+
+def test_no_shocks_test_disables_tail():
+    cfg = load_config()
+    assert any(e["id"] == "pandemic" for e in cfg["pestel_events"])
+
+
+def test_backtest_starts_at_fy19_and_excludes_ai():
+    cfg = load_config()
+    bt = backtest_config(cfg)
+    s = _settings(cfg, runs=50)
+    runs = run_set(bt, "P19", s)
+    assert abs(runs[0].totals[0] - 14.85) < 1e-9
+    assert len(runs[0].totals) == 8
+    assert all("aiflood" not in r.first_seen and "openai" not in r.first_seen for r in runs)

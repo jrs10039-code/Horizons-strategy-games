@@ -50,6 +50,15 @@ class Run:
     log: list[tuple[int, Event]] = field(default_factory=list)
 
 
+def backtest_config(cfg: dict) -> dict:
+    """Return a copy of cfg set up for the FY19-FY26 backtest."""
+    bt = cfg["backtest"]
+    out = dict(cfg)
+    out.update(start_fy=bt["start_fy"], start_segment_oi_busd=bt["start_segment_oi_busd"],
+               years=bt["years"], playbooks=[bt["playbook"]], _excluded=set(bt["excluded_events"]))
+    return out
+
+
 def build_events(cfg: dict, settings: dict) -> list[Event]:
     """Turn the assumptions plus slider settings into annual probabilities."""
     names = {c["id"]: c["name"] for c in cfg["pestel_categories"]}
@@ -67,7 +76,10 @@ def build_events(cfg: dict, settings: dict) -> list[Event]:
         r = settings["archetype_arrival_pct"][a["id"]]
         events.append(Event(a["id"], a["label"], "Startup: " + a["name"], r / 100,
                             a["imp"], cfg["years"], a["tag"], once=True))
-    return events
+    excluded = set(cfg.get("_excluded", ()))
+    if not settings.get("tail", True):
+        excluded.add("pandemic")
+    return [e for e in events if e.id not in excluded]
 
 
 def simulate_one(cfg: dict, playbook: dict, events: list[Event],
@@ -102,7 +114,7 @@ def simulate_one(cfg: dict, playbook: dict, events: list[Event],
         total = 0.0
         for k in SEGMENTS:
             base[k] *= 1 + playbook["g"][k] + cfg["noise_sd"] * rng.gauss(0, 1)
-            total += base[k] * max(0.3, factor[k])
+            total += base[k] * max(cfg.get("segment_floor", 0.05), factor[k])
         run.totals.append(total)
     return run
 

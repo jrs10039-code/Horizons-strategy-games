@@ -10,6 +10,7 @@
 
 - **Which playbook holds up?** Six Disney playbooks run against the *same* simulated futures, so the comparison is fair. Robust playbooks keep the bad case (10th percentile) high, not just the median.
 - **What should we watch?** Each event is ranked by what it costs when it hits. The costliest ones become **signposts**: observable signals worth monitoring.
+- **Would it have worked before?** Backtest mode starts in FY19 with only a 2019 view of the world and compares the simulated futures with what Disney actually reported through FY26. Results are in [docs/methodology.md](docs/methodology.md#5-backtest-fy19-to-fy26).
 - **Does early warning pay?** With triggers on, Disney responds after the first hit of a threat type, and later hits land softer. The simulator measures how much that protects the bad case.
 
 ## How the model works
@@ -34,11 +35,13 @@ Every number lives in [`config/assumptions.json`](config/assumptions.json). Disa
 | `run.py` | Command-line runner: playbook comparison plus the costliest events. |
 | `config/assumptions.json` | Every assumption: players, events, impacts, probabilities, playbooks. |
 | `docs/competitors.md` | The 109-company roster by arena and tier, with each one's threatening move. |
+| `docs/methodology.md` | Mechanics, calibration, backtest results and known limits. |
 | `tests/` | Checks for reproducibility, the starting point, trigger value, and pure compounding. |
 
 ```bash
 python run.py                          # default assumptions, 1,000 futures per playbook
 python run.py --runs 5000 --playbook D
+python run.py --backtest               # FY19 start, compared with actuals
 python -m pytest tests
 ```
 
@@ -60,6 +63,7 @@ No dependencies beyond Python 3.9+ (pytest for the tests).
 
 ## Roadmap
 
-- [ ] **2019 backtest:** start from FY2019 inputs only, and check whether the sim surfaces the risks that actually hit (streaming losses, linear decline, sports-rights inflation, Epic Universe, Asia weakness).
+- [x] **2019 backtest:** 10 of 11 listed threats happened; the COVID trough lands at the 2nd–4th percentile with a tail event; the recovery outran the model.
+- [ ] Streaming margin as its own variable, plus rebound dynamics after shocks (the main backtest miss)
 - [ ] Disney M&A moves and a balance sheet (cash and debt limits on moves)
 - [ ] Phase 2 monitoring pilot

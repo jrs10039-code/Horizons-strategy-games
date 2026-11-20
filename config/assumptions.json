@@ -9,6 +9,51 @@
   "impact_scale": 1.5,
   "noise_sd": 0.02,
   "trigger_mitigation": 0.7,
+  "segment_floor": 0.05,
+  "backtest": {
+    "start_fy": 2019,
+    "start_segment_oi_busd": {
+      "exp": 6.76,
+      "ent": 5.09,
+      "spt": 3
+    },
+    "years": 7,
+    "actual_total_segment_oi_busd": {
+      "19": 14.85,
+      "20": 8.11,
+      "21": 7.77,
+      "22": 12.12,
+      "23": 12.86,
+      "24": 15.6,
+      "25": 17.6,
+      "26": 19.7
+    },
+    "excluded_events": [
+      "aiflood",
+      "aicopy",
+      "aistudio",
+      "aimedia",
+      "openai",
+      "runway",
+      "luma",
+      "characterai",
+      "netflixhouse",
+      "qiddiya",
+      "cosm"
+    ],
+    "playbook": {
+      "id": "P19",
+      "name": "2019 plan",
+      "desc": "As of late 2019: parks growth, heavy Disney+ investment, slow linear decline. Draft growth assumptions.",
+      "g": {
+        "exp": 0.06,
+        "ent": 0.03,
+        "spt": 0.02
+      },
+      "sens": {}
+    },
+    "notes": "FY19 total $14.85B as recast in the FY20 release. Sports split is an approximation (ESPN not broken out in FY19)."
+  },
   "tiers": {
     "1": {
       "p": 0.09,
@@ -252,6 +297,19 @@
       },
       "dur": 5,
       "tag": "physai"
+    },
+    {
+      "id": "pandemic",
+      "src": "En",
+      "label": "Pandemic-class shutdown closes parks and halts production",
+      "p": 0.015,
+      "imp": {
+        "exp": -0.6,
+        "ent": -0.12,
+        "spt": -0.2
+      },
+      "dur": 2,
+      "tag": "pandemic"
     },
     {
       "id": "hurricane",
@@ -1765,6 +1823,7 @@
     "runs": 1000,
     "seed": 2026,
     "triggers": true,
+    "tail": true,
     "pestel_weights": {
       "P": 3,
       "E": 3,
