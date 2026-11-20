@@ -1,10 +1,12 @@
 # Example results
 
-Default assumptions, 1,000 futures, seed 2026, Current course strategy unless noted. "Profit" means total segment operating income. Every number comes from draft assumptions. These are examples of what the tool produces, not forecasts.
+Default assumptions, 1,000 futures, seed 2026, Current course strategy unless noted. "Profit" means total segment operating income. Results are from the site; the Python engine reports 2036 profit and differs slightly. Every number comes from draft assumptions. These are examples of what the tool produces, not forecasts.
 
 ## The headline
 
-> Under Current course, Disney's profit most likely grows from $19.7B to **$26.8B** by fiscal 2036. In a bad decade (10th percentile) it reaches only **$23.3B**. Three low-cost actions address **50% of the serious threats** and lift the bad decade to **$24.7B**.
+> Under Current course, Disney most likely earns **$219B** of profit over the next ten years, with annual profit growing from $19.7B to $26.8B by 2036. In a bad decade (10th percentile) it earns only **$197B**, about what it would make if profit stayed flat. Three low-cost actions address **50% of the serious threats** and add **$11B** to the bad decade.
+
+**The yardstick is ten-year total profit.** It counts the bad years along the way, not just where Disney ends up in 2036. That matters: the bad decade below is a pandemic future that rebounds to $29.0B a year by 2036, higher than the typical future. But it lost two years of park profit getting there, the way COVID did.
 
 ## The thesis: three low-cost actions
 
@@ -20,7 +22,7 @@ The three actions:
 
 - **Cover** 50% of serious threats and 68% of their damage.
 - **Re-simulated** on the same 1,000 futures with the actions in place, they avoid 18% of all threat damage.
-- **Lift** the bad decade from $23.3B to $24.7B, and the most likely outcome from $26.8B to $27.7B.
+- **Lift** the bad decade's ten-year profit from $197B to $209B, and the most likely from $219B to $226B.
 
 **It holds up.** The same three actions come out on top under all six strategies and across five different random seeds. Coverage is 50–53% in every case.
 
@@ -49,29 +51,35 @@ Share of futures where the threat is among that future's five costliest:
 
 ## Three individual futures
 
-| Future | FY36 profit | Five costliest threats ($B of profit lost over the decade) |
-| --- | --- | --- |
-| Bad decade (10th pct) | $23.3B | Recession (7.7) · Personalized AI media (4.7) · AI content flood (3.5) · Gen Alpha leaves long-form (3.3) · Immersive venues (3.3) |
-| Typical (median) | $26.8B | Recession (5.5) · Florida hurricane season (4.3) · AI content flood (2.4) · Personalized AI media (2.3) · AI copyright ruling (2.3) |
-| Good decade (90th pct) | $29.4B | Recession (4.0) · Gen Alpha leaves long-form (3.1) · Extreme heat (2.5) · Universal park opening (1.8) · Creator-led franchise (1.7) |
+Ranked by ten-year profit.
+
+| Future | Ten-year profit | 2036 profit | Five costliest threats ($B of profit lost over the decade) |
+| --- | --- | --- | --- |
+| Bad decade (10th pct) | $197B | $29.0B | Pandemic-class shutdown (25.9) · Recession (11.0) · Personalized AI media (5.8) · Royal Caribbean mega-ships (3.9) · Gen Alpha leaves long-form (2.4) |
+| Typical (median) | $219B | $26.8B | Personalized AI media (7.9) · Recession (7.5) · Florida hurricane season (3.5) · AI-native studio (2.7) · Universal park opening (1.7) |
+| Good decade (90th pct) | $234B | $25.9B | AI-native studio (7.0) · Recession (2.9) · AI copyright ruling (2.6) · Rate spike (2.4) · Asia slump (1.9) |
+
+All three faced 16 serious threats. What separated them was how hard the threats hit ($70B vs. $42B vs. $34B of profit lost), not how many there were.
 
 ## Strategy comparison
 
+Ten-year profit, fiscal 2027–2036 (site, seed 2026):
+
 | Strategy | Bad decade | Most likely | Good decade |
 | --- | --- | --- | --- |
-| AI-forward | $23.6B | $26.8B | $29.5B |
-| Streaming-first | $23.6B | $26.9B | $29.8B |
-| Sports fortress | $23.5B | $26.8B | $29.3B |
-| Current course | $23.4B | $26.7B | $29.3B |
-| Experiences-heavy | $22.8B | $28.1B | $31.2B |
-| Asset-light pivot | $22.4B | $24.7B | $26.8B |
+| AI-forward | $199B | $221B | $235B |
+| Experiences-heavy | $198B | $222B | $239B |
+| Streaming-first | $198B | $220B | $237B |
+| Sports fortress | $198B | $220B | $234B |
+| Current course | $197B | $219B | $234B |
+| Asset-light pivot | $190B | $212B | $225B |
 
-These figures come from the Python engine. The site uses a different random-number generator, so its numbers differ by about $0.1B (for example $23.3B vs $23.4B for Current course).
+Across seeds these totals move by about $3B, so the top five are effectively tied on the bad decade. The robust findings:
 
-Differences under about $0.5B are within simulation noise (see [stress-test.md](stress-test.md)). The robust findings:
+- Asset-light trails on every measure.
+- Experiences-heavy has the most upside.
 
-- Experiences-heavy has the highest median and a weaker bad decade.
-- Asset-light has the lowest upside.
+On 2036 profit alone, Experiences-heavy looks riskier, but measured over the whole decade its bad case holds up as well as the others.
 
 ## Backtest (FY19 to FY26)
 

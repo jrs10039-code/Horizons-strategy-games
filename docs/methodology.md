@@ -6,7 +6,7 @@ How Horizons works, how it is calibrated, how it scores against history, and wha
 
 The model is an early warning system, not a forecast. It is built to answer three questions:
 
-1. **Which Disney strategy holds up across many futures?** A strategy that holds up still does reasonably well in its worst futures. The tool judges strategies on their bad-decade result (the 10th percentile: 1 in 10 futures end lower), not only on their typical result.
+1. **Which Disney strategy holds up across many futures?** A strategy that holds up still does reasonably well in its worst futures. The tool judges strategies on their bad-decade result (the 10th percentile: 1 in 10 futures do worse), not only on their typical result. The yardstick is ten-year total profit, so a decade with a deep dip and a strong rebound, like COVID, still counts as a bad decade.
 2. **Which threats cost the most when they hit?** Those become signposts to monitor.
 3. **Is early warning worth paying for?** This is measured as the lift in the bad case when Disney responds after the first hit of a threat type.
 

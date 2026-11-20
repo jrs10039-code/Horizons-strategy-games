@@ -666,6 +666,10 @@ const plain = name => name.replace(/^[A-F]\. /, '');
 const ordinal = n => { const v = n % 100; return n + (v >= 11 && v <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'); };
 const rankOf = (runs, y, value) => Math.round(100 * runs.filter(r => r.totals[y] <= value).length / runs.length);
 const finals = runs => runs.map(r => r.totals[YEARS]).sort((a, b) => a - b);
+// Ten-year total profit: the main yardstick. It counts the bad years, not just where Disney ends up.
+const decade = r => r.totals.slice(1).reduce((a, v) => a + v, 0);
+const decades = runs => runs.map(decade).sort((a, b) => a - b);
+const fmtT = v => '$' + Math.round(v) + 'B';
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const TAG_NAMES = {
   econ: 'Recession and interest rates', ai: 'AI disruption of content', attention: 'Competition for kids\' and young adults\' time',
@@ -829,11 +833,11 @@ function drawStrategies(comp, sel) {
   const svg = $('pbchart'); svg.innerHTML = '';
   const W = 640, rowH = 42, T = 10, L = 170, R = 24, B = 32, H = T + comp.length * rowH + B;
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  const lo = Math.min(...comp.map(c => c.p10), startTotal()) * 0.95, hi = Math.max(...comp.map(c => c.p90)) * 1.03;
+  const flat = startTotal() * YEARS; const lo = Math.min(...comp.map(c => c.p10), flat) * 0.97, hi = Math.max(...comp.map(c => c.p90)) * 1.02;
   const ticks = niceTicks(lo, hi, 5), x0 = ticks[0], x1 = Math.max(hi, ticks.at(-1));
   const X = v => L + (v - x0) / (x1 - x0) * (W - L - R);
   ticks.forEach(t => { el('line', { x1: X(t), x2: X(t), y1: T, y2: H - B, stroke: 'var(--rule)' }, svg); el('text', { x: X(t), y: H - 10, 'text-anchor': 'middle', 'font-size': 12, fill: 'var(--ink-3)' }, svg, '$' + t + 'B'); });
-  el('line', { x1: X(startTotal()), x2: X(startTotal()), y1: T, y2: H - B, stroke: 'var(--ink-3)', 'stroke-dasharray': '3 4' }, svg);
+  el('line', { x1: X(flat), x2: X(flat), y1: T, y2: H - B, stroke: 'var(--ink-3)', 'stroke-dasharray': '3 4' }, svg);
   const tip = $('pbtip');
   comp.forEach((c, i) => {
     const cy = T + i * rowH + rowH / 2, on = c.pb.id === sel.id, col = on ? 'var(--navy)' : 'var(--ink-3)';
@@ -842,7 +846,7 @@ function drawStrategies(comp, sel) {
     el('circle', { cx: X(c.p50), cy, r: on ? 7 : 5.5, fill: col, stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
     const hit = el('rect', { x: 0, y: cy - rowH / 2, width: W, height: rowH, fill: 'transparent', style: 'cursor:pointer' }, svg);
     hit.addEventListener('pointermove', ev => {
-      tip.innerHTML = `<b>${plain(c.pb.name)}</b><br>Bad decade: ${fmtB(c.p10)} · Most likely: ${fmtB(c.p50)} · Good decade: ${fmtB(c.p90)}<br>Below today's profit in FY${BASE_FY + MID()}: ${(c.below * 100).toFixed(0)}% of futures`;
+      tip.innerHTML = `<b>${plain(c.pb.name)}</b> · ten-year profit<br>Bad decade: ${fmtT(c.p10)} · Most likely: ${fmtT(c.p50)} · Good decade: ${fmtT(c.p90)}<br>Below today's profit in FY${BASE_FY + MID()}: ${(c.below * 100).toFixed(0)}% of futures`;
       tip.style.display = 'block';
       const box = $('pbwrap').getBoundingClientRect();
       let left = ev.clientX - box.left + 14; if (left > box.width - 360) left = Math.max(0, left - 380);
@@ -866,7 +870,7 @@ function runAll() {
   const A = analyzeRisks(main, evs);
   const mitRuns = runSet(pb, S, S.triggers, mitsFor(A.chosen));
   const comp = PLAYBOOKS.map(p => {
-    const r = p.id === pb.id ? main : runSet(p, S, S.triggers), f = finals(r);
+    const r = p.id === pb.id ? main : runSet(p, S, S.triggers), f = decades(r);
     return { pb: p, p10: pct(f, .1), p50: pct(f, .5), p90: pct(f, .9), below: r.filter(x => x.totals[MID()] < startTotal()).length / r.length };
   });
   renderForward(pb, main, alt, A, mitRuns, comp);
@@ -879,16 +883,17 @@ function runAll() {
 }
 
 function renderForward(pb, main, alt, A, mitRuns, comp) {
-  const f = finals(main), fm = finals(mitRuns), fa = finals(alt);
-  const p10 = pct(f, .1), p50 = pct(f, .5), p10m = pct(fm, .1), end = 2000 + BASE_FY + YEARS;
+  const f = decades(main), fm = decades(mitRuns), fa = decades(alt), fe = finals(main);
+  const p10 = pct(f, .1), p50 = pct(f, .5), p10m = pct(fm, .1), end = 2000 + BASE_FY + YEARS, endMed = pct(fe, .5);
+  const flat = startTotal() * YEARS;
   const dmgTot = r => r.reduce((a, x) => a + Object.values(x.dmg).reduce((s, v) => s + v, 0), 0);
   const avoided = 1 - dmgTot(mitRuns) / dmgTot(main);
   const names = A.chosen.map(m => m.title.charAt(0).toLowerCase() + m.title.slice(1));
   const n = main.length;
 
-  $('answer').innerHTML = `Under <b>${esc(plain(pb.name))}</b>, Disney's profit most likely grows from ${fmtB(startTotal())} to <b>${fmtB(p50)}</b> by fiscal ${end}. In a bad decade it reaches only <b>${fmtB(p10)}</b>. Three low-cost actions address <b>${(A.coverCount * 100).toFixed(0)}% of the serious threats</b> and lift the bad decade to <b>${fmtB(p10m)}</b>.`;
+  $('answer').innerHTML = `Under <b>${esc(plain(pb.name))}</b>, Disney most likely earns <b>${fmtT(p50)}</b> of profit over the next ten years, with annual profit growing from ${fmtB(startTotal())} to ${fmtB(endMed)} by ${end}. In a bad decade it earns only <b>${fmtT(p10)}</b>. Three low-cost actions address <b>${(A.coverCount * 100).toFixed(0)}% of the serious threats</b> and add <b>${fmtT(p10m - p10)}</b> to the bad decade.`;
 
-  $('thesis-sub').innerHTML = `Across ${n.toLocaleString()} futures, Disney faced ${A.inst.length.toLocaleString()} serious threats (about ${(A.inst.length / n).toFixed(0)} per future; ${(A.highShare * 100).toFixed(0)}% of them high-impact). These three actions address ${(A.coverCount * 100).toFixed(0)}% of those threats and ${(A.coverDmg * 100).toFixed(0)}% of their damage. Re-running the same futures with the actions in place avoids ${(avoided * 100).toFixed(0)}% of all threat damage and lifts the bad decade from ${fmtB(p10)} to ${fmtB(p10m)}. Each action's effect (a 25–35% cut to the threats it addresses) is a draft assumption.`;
+  $('thesis-sub').innerHTML = `Across ${n.toLocaleString()} futures, Disney faced ${A.inst.length.toLocaleString()} serious threats (about ${(A.inst.length / n).toFixed(0)} per future; ${(A.highShare * 100).toFixed(0)}% of them high-impact). These three actions address ${(A.coverCount * 100).toFixed(0)}% of those threats and ${(A.coverDmg * 100).toFixed(0)}% of their damage. Re-running the same futures with the actions in place avoids ${(avoided * 100).toFixed(0)}% of all threat damage and lifts the bad decade's ten-year profit from ${fmtT(p10)} to ${fmtT(p10m)}. Each action's effect (a 25–35% cut to the threats it addresses) is a draft assumption.`;
   const totalV = Object.values(A.byTag).reduce((a, x) => a + x.v, 0) || 1;
   $('actions').innerHTML = A.chosen.map((m, i) => {
     const share = m.tags.reduce((a, t) => a + (A.byTag[t]?.v || 0), 0) / totalV;
@@ -901,16 +906,16 @@ function renderForward(pb, main, alt, A, mitRuns, comp) {
     tile('Serious threats per future', (A.inst.length / n).toFixed(0), `$0.5B+ of lost profit each, over ${YEARS} years`, 'risk') +
     tile('High-impact share', (A.highShare * 100).toFixed(0) + '%', 'Threats costing $1.5B+ each', 'risk') +
     tile('Addressed by the 3 actions', (A.coverCount * 100).toFixed(0) + '%', `${(A.coverDmg * 100).toFixed(0)}% of serious threat damage`, 'goodt') +
-    tile('Bad decade, with actions', fmtB(p10m), `+${fmtB(p10m - p10)} vs ${fmtB(p10)} without`, 'goodt');
+    tile('Bad decade, with actions', fmtT(p10m), `Ten-year profit; +${fmtT(p10m - p10)} vs ${fmtT(p10)} without`, 'goodt');
 
   // three example futures
-  const order = main.map((r, i) => ({ i, v: r.totals[YEARS] })).sort((a, b) => a.v - b.v);
+  const order = main.map((r, i) => ({ i, v: decade(r) })).sort((a, b) => a.v - b.v);
   const picks = [['A bad decade', .1], ['A typical decade', .5], ['A good decade, which still took hits', .9]].map(([t, q]) => ({ t, i: order[Math.floor((n - 1) * q)].i }));
   $('futures').innerHTML = picks.map(p => {
     const r = main[p.i], top = A.perRun[p.i].slice(0, 5);
     const lost = Object.values(r.dmg).reduce((a, v) => a + v, 0);
     const serious = Object.values(r.dmg).filter(v => v >= MED).length;
-    return `<div class="future"><h3>${p.t}</h3><div class="res">Fiscal ${end} profit: <b>${fmtB(r.totals[YEARS])}</b> · ${serious} serious threats · ${fmtB(lost)} of profit lost over the decade</div><ol>${top.map(x => {
+    return `<div class="future"><h3>${p.t}</h3><div class="res">Ten-year profit <b>${fmtT(decade(r))}</b> · ${end} profit ${fmtB(r.totals[YEARS])} · ${serious} serious threats · ${fmtT(lost)} lost to threats</div><ol>${top.map(x => {
       const m = mitFor(x.e.tag);
       return `<li>${esc(x.e.label)} <span class="note">· ${fmtB(x.v)} lost</span><span class="fix">${m ? '→ ' + esc(m.title) : '→ No low-cost fix; monitor'}</span></li>`;
     }).join('') || '<li>No serious threats.</li>'}</ol></div>`;
@@ -930,23 +935,23 @@ function renderForward(pb, main, alt, A, mitRuns, comp) {
   const below = main.filter(x => x.totals[MID()] < startTotal()).length / n;
   const p10a = pct(fa, .1), on = S.triggers ? p10 : p10a, off = S.triggers ? p10a : p10;
   $('outlook-tiles').innerHTML =
-    tile(`Most likely, fiscal ${end}`, fmtB(p50), `${p50 >= startTotal() ? '+' : ''}${((p50 / startTotal() - 1) * 100).toFixed(0)}% vs ${fmtB(startTotal())} today`, 'base') +
-    tile(`Bad decade, fiscal ${end}`, fmtB(p10), '1 in 10 futures end lower', 'risk') +
-    tile(`Below today's profit in fiscal ${2000 + BASE_FY + MID()}`, (below * 100).toFixed(0) + '%', 'Share of futures', 'risk') +
-    tile('Value of learning as it goes', (on - off >= 0 ? '+' : '−') + fmtB(Math.abs(on - off)), 'Bad decade, Disney adapting vs not', 'goodt');
+    tile('Ten-year profit, most likely', fmtT(p50), `vs ${fmtT(flat)} if profit stayed flat`, 'base') +
+    tile('Ten-year profit, bad decade', fmtT(p10), '1 in 10 futures earn less', 'risk') +
+    tile(`Annual profit in ${end}, most likely`, fmtB(endMed), `${(below * 100).toFixed(0)}% of futures dip below today in ${2000 + BASE_FY + MID()}`, 'base') +
+    tile('Value of learning as it goes', (on - off >= 0 ? '+' : '−') + fmtT(Math.abs(on - off)), 'Bad decade, Disney adapting vs not', 'goodt');
   $('fan-title').textContent = `Disney's profit under ${plain(pb.name)}, fiscal ${2000 + BASE_FY}–${end}`;
   $('fan-sub').textContent = 'Total segment operating income, $B. The shaded band holds the middle 80% of the 1,000 futures; the line is the most likely path. Hover to see each year.';
   $('leg-base').lastChild.textContent = `Today (${fmtB(startTotal())})`;
   drawFan('fan', 'fantip', 'fanwrap', main, null);
   const pick = main[order[Math.floor((n - 1) * .1)].i];
-  $('story-sub').textContent = `The future at the 10th percentile under ${plain(pb.name)}, ending at ${fmtB(pick.totals[YEARS])} in fiscal ${end}. Every event that hit, in order.`;
+  $('story-sub').textContent = `The future at the 10th percentile of ten-year profit under ${plain(pb.name)}: ${fmtT(decade(pick))} over the decade, ending at ${fmtB(pick.totals[YEARS])} in ${end}. Every event that hit, in order.`;
   $('story').innerHTML = pick.log.map(l => {
     const up = Object.values(l.e.imp).some(v => v > 0);
     return `<li><span class="yr">FY${BASE_FY + l.y}</span><span>${up ? '<span class="pill good">Upside</span> ' : ''}${esc(l.e.label)} <span class="note">· ${esc(l.e.srcName)}</span></span></li>`;
   }).join('') || '<li><span class="yr">–</span><span>No events in this future.</span></li>';
 
   // strategies
-  $('pb-sub').textContent = `Each strategy runs against the same 1,000 futures, so the comparison is fair. The dot is the most likely fiscal ${end} profit; the line runs from a bad decade to a good one. A strategy that holds up keeps the left end of its line high. Differences smaller than about $0.5B are within simulation noise (they shift when you change the random seed).`;
+  $('pb-sub').textContent = `Ten-year profit, fiscal ${2000 + BASE_FY + 1}–${end}. Each strategy runs against the same 1,000 futures, so the comparison is fair. The dot is the most likely total; the line runs from a bad decade to a good one. A strategy that holds up keeps the left end of its line high. The dashed line is ${fmtT(flat)}, today's profit held flat for ten years. Differences smaller than about $3B are within simulation noise (they shift when you change the random seed).`;
   drawStrategies(comp, pb);
 }
 
