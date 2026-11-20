@@ -13,7 +13,7 @@ from engine.simulator import load_config, run_set, summarize, themes, backtest_c
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Strategy war game: Monte Carlo of Disney vs. competitors")
+    ap = argparse.ArgumentParser(description="Horizons: Monte Carlo of Disney vs. competitors")
     ap.add_argument("--config", default=str(DEFAULT_CONFIG))
     ap.add_argument("--playbook", default=None, help="Playbook id for the themes table (A-F)")
     ap.add_argument("--runs", type=int, default=None)

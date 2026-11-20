@@ -1,8 +1,8 @@
-<p align="center"><a href="https://jrs10039-code.github.io/strategy-war-game/"><img src="docs/img/banner.jpg" alt="Disney Strategy War Game" width="100%"></a></p>
+<p align="center"><a href="https://jrs10039-code.github.io/strategy-war-game/"><img src="docs/img/banner.jpg" alt="Horizons: a strategic early warning system for Disney" width="100%"></a></p>
 
 <p align="center"><a href="https://jrs10039-code.github.io/strategy-war-game/"><img src="docs/img/launch.png" alt="Launch the simulator" height="56"></a></p>
 
-<p align="center"><b>Runs in your browser. No login, no install.</b><br>Prototype by Jake Schmidt · November 2026 · Illustrative draft assumptions, not a forecast</p>
+<p align="center"><b>Runs in your browser. No login, no install.</b><br><b>Horizons</b> is a prototype by Jake Schmidt · November 2026<br><sub>Named for the EPCOT attraction (1983–1999) that showed guests possible futures and let them choose their ending.</sub><br> · Illustrative draft assumptions, not a forecast</p>
 
 ---
 

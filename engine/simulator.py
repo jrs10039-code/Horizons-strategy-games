@@ -1,4 +1,4 @@
-"""Monte Carlo war-game engine.
+"""Horizons: Monte Carlo war-gaming engine.
 
 Python reference implementation of the model behind the browser prototype
 (index.html). Same assumptions file, same logic. It is the piece a strategy

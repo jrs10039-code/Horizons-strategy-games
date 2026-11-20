@@ -1,6 +1,6 @@
 # Methodology
 
-How the Strategy War Game works, how it is calibrated, how it scores against history, and what it cannot do yet.
+How Horizons works, how it is calibrated, how it scores against history, and what it cannot do yet.
 
 ## 1. What it is for
 
