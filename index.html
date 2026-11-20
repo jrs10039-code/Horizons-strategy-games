@@ -169,6 +169,18 @@ details details summary { font-size: 14px; font-weight: 600; }
 .toggle input { margin-top: 4px; accent-color: var(--navy); }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
 textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 12px; min-height: 70px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.wr-controls { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin-top: 12px; }
+.wr-controls input { min-width: 200px; }
+.games { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+@media (max-width: 1000px) { .games { grid-template-columns: 1fr; } }
+.game h3 { font-size: 16px; margin: 0; }
+.game .res { font-size: 13px; color: var(--ink-2); margin: 2px 0 4px; }
+.game .wild { margin-bottom: 8px; }
+.game ol.turns { margin: 0; padding-left: 18px; display: grid; gap: 12px; font-size: 14px; }
+.rulings { margin: 6px 0 0; padding-left: 16px; display: grid; gap: 4px; font-size: 13px; }
+.insights { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+@media (max-width: 900px) { .insights { grid-template-columns: 1fr; } }
 [hidden] { display: none !important; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -196,7 +208,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
       <h2>How to use it</h2>
       <ol>
         <li><span><b>Pick a strategy</b>Choose one of Disney's six possible strategies in the menu below. Everything updates in about a second.</span></li>
-        <li><span><b>Read the tabs</b>Start with <i>Threats &amp; actions</i>. Then compare strategies, or check the model against what really happened from 2019 to 2026.</span></li>
+        <li><span><b>Read the tabs</b>Start with <i>Threats &amp; actions</i>. Then let AI agents play out the decade in the <i>AI War Room</i>, compare strategies, or check the model against 2019–2026.</span></li>
         <li><span><b>Change the assumptions</b>Disagree with a number? Open <i>Adjust assumptions</i> and move a slider, for one competitor or a whole industry.</span></li>
       </ol>
     </div>
@@ -218,6 +230,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
 
   <div class="tabs" role="tablist" aria-label="Results">
     <button role="tab" id="tab-threats" aria-controls="p-threats" aria-selected="true">Threats &amp; actions</button>
+    <button role="tab" id="tab-warroom" aria-controls="p-warroom" aria-selected="false">AI War Room</button>
     <button role="tab" id="tab-outlook" aria-controls="p-outlook" aria-selected="false">Profit outlook</button>
     <button role="tab" id="tab-strategies" aria-controls="p-strategies" aria-selected="false">Compare strategies</button>
     <button role="tab" id="tab-history" aria-controls="p-history" aria-selected="false">Test against history</button>
@@ -248,6 +261,36 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
         <div class="tablewrap"><table><thead><tr><th>Type of threat</th><th class="num">Share of damage</th><th>Covered by</th></tr></thead><tbody id="bytag"></tbody></table></div>
       </div>
     </div>
+  </section>
+
+
+  <!-- AI WAR ROOM -->
+  <section role="tabpanel" id="p-warroom" aria-labelledby="tab-warroom" hidden>
+    <div class="card">
+      <h2>AI War Room: let AI agents play out the decade</h2>
+      <p class="sub">Eight AI agents each play one company. Each turn covers two years: every agent makes its moves, reacting to the others and to world events, and an AI referee judges what each move does to Disney's profit. Five turns make one decade. Each click plays 3 games, and no two games go the same way. At the end, an AI analyst pulls out the insights a strategy team would not already have.</p>
+      <div class="chips" id="wr-players"></div>
+      <p class="note" id="wr-mode-note"></p>
+      <p class="note">Uses the strategy selected above and the shock settings in <i>Adjust assumptions</i>. Players run on Claude Haiku 5.5, the referee on Claude Sonnet 5.5, and the analyst on Claude Opus 5.5. A click takes about 3–6 minutes.</p>
+      <form class="wr-controls" id="wr-form">
+        <div class="field"><label for="wr-pass">Passcode</label><input id="wr-pass" type="password" autocomplete="off" placeholder="From Jake's email"></div>
+        <button type="submit" class="primary" id="wr-play">Play 3 games</button>
+        <button type="button" id="wr-stop" hidden>Stop</button>
+        <span class="note" id="wr-status" aria-live="polite"></span>
+      </form>
+    </div>
+    <div class="card" id="wr-insights-card" hidden>
+      <h2>What the AI analyst found</h2>
+      <p class="sub" id="wr-headline"></p>
+      <div class="insights" id="wr-insights"></div>
+    </div>
+    <div class="card" id="wr-results-card" hidden>
+      <h2>Three AI-played decades vs. 1,000 simulated ones</h2>
+      <p class="sub">Annual profit in each AI game, drawn over the simulator's range for the same strategy. Each AI game shows its ten-year profit and where that ranks among the simulator's 1,000 futures.</p>
+      <div class="chartwrap" id="wrwrap"><svg id="wrchart" viewBox="0 0 720 300" width="100%" role="img" aria-label="AI games compared with the simulator"></svg></div>
+      <div class="legend" id="wr-legend"></div>
+    </div>
+    <div class="games" id="wr-games"></div>
   </section>
 
   <!-- OUTLOOK -->
@@ -297,7 +340,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
   <footer>
     <p><b>Starting point:</b> fiscal 2026 segment operating income from Disney's FY26 Q4 8-K: Experiences $11.19B, Entertainment $5.44B, Sports $3.09B (total $19.7B). "Profit" on this page means total segment operating income.</p>
     <p><b>What the numbers are:</b> draft assumptions by Jake Schmidt, built from public information to be overwritten with a strategy team's own views and data. The tool shows ranges and recurring threats, not a forecast. Action effects are assumptions too.</p>
-    <p><b>No AI runs here.</b> The simulator is plain math in your browser: same settings, same answer. <span id="status"></span></p>
+    <p><b>Where AI runs:</b> only in the AI War Room tab, which calls Claude (Haiku 5.5 players, Sonnet 5.5 referee, Opus 5.5 analyst). The simulator itself is plain math in your browser: same settings, same answer. <span id="status"></span></p>
   </footer>
 </div>
 
@@ -756,7 +799,7 @@ $('loadcfg').addEventListener('click', () => {
 $('reset').addEventListener('click', () => { S = defaults(); buildControls(); runAll(); $('cfgmsg').textContent = 'Reset to the baseline assumptions.'; });
 
 // tabs (hash routed: #threats, #outlook, #strategies, #history)
-const TABS = ['threats', 'outlook', 'strategies', 'history'];
+const TABS = ['threats', 'warroom', 'outlook', 'strategies', 'history'];
 function showTab(name, focus) {
   if (!TABS.includes(name)) name = 'threats';
   TABS.forEach(t => { const on = t === name; $('tab-' + t).setAttribute('aria-selected', on); $('tab-' + t).tabIndex = on ? 0 : -1; $('p-' + t).hidden = !on; });
@@ -867,6 +910,7 @@ function runAll() {
   const pb = PLAYBOOKS.find(p => p.id === S.playbook);
   const evs = eventList(S);
   const main = runSet(pb, S, S.triggers), alt = runSet(pb, S, !S.triggers);
+  LAST_FORWARD = { main, pb };
   const A = analyzeRisks(main, evs);
   const mitRuns = runSet(pb, S, S.triggers, mitsFor(A.chosen));
   const comp = PLAYBOOKS.map(p => {
@@ -982,6 +1026,255 @@ function renderHistory(bt) {
     return `<tr><td>${esc(t)}</td><td>${pill} ${esc(h.replace(/^(Yes|No|Emerging)[,.]?\s*/, ''))}</td></tr>`;
   }).join('');
 }
+
+
+// ---------- AI War Room ----------
+// Two ways to reach Claude:
+//  1. On the Claude-hosted copy of this page: the viewer's own Claude account (the "sample" capability). Free for the viewer.
+//  2. On the public site: a private relay that holds Jake's API key (api/agent.js on Vercel), unlocked by a passcode.
+const AGENT_API = 'https://horizons-strategy-games.vercel.app/api/agent';
+const WR_MODELS = { player: 'claude-haiku-5-5', referee: 'claude-sonnet-5-5', analyst: 'claude-opus-5-5' };
+const WR_TIERS = { player: 'quick', referee: 'default', analyst: 'complex' };
+const WR_TURNS = 5, WR_SPAN = 2; // five two-year turns = one decade
+const WR_COLORS = ['var(--navy)', '#c2410c', '#0f766e'];
+
+const AI_PLAYERS = [
+  { id: 'disney', name: 'Disney', brief: 'You run Disney\'s corporate strategy. Segments: Experiences (parks, cruises, resorts; a ~$60B ten-year build plan), Entertainment (studios, Disney+ and Hulu streaming, TV networks, consumer products), Sports (ESPN, which the NFL owns 10% of). You hold a $1.5B stake in Epic Games. Protect and grow Disney\'s profit; respond to rivals and world events.' },
+  { id: 'netflix', name: 'Netflix', agg: () => S.players.netflixsports, brief: 'The largest global streamer, with strong cash flow. Growing in live events and sports (NFL Christmas games, WWE Raw) and testing physical experiences (Netflix House).' },
+  { id: 'comcast', name: 'Comcast / NBCUniversal', agg: () => S.players.universal, brief: 'Owns Universal parks (Epic Universe opened in Orlando in 2025), Peacock, NBC Sports, and the Universal and Illumination studios.' },
+  { id: 'alphabet', name: 'Alphabet / YouTube', agg: () => S.players.youtube, brief: 'YouTube is the most-watched TV platform among young viewers. It owns NFL Sunday Ticket, and YouTube TV carries Disney\'s channels (a 2025 blackout fight). Google builds leading AI video tools.' },
+  { id: 'amazon', name: 'Amazon', agg: () => S.players.amazon, brief: 'Prime Video is bundled with Prime. Holds Thursday Night Football and an NBA package, owns MGM, and has enormous cash and AI/cloud capabilities.' },
+  { id: 'gaming', name: 'Gaming platforms (Epic, Roblox, Sony)', agg: () => Math.round((S.players.epic + S.players.roblox + S.players.sony) / 3), brief: 'Where Gen Alpha spends its time. Epic (Fortnite; Disney is an investor), Roblox, and Sony (PlayStation, Crunchyroll anime). Act as an informal coalition or as rivals of each other, whichever serves you.' },
+  { id: 'leagues', name: 'Sports leagues (NFL, NBA, college)', agg: () => Math.round((S.players.nfl + S.players.nba + S.players.college) / 3), brief: 'Sell media rights to the highest bidder and increasingly go direct to fans and to big tech. The NFL owns 10% of ESPN.' },
+  { id: 'wildcard', name: 'Wildcard newcomer', agg: () => Math.round(Object.values(S.arch).reduce((a, v) => a + v, 0) / Object.values(S.arch).length * 5), brief: 'A company that does not exist today. On your first turn, invent it: give it a name and a one-line description (for example an AI-native studio, a creator-led franchise, a Gulf-funded experiences developer, a new kind of venue). Then play it to win.' },
+];
+const aggWord = v => v == null ? 'normal' : v >= 75 ? 'very aggressive' : v >= 55 ? 'aggressive' : v >= 35 ? 'measured' : 'cautious';
+
+let sampleFn = null, WR_MODE = 'api', wrAbort = null;
+const samplePromise = (window.claude && typeof window.claude.use === 'function')
+  ? window.claude.use('sample').then(s => s, () => null) : Promise.resolve(null);
+samplePromise.then(s => {
+  if (s) { sampleFn = s; WR_MODE = 'claude'; }
+  renderWarRoomMode();
+});
+
+function renderWarRoomMode() {
+  $('wr-players').innerHTML = AI_PLAYERS.map(p => `<span class="pill neutral">${esc(p.name)}</span>`).join(' ');
+  const claudeMode = WR_MODE === 'claude';
+  $('wr-pass').closest('.field').hidden = claudeMode;
+  $('wr-mode-note').textContent = claudeMode
+    ? 'Running on your own Claude account. The first game asks you to allow it; there are no API charges, but the games count toward your plan\'s usage limits.'
+    : 'Live games run on Jake\'s Claude API account. Enter the passcode from his email.';
+}
+
+// small concurrency limiter so we don't flood the API
+function limiter(n) {
+  let active = 0; const q = [];
+  const next = () => { if (active >= n || !q.length) return; active++; const { fn, ok, no } = q.shift(); fn().then(ok, no).finally(() => { active--; next(); }); };
+  return fn => new Promise((ok, no) => { q.push({ fn, ok, no }); next(); });
+}
+
+class StopError extends Error {}
+async function askClaude(role, system, prompt, signal) {
+  if (signal.aborted) throw new StopError('stopped');
+  if (WR_MODE === 'claude') {
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        const r = await sampleFn([{ role: 'user', content: system + '\n\n' + prompt }], { model: WR_MODELS[role], modelTier: WR_TIERS[role], signal, cache: false });
+        return r.text || '';
+      } catch (e) {
+        if (signal.aborted) throw new StopError('stopped');
+        if (e && e.code === 'rate_limited' && attempt < 3) { await new Promise(ok => setTimeout(ok, 4000 * (attempt + 1))); continue; }
+        if (e && e.code === 'not_granted') throw new Error('Claude access was not allowed. Click Play again and choose Allow.');
+        throw new Error((e && e.message) || 'Claude did not answer.');
+      }
+    }
+    throw new Error('Claude is busy. Try again in a minute.');
+  }
+  const passcode = $('wr-pass').value.trim();
+  const r = await fetch(AGENT_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passcode, role, system, prompt }), signal })
+    .catch(e => { if (signal.aborted) throw new StopError('stopped'); throw new Error('Live AI games are not switched on yet.'); });
+  const data = await r.json().catch(() => ({}));
+  if (r.status === 401) throw new Error('Wrong passcode.');
+  if (!r.ok) throw new Error(data.error || 'The AI server did not answer.');
+  return data.text || '';
+}
+function parseJSON(text) {
+  const m = String(text).match(/\{[\s\S]*\}/);
+  if (!m) return null;
+  try { return JSON.parse(m[0]); } catch { return null; }
+}
+const clampPct = (v, lo, hi) => Math.max(lo, Math.min(hi, Number(v) || 0));
+
+function rollWorldEvents(fromYear) {
+  // same PESTLE deck and odds as the simulator, but fresh dice every game
+  const out = [];
+  for (let y = fromYear; y < fromYear + WR_SPAN; y++) {
+    for (const e of EVENTS) {
+      const p = e.p * ((S.pestel[e.src] ?? 3) / 3);
+      if (e.id === 'pandemic' && !S.tail) continue;
+      if (Math.random() < p) out.push({ y, e });
+    }
+  }
+  return out;
+}
+
+async function playGame(g, pb, signal, run, onUpdate) {
+  const base = { ...MODES.forward.start };
+  const effects = []; // {from, until, imp:{exp,ent,spt}, label}
+  const totals = [startTotal()];
+  const turns = [];
+  let lastMoves = 'None yet: this is the first turn.';
+  let wildcardName = null;
+  for (let t = 0; t < WR_TURNS; t++) {
+    const y1 = 1 + t * WR_SPAN, fy1 = 2026 + y1, fy2 = fy1 + WR_SPAN - 1;
+    const world = rollWorldEvents(y1);
+    world.forEach(w => {
+      const sens = pb.sens[w.e.tag] ?? 1, imp = {};
+      for (const k in w.e.imp) imp[k] = w.e.imp[k] * IMPACT * sens;
+      effects.push({ from: w.y, until: w.y + w.e.dur - 1, imp, label: w.e.label, kind: 'world' });
+    });
+    const worldText = world.length ? world.map(w => `- FY${26 + w.y}: ${w.e.label}`).join('\n') : '- A quiet two years: no major shocks.';
+    const lastY = totals.length - 1;
+    const stateText = `Disney's total segment operating income last year: $${totals[lastY].toFixed(1)}B (it was $${startTotal().toFixed(1)}B in FY2026). Disney's stated strategy: ${pb.desc}`;
+    onUpdate({ g, t, phase: `Turn ${t + 1} of ${WR_TURNS}: players are deciding (FY${fy1}–${fy2})` });
+
+    const moves = await Promise.all(AI_PLAYERS.map(p => run(async () => {
+      const agg = p.agg ? aggWord(p.agg()) : null;
+      const system = `You are the head of strategy for ${p.name} in a business war game about the media, entertainment and experiences industry, fiscal years ${fy1}–${fy2}. Act in your own company's interest, not Disney's (unless you are Disney). Be specific and realistic, but willing to surprise: react to other players, form unexpected partnerships, make acquisitions, change prices, use new technology, or move outside your usual lane. Respond with JSON only.`;
+      const prompt = `Your company: ${p.brief}${wildcardName && p.id === 'wildcard' ? `\nYou already invented: ${wildcardName}. Keep playing it.` : ''}${agg ? `\nYour posture: ${agg}.` : ''}\n\nWorld events these two years:\n${worldText}\n\nWhat every player did last turn:\n${lastMoves}\n\nDisney today: ${stateText}\n\nMake 1 or 2 moves for these two years. Return exactly: {"moves":[{"move":"one specific sentence","why":"one short reason"}]${p.id === 'wildcard' && !wildcardName ? ',"company":"name: one-line description"' : ''}}`;
+      const out = parseJSON(await askClaude('player', system, prompt, signal)) || { moves: [] };
+      if (p.id === 'wildcard' && out.company && !wildcardName) wildcardName = String(out.company).slice(0, 160);
+      return { player: p.id === 'wildcard' && wildcardName ? wildcardName.split(':')[0] : p.name, moves: (out.moves || []).slice(0, 2).map(m => ({ move: String(m.move || '').slice(0, 300), why: String(m.why || '').slice(0, 200) })).filter(m => m.move) };
+    })));
+
+    onUpdate({ g, t, phase: `Turn ${t + 1} of ${WR_TURNS}: the referee is ruling` });
+    const moveText = moves.map(m => `${m.player}:\n` + (m.moves.map(x => `  - ${x.move} (${x.why})`).join('\n') || '  - (no move)')).join('\n');
+    const refSystem = 'You referee a business war game about Disney. Judge each move for plausibility given the company\'s money, assets and position. Decide its effect on Disney\'s segment operating income: Experiences (parks, cruises, resorts), Entertainment (studios, streaming, TV), Sports (ESPN). Effects are the percent change to that segment\'s annual operating income for each year the effect lasts. Calibration: most rival moves barely touch Disney (0 to -2); a strong move is -3 to -6; only a truly major move reaches -10. Disney\'s own good moves can be positive, up to +6, and can offset threats. Implausible moves get zero effect. Mark "novel": true only for moves a standard strategy deck would not already list. Respond with JSON only.';
+    const refPrompt = `Fiscal years ${fy1}–${fy2}.\n\nWorld events:\n${worldText}\n\n${stateText}\n\nMoves this turn:\n${moveText}\n\nReturn exactly: {"narrative":"2-3 plain sentences on how these two years unfolded","rulings":[{"player":"name","move":"short restatement","plausible":true,"exp":0,"ent":0,"spt":0,"years":3,"novel":false,"note":"one line on why"}]}. Give one ruling per move, in the same order.`;
+    const ref = parseJSON(await askClaude('referee', refSystem, refPrompt, signal)) || { narrative: 'The referee could not rule this turn.', rulings: [] };
+    const rulings = (ref.rulings || []).map(r => {
+      const years = Math.round(clampPct(r.years, 1, 6));
+      const imp = { exp: clampPct(r.exp, -15, 10) / 100, ent: clampPct(r.ent, -15, 10) / 100, spt: clampPct(r.spt, -15, 10) / 100 };
+      if (r.plausible === false) { imp.exp = imp.ent = imp.spt = 0; }
+      if (imp.exp || imp.ent || imp.spt) effects.push({ from: y1, until: y1 + years - 1, imp, label: r.move, kind: 'move', player: r.player });
+      return { player: String(r.player || ''), move: String(r.move || ''), plausible: r.plausible !== false, imp, years, novel: !!r.novel, note: String(r.note || '') };
+    });
+
+    for (let y = y1; y < y1 + WR_SPAN; y++) {
+      const f = { exp: 1, ent: 1, spt: 1 };
+      effects.forEach(e => { if (y >= e.from && y <= e.until) for (const k in e.imp) f[k] += e.imp[k]; });
+      let tot = 0;
+      for (const k of SEGS) { base[k] *= 1 + pb.g[k]; tot += base[k] * Math.max(0.05, f[k]); }
+      totals.push(tot);
+    }
+    lastMoves = moves.map(m => `${m.player}: ` + (m.moves.map(x => x.move).join(' / ') || 'no move')).join('\n');
+    turns.push({ fy1, fy2, world, moves, narrative: String(ref.narrative || ''), rulings });
+    onUpdate({ g, t, totals, turns, wildcardName });
+  }
+  return { totals, turns, wildcardName, decade: totals.slice(1).reduce((a, v) => a + v, 0) };
+}
+
+function impactText(imp) {
+  const parts = [];
+  const nm = { exp: 'Experiences', ent: 'Entertainment', spt: 'Sports' };
+  for (const k of ['exp', 'ent', 'spt']) if (imp[k]) parts.push(`${nm[k]} ${imp[k] > 0 ? '+' : ''}${Math.round(imp[k] * 100)}%`);
+  return parts.join(', ');
+}
+
+function renderGame(i, game, phase) {
+  const box = $('wr-game-' + i);
+  if (!box) return;
+  const total = game && game.totals && game.totals.length > WR_TURNS * WR_SPAN ? game.totals.slice(1).reduce((a, v) => a + v, 0) : null;
+  box.querySelector('.res').innerHTML = total != null ? `Ten-year profit <b>${fmtT(total)}</b> · 2036 profit ${fmtB(game.totals.at(-1))}` : esc(phase || 'Waiting…');
+  if (game && game.wildcardName) box.querySelector('.wild').textContent = 'Wildcard: ' + game.wildcardName;
+  if (!game || !game.turns) return;
+  box.querySelector('ol').innerHTML = game.turns.map(tn => {
+    const rul = tn.rulings.filter(r => r.plausible && (r.imp.exp || r.imp.ent || r.imp.spt || r.novel));
+    return `<li><b>FY${tn.fy1}–${tn.fy2}.</b> ${esc(tn.narrative)}
+      ${tn.world.length ? `<div class="note">World: ${tn.world.map(w => esc(w.e.label)).join('; ')}</div>` : ''}
+      ${rul.length ? `<ul class="rulings">${rul.map(r => `<li>${r.novel ? '<span class="pill warn">New</span> ' : ''}<b>${esc(r.player)}:</b> ${esc(r.move)}${impactText(r.imp) ? ` <span class="note">· Disney ${impactText(r.imp)} for ${r.years} yr${r.years > 1 ? 's' : ''}</span>` : ''}</li>`).join('')}</ul>` : ''}</li>`;
+  }).join('');
+}
+
+function drawWarRoomChart(games) {
+  const svg = $('wrchart'); svg.innerHTML = '';
+  const main = LAST_FORWARD.main;
+  const W = 720, H = 300, L = 54, R = 120, T = 16, B = 34, Y10 = 10;
+  const stats = [];
+  for (let y = 0; y <= Y10; y++) { const v = main.map(x => x.totals[y]).sort((a, b) => a - b); stats.push({ y, p10: pct(v, .1), p90: pct(v, .9) }); }
+  const all = games.flatMap(g => g.totals);
+  const lo = Math.min(...stats.map(s => s.p10), ...all) * 0.92, hi = Math.max(...stats.map(s => s.p90), ...all) * 1.04;
+  const ticks = niceTicks(lo, hi, 5), y0 = ticks[0], y1 = Math.max(hi, ticks.at(-1));
+  const X = i => L + (i / Y10) * (W - L - R), Y = v => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
+  ticks.forEach(t => { el('line', { x1: L, x2: W - R, y1: Y(t), y2: Y(t), stroke: 'var(--rule)' }, svg); el('text', { x: L - 8, y: Y(t) + 4, 'text-anchor': 'end', 'font-size': 12, fill: 'var(--ink-3)' }, svg, '$' + t + 'B'); });
+  for (let i = 0; i <= Y10; i += 2) el('text', { x: X(i), y: H - 10, 'text-anchor': 'middle', 'font-size': 12, fill: 'var(--ink-3)' }, svg, 'FY' + (26 + i));
+  el('path', { d: 'M' + stats.map(s => `${X(s.y)},${Y(s.p90)}`).join('L') + 'L' + stats.slice().reverse().map(s => `${X(s.y)},${Y(s.p10)}`).join('L') + 'Z', fill: 'var(--band)' }, svg);
+  const ranked = decades(main);
+  const labels = games.map((g, i) => ({ i, v: g.totals.at(-1) })).sort((a, b) => b.v - a.v);
+  let lastY = -99;
+  labels.forEach(l => { let yy = Y(l.v) + 4; if (yy - lastY < 16) yy = lastY + 16; lastY = yy; l.yy = yy; });
+  games.forEach((g, i) => {
+    el('path', { d: 'M' + g.totals.map((v, j) => `${X(j)},${Y(v)}`).join('L'), fill: 'none', stroke: WR_COLORS[i], 'stroke-width': 2.5, 'stroke-linejoin': 'round' }, svg);
+    el('circle', { cx: X(Y10), cy: Y(g.totals.at(-1)), r: 4, fill: WR_COLORS[i], stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
+    const l = labels.find(x => x.i === i);
+    el('text', { x: X(Y10) + 10, y: l.yy, 'font-size': 12, 'font-weight': 600, fill: 'var(--ink)' }, svg, `Game ${i + 1}: ${fmtB(g.totals.at(-1))}`);
+  });
+  $('wr-legend').innerHTML = '<span><i style="background:var(--band)"></i>Simulator: middle 80% of 1,000 futures</span>' + games.map((g, i) => {
+    const rank = Math.round(100 * ranked.filter(v => v <= g.decade).length / ranked.length);
+    return `<span><i style="background:${WR_COLORS[i]};height:3px;vertical-align:3px"></i>Game ${i + 1}: ${fmtT(g.decade)} over ten years (${ordinal(rank)} percentile)</span>`;
+  }).join('');
+}
+
+async function runAnalyst(games, pb, signal) {
+  const sim = decades(LAST_FORWARD.main);
+  const summary = games.map((g, i) => `GAME ${i + 1}: ten-year profit $${g.decade.toFixed(0)}B${g.wildcardName ? `; wildcard: ${g.wildcardName}` : ''}\n` + g.turns.map(tn =>
+    `FY${tn.fy1}-${tn.fy2}: ${tn.narrative}\n` + tn.rulings.filter(r => r.plausible && (r.novel || r.imp.exp || r.imp.ent || r.imp.spt)).map(r => `  * ${r.novel ? '[NEW] ' : ''}${r.player}: ${r.move} -> ${impactText(r.imp) || 'no direct effect'} for ${r.years}y`).join('\n')).join('\n')).join('\n\n');
+  const system = 'You are a sharp corporate strategy analyst advising Disney\'s corporate strategy team. Find insights the team would not already have. Skip the obvious (recessions hurt parks, AI disrupts content, rivals bid for sports) unless you have a specific new angle. Prefer patterns that repeat across games, second-order effects, and moves rivals made that Disney did not anticipate. Each insight must be actionable: a low-cost step Disney can take now, and an observable signpost that the threat is arriving. Respond with JSON only.';
+  const prompt = `Disney's strategy: ${pb.desc}\nFor comparison, a rules-based simulator of the same strategy gives a median ten-year profit of $${pct(sim, .5).toFixed(0)}B (bad decade $${pct(sim, .1).toFixed(0)}B).\n\nThree AI-played games:\n\n${summary}\n\nReturn exactly: {"headline":"one sentence: the single most important takeaway","insights":[{"title":"short","what_happened":"what the games showed, citing game numbers","why_it_matters":"one or two sentences","action":"a low-cost step Disney can take now","signpost":"what to watch for"}],"biggest_surprise":"one sentence"}. Give 3 to 5 insights.`;
+  return parseJSON(await askClaude('analyst', system, prompt, signal));
+}
+
+let LAST_FORWARD = null;
+async function playWarRoom(ev) {
+  ev.preventDefault();
+  if (WR_MODE === 'api' && !$('wr-pass').value.trim()) { $('wr-status').textContent = 'Enter the passcode first.'; $('wr-pass').focus(); return; }
+  try { if (WR_MODE === 'api') localStorage.setItem('horizons-pass', $('wr-pass').value.trim()); } catch {}
+  const pb = PLAYBOOKS.find(p => p.id === S.playbook);
+  wrAbort = new AbortController();
+  const signal = wrAbort.signal;
+  $('wr-play').disabled = true; $('wr-stop').hidden = false;
+  $('wr-insights-card').hidden = true; $('wr-results-card').hidden = true;
+  $('wr-games').innerHTML = [0, 1, 2].map(i => `<div class="card game" id="wr-game-${i}"><h3>Game ${i + 1} · ${esc(plain(pb.name))}</h3><div class="res"></div><div class="note wild"></div><ol class="turns"></ol></div>`).join('');
+  const t0 = Date.now();
+  $('wr-status').textContent = 'Starting 3 games…';
+  const run = limiter(WR_MODE === 'claude' ? 6 : 8);
+  const state = [{}, {}, {}];
+  const onUpdate = u => { Object.assign(state[u.g], u); renderGame(u.g, state[u.g], u.phase); };
+  try {
+    const games = await Promise.all([0, 1, 2].map(g => playGame(g, pb, signal, run, onUpdate)));
+    games.forEach((gm, i) => renderGame(i, { ...gm, turns: gm.turns }, ''));
+    $('wr-results-card').hidden = false;
+    drawWarRoomChart(games);
+    $('wr-status').textContent = 'Games done. The analyst is reading all three…';
+    const a = await runAnalyst(games, pb, signal);
+    if (a) {
+      $('wr-headline').textContent = a.headline || '';
+      $('wr-insights').innerHTML = (a.insights || []).map((x, i) => `<div class="action"><div class="no">Insight ${i + 1}</div><h3>${esc(x.title || '')}</h3><p><b>What happened:</b> ${esc(x.what_happened || '')}</p><p><b>Why it matters:</b> ${esc(x.why_it_matters || '')}</p><p><b>Low-cost action:</b> ${esc(x.action || '')}</p><p><b>Signpost to watch:</b> ${esc(x.signpost || '')}</p></div>`).join('') +
+        (a.biggest_surprise ? `<p class="note" style="grid-column:1/-1"><b>Biggest surprise:</b> ${esc(a.biggest_surprise)}</p>` : '');
+      $('wr-insights-card').hidden = false;
+    }
+    $('wr-status').textContent = `Done in ${Math.round((Date.now() - t0) / 60000 * 10) / 10} minutes. Play again for three new decades.`;
+  } catch (e) {
+    $('wr-status').textContent = e instanceof StopError ? 'Stopped.' : e.message;
+    if (!(e instanceof StopError)) wrAbort.abort();
+  } finally {
+    $('wr-play').disabled = false; $('wr-stop').hidden = true;
+  }
+}
+$('wr-form').addEventListener('submit', playWarRoom);
+$('wr-stop').addEventListener('click', () => wrAbort && wrAbort.abort());
+try { const p = localStorage.getItem('horizons-pass'); if (p) $('wr-pass').value = p; } catch {}
 
 buildControls();
 showTab(location.hash.slice(1));

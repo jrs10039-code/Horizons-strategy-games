@@ -28,6 +28,8 @@ The model starts in FY19 with only what was knowable then, and is compared with 
 
 ## What it answers
 
+- **What happens when rivals think for themselves?** The AI War Room tab has 8 AI agents (Disney, Netflix, Comcast/Universal, YouTube, Amazon, gaming platforms, the sports leagues and an invented newcomer) play out the decade in two-year turns, with an AI referee and an AI analyst. Each click plays 3 games, and no two go the same way. It runs on the viewer's Claude account on the Claude-hosted copy, or through a private relay ([setup](docs/ai-war-room-setup.md)) on the public site.
+
 - **What could knock Disney off course, and what can it do today?** For each of 1,000 futures the tool ranks that future's costliest threats. It then finds the threats that keep recurring and picks the three low-cost actions that cover the most serious-threat damage. Finally it re-runs every future with those actions in place to measure the effect. With default assumptions, three actions address about half of serious threats and lift the bad decade by about $1.4B. See [docs/examples.md](docs/examples.md).
 
 - **Which playbook holds up?** Six Disney playbooks run against the *same* simulated futures, so the comparison is fair. Robust playbooks keep the bad case (10th percentile) high, not just the median.
@@ -59,6 +61,8 @@ Every number lives in [`config/assumptions.json`](config/assumptions.json). Disa
 | `docs/competitors.md` | The 109-company roster by arena and tier, with each one's threatening move. |
 | `docs/examples.md` | Example results: the three-action thesis, recurring threats, sample futures. |
 | `docs/stress-test.md` | Pressure tests, the bug found and fixed, and suggestions. |
+| `api/agent.js` | Private relay for the AI War Room: holds the API key, checks a passcode, picks the model per role. |
+| `docs/ai-war-room-setup.md` | 15-minute setup to switch on live AI games for the public site. |
 | `docs/methodology.md` | Mechanics, calibration, backtest results and known limits. |
 | `tests/` | Checks for reproducibility, the starting point, trigger value, and pure compounding. |
 
