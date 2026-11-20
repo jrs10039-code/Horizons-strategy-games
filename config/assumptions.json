@@ -1,0 +1,500 @@
+{
+  "start_fy": 2026,
+  "start_segment_oi_busd": {
+    "exp": 11.19,
+    "ent": 5.44,
+    "spt": 3.09
+  },
+  "years": 10,
+  "impact_scale": 1.5,
+  "noise_sd": 0.02,
+  "trigger_mitigation": 0.7,
+  "playbooks": [
+    {
+      "id": "A",
+      "name": "A. Current course",
+      "desc": "~$60B parks plan, ~$9B buybacks, ~$26B content, capital-light international.",
+      "g": {
+        "exp": 0.05,
+        "ent": 0.05,
+        "spt": 0.04
+      },
+      "sens": {}
+    },
+    {
+      "id": "B",
+      "name": "B. Experiences-heavy",
+      "desc": "Accelerate parks and cruise capex, funded by fewer buybacks. More exposed to recessions, better defended against rival parks.",
+      "g": {
+        "exp": 0.065,
+        "ent": 0.04,
+        "spt": 0.035
+      },
+      "sens": {
+        "econ": 1.6,
+        "rivalpark": 0.7,
+        "asia": 1.3,
+        "climate": 1.3,
+        "ai": 1.05
+      }
+    },
+    {
+      "id": "C",
+      "name": "C. Streaming-first",
+      "desc": "More content spend, Disney+ as the portal for everything, aggressive pricing. Gains if streaming wins, most exposed to AI content.",
+      "g": {
+        "exp": 0.045,
+        "ent": 0.075,
+        "spt": 0.035
+      },
+      "sens": {
+        "ai": 1.6,
+        "attention": 0.8,
+        "econ": 0.9,
+        "distribution": 0.7,
+        "legal": 1.2
+      }
+    },
+    {
+      "id": "D",
+      "name": "D. Sports fortress",
+      "desc": "Lock up long rights deals and league equity partnerships. Protected from rights raids, pays for it in lower Entertainment growth.",
+      "g": {
+        "exp": 0.048,
+        "ent": 0.04,
+        "spt": 0.06
+      },
+      "sens": {
+        "rights": 0.45,
+        "distribution": 0.9,
+        "attention": 1.15
+      }
+    },
+    {
+      "id": "E",
+      "name": "E. Asset-light pivot",
+      "desc": "License more parks, sell or spin linear networks. Lower growth, lower downside.",
+      "g": {
+        "exp": 0.04,
+        "ent": 0.042,
+        "spt": 0.025
+      },
+      "sens": {
+        "econ": 0.6,
+        "asia": 0.5,
+        "climate": 0.7,
+        "rivalpark": 0.9,
+        "rights": 1.15
+      }
+    },
+    {
+      "id": "F",
+      "name": "F. AI-forward",
+      "desc": "Early AI production tools, AI-built franchises, physical AI in parks. Turns AI from threat to tool, adds legal and brand risk.",
+      "g": {
+        "exp": 0.048,
+        "ent": 0.048,
+        "spt": 0.04
+      },
+      "sens": {
+        "ai": 0.45,
+        "legal": 1.5,
+        "physai": 1.6,
+        "brand": 1.5
+      }
+    }
+  ],
+  "pestel_categories": [
+    {
+      "id": "P",
+      "name": "Political"
+    },
+    {
+      "id": "E",
+      "name": "Economic"
+    },
+    {
+      "id": "S",
+      "name": "Social"
+    },
+    {
+      "id": "T",
+      "name": "Technological"
+    },
+    {
+      "id": "En",
+      "name": "Environmental"
+    },
+    {
+      "id": "L",
+      "name": "Legal"
+    }
+  ],
+  "pestel_events": [
+    {
+      "id": "asia",
+      "src": "P",
+      "label": "Asia parks slump deepens (US–China tension)",
+      "p": 0.1,
+      "imp": {
+        "exp": -0.04
+      },
+      "dur": 3,
+      "tag": "asia"
+    },
+    {
+      "id": "trade",
+      "src": "P",
+      "label": "Trade war or travel restrictions",
+      "p": 0.06,
+      "imp": {
+        "exp": -0.03,
+        "ent": -0.01
+      },
+      "dur": 2,
+      "tag": "econ"
+    },
+    {
+      "id": "recession",
+      "src": "E",
+      "label": "US recession cuts park visits and ad spend",
+      "p": 0.12,
+      "imp": {
+        "exp": -0.12,
+        "ent": -0.04,
+        "spt": -0.05
+      },
+      "dur": 2,
+      "tag": "econ"
+    },
+    {
+      "id": "rates",
+      "src": "E",
+      "label": "Rate spike raises cost of the parks plan",
+      "p": 0.08,
+      "imp": {
+        "exp": -0.03
+      },
+      "dur": 3,
+      "tag": "econ"
+    },
+    {
+      "id": "genalpha",
+      "src": "S",
+      "label": "Gen Alpha abandons long-form TV and film",
+      "p": 0.06,
+      "imp": {
+        "ent": -0.05,
+        "spt": -0.01
+      },
+      "dur": 10,
+      "tag": "attention"
+    },
+    {
+      "id": "boycott",
+      "src": "S",
+      "label": "Culture-war boycott hits the brand",
+      "p": 0.07,
+      "imp": {
+        "ent": -0.04,
+        "exp": -0.02
+      },
+      "dur": 1,
+      "tag": "brand"
+    },
+    {
+      "id": "aiflood",
+      "src": "T",
+      "label": "AI-generated content floods supply",
+      "p": 0.1,
+      "imp": {
+        "ent": -0.08
+      },
+      "dur": 4,
+      "tag": "ai"
+    },
+    {
+      "id": "physai",
+      "src": "T",
+      "label": "Physical AI cuts ride and show costs (upside)",
+      "p": 0.08,
+      "imp": {
+        "exp": 0.04
+      },
+      "dur": 5,
+      "tag": "physai"
+    },
+    {
+      "id": "hurricane",
+      "src": "En",
+      "label": "Major Florida hurricane season",
+      "p": 0.15,
+      "imp": {
+        "exp": -0.05
+      },
+      "dur": 1,
+      "tag": "climate"
+    },
+    {
+      "id": "heat",
+      "src": "En",
+      "label": "Extreme heat seasons cut attendance",
+      "p": 0.06,
+      "imp": {
+        "exp": -0.03
+      },
+      "dur": 3,
+      "tag": "climate"
+    },
+    {
+      "id": "aicopy",
+      "src": "L",
+      "label": "AI copyright ruling weakens IP protection",
+      "p": 0.06,
+      "imp": {
+        "ent": -0.05
+      },
+      "dur": 5,
+      "tag": "legal"
+    },
+    {
+      "id": "antitrust",
+      "src": "L",
+      "label": "Antitrust limits bundling",
+      "p": 0.05,
+      "imp": {
+        "ent": -0.03,
+        "spt": -0.03
+      },
+      "dur": 3,
+      "tag": "legal"
+    }
+  ],
+  "players": [
+    {
+      "id": "netflix",
+      "name": "Netflix",
+      "label": "Netflix wins a top-tier live sports package",
+      "p": 0.12,
+      "imp": {
+        "spt": -0.06,
+        "ent": -0.02
+      },
+      "dur": 4,
+      "tag": "rights",
+      "def": 60
+    },
+    {
+      "id": "comcast",
+      "name": "Comcast / Universal",
+      "label": "Universal opens a new park near a Disney market",
+      "p": 0.08,
+      "imp": {
+        "exp": -0.05
+      },
+      "dur": 4,
+      "tag": "rivalpark",
+      "def": 55
+    },
+    {
+      "id": "youtube",
+      "name": "Alphabet / YouTube",
+      "label": "YouTube carriage fight or creator share gain",
+      "p": 0.12,
+      "imp": {
+        "spt": -0.03,
+        "ent": -0.03
+      },
+      "dur": 2,
+      "tag": "distribution",
+      "def": 60
+    },
+    {
+      "id": "amazon",
+      "name": "Amazon",
+      "label": "Amazon outbids Disney for a sports package",
+      "p": 0.1,
+      "imp": {
+        "spt": -0.06
+      },
+      "dur": 4,
+      "tag": "rights",
+      "def": 55
+    },
+    {
+      "id": "apple",
+      "name": "Apple",
+      "label": "Apple takes a premium sports or film franchise",
+      "p": 0.06,
+      "imp": {
+        "spt": -0.03,
+        "ent": -0.02
+      },
+      "dur": 3,
+      "tag": "rights",
+      "def": 35
+    },
+    {
+      "id": "wbd",
+      "name": "Warner Bros. Discovery",
+      "label": "WBD combines into a bigger studio rival",
+      "p": 0.07,
+      "imp": {
+        "ent": -0.04,
+        "spt": -0.01
+      },
+      "dur": 5,
+      "tag": "consolidation",
+      "def": 50
+    },
+    {
+      "id": "paramount",
+      "name": "Paramount Skydance",
+      "label": "Paramount buys a studio or network",
+      "p": 0.06,
+      "imp": {
+        "ent": -0.02
+      },
+      "dur": 4,
+      "tag": "consolidation",
+      "def": 50
+    },
+    {
+      "id": "sony",
+      "name": "Sony",
+      "label": "Sony anime and game IP takes family share",
+      "p": 0.06,
+      "imp": {
+        "ent": -0.02
+      },
+      "dur": 4,
+      "tag": "attention",
+      "def": 40
+    },
+    {
+      "id": "epic",
+      "name": "Epic / Roblox",
+      "label": "Virtual worlds capture Gen Alpha time",
+      "p": 0.09,
+      "imp": {
+        "ent": -0.03,
+        "exp": -0.01
+      },
+      "dur": 4,
+      "tag": "attention",
+      "def": 55
+    },
+    {
+      "id": "tiktok",
+      "name": "TikTok / ByteDance",
+      "label": "Short video takes more youth attention",
+      "p": 0.1,
+      "imp": {
+        "ent": -0.02
+      },
+      "dur": 3,
+      "tag": "attention",
+      "def": 55
+    },
+    {
+      "id": "china",
+      "name": "Chinese parks and media",
+      "label": "Chinese parks and IP take local share",
+      "p": 0.1,
+      "imp": {
+        "exp": -0.03
+      },
+      "dur": 4,
+      "tag": "asia",
+      "def": 50
+    },
+    {
+      "id": "leagues",
+      "name": "Leagues (NFL, NBA, others)",
+      "label": "Leagues push rights inflation or go direct",
+      "p": 0.12,
+      "imp": {
+        "spt": -0.07
+      },
+      "dur": 4,
+      "tag": "rights",
+      "def": 55
+    }
+  ],
+  "archetypes": [
+    {
+      "id": "aistudio",
+      "name": "AI-native studio",
+      "label": "AI-native studio makes film-quality content at a fraction of the cost",
+      "imp": {
+        "ent": -0.06
+      },
+      "tag": "ai",
+      "def": 10
+    },
+    {
+      "id": "creator",
+      "name": "Creator-led franchise",
+      "label": "A creator brand becomes a Gen Alpha franchise",
+      "imp": {
+        "ent": -0.03
+      },
+      "tag": "attention",
+      "def": 8
+    },
+    {
+      "id": "immersive",
+      "name": "Immersive venue operator",
+      "label": "Immersive venues near cities take day-trip share",
+      "imp": {
+        "exp": -0.03
+      },
+      "tag": "rivalpark",
+      "def": 6
+    },
+    {
+      "id": "aimedia",
+      "name": "Personalized AI media",
+      "label": "Personalized AI stories cut demand for fixed films and shows",
+      "imp": {
+        "ent": -0.07
+      },
+      "tag": "ai",
+      "def": 6
+    }
+  ],
+  "defaults": {
+    "playbook": "A",
+    "runs": 1000,
+    "seed": 2026,
+    "triggers": true,
+    "pestel_weights": {
+      "P": 3,
+      "E": 3,
+      "S": 3,
+      "T": 3,
+      "En": 3,
+      "L": 3
+    },
+    "player_aggression": {
+      "netflix": 60,
+      "comcast": 55,
+      "youtube": 60,
+      "amazon": 55,
+      "apple": 35,
+      "wbd": 50,
+      "paramount": 50,
+      "sony": 40,
+      "epic": 55,
+      "tiktok": 55,
+      "china": 50,
+      "leagues": 55
+    },
+    "archetype_arrival_pct": {
+      "aistudio": 10,
+      "creator": 8,
+      "immersive": 6,
+      "aimedia": 6
+    }
+  }
+}

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Disney Strategy War Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a strategy-team workbench. Assumptions rail on the left, results read top-down on the right: headline tiles, the fan of futures, playbook comparison, recurring themes, one bad run narrated. */
+:root {
+  color-scheme: light;
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --ink: #0f1a2b;
+  --ink-2: #4a5568;
+  --ink-3: #7a8494;
+  --rule: #e1e5eb;
+  --accent: #2a78d6;
+  --accent-soft: rgba(42,120,214,0.14);
+  --band: rgba(42,120,214,0.16);
+  --good: #0a7d0a;
+  --warn: #b07800;
+  --crit: #c23434;
+  --crit-soft: rgba(208,59,59,0.12);
+  --good-soft: rgba(12,163,12,0.12);
+  --font-display: "IBM Plex Serif", Georgia, serif;
+  --font-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #12161d; --surface: #1a1f28; --ink: #eef1f5; --ink-2: #b6beca; --ink-3: #8a93a1; --rule: #2c333e;
+    --accent: #3987e5; --accent-soft: rgba(57,135,229,0.2); --band: rgba(57,135,229,0.24);
+    --good: #2fbf2f; --warn: #f0b429; --crit: #e66767; --crit-soft: rgba(230,103,103,0.16); --good-soft: rgba(47,191,47,0.14);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #12161d; --surface: #1a1f28; --ink: #eef1f5; --ink-2: #b6beca; --ink-3: #8a93a1; --rule: #2c333e;
+  --accent: #3987e5; --accent-soft: rgba(57,135,229,0.2); --band: rgba(57,135,229,0.24);
+  --good: #2fbf2f; --warn: #f0b429; --crit: #e66767; --crit-soft: rgba(230,103,103,0.16); --good-soft: rgba(47,191,47,0.14);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.5; }
+header { padding: 24px 24px 16px; border-bottom: 1px solid var(--rule); background: var(--surface); }
+header h1 { font-family: var(--font-display); font-weight: 600; font-size: 26px; margin: 0 0 4px; text-wrap: balance; }
+header p { margin: 0; color: var(--ink-2); max-width: 78ch; }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+.layout { display: grid; grid-template-columns: 320px 1fr; gap: 0; align-items: start; }
+aside { border-right: 1px solid var(--rule); background: var(--surface); padding: 16px; position: sticky; top: 0; max-height: 100vh; overflow-y: auto; }
+main { padding: 20px 24px 48px; display: grid; gap: 20px; min-width: 0; }
+@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } aside { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--rule); } main { padding: 16px; } }
+.ctl { display: grid; gap: 4px; margin-bottom: 12px; }
+.ctl label, .lbl { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+select, input[type=number], textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 8px; width: 100%; }
+textarea { font-family: var(--font-mono); font-size: 11px; min-height: 80px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+button { font: inherit; font-weight: 600; border-radius: 6px; padding: 8px 12px; cursor: pointer; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; width: 100%; }
+button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.btnrow button { flex: 1; font-size: 12px; padding: 6px 8px; }
+details { border-top: 1px solid var(--rule); padding: 10px 0; }
+summary { cursor: pointer; font-weight: 600; font-size: 13px; list-style: none; display: flex; justify-content: space-between; }
+summary::after { content: "+"; color: var(--ink-3); }
+details[open] summary::after { content: "−"; }
+.hint { font-size: 12px; color: var(--ink-3); margin: 6px 0 8px; }
+.slider { display: grid; grid-template-columns: 1fr 40px; gap: 2px 8px; align-items: center; margin: 8px 0; }
+.slider span.name { font-size: 12px; color: var(--ink); grid-column: 1 / -1; }
+.slider input[type=range] { width: 100%; accent-color: var(--accent); }
+.slider output { font-family: var(--font-mono); font-size: 12px; text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.toggle { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; margin: 4px 0 12px; }
+.toggle input { margin-top: 3px; accent-color: var(--accent); }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; min-width: 0; }
+.card h2 { font-family: var(--font-display); font-size: 17px; font-weight: 600; margin: 0 0 2px; text-wrap: balance; }
+.card .sub { color: var(--ink-2); font-size: 13px; margin: 0 0 12px; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+@media (max-width: 1100px) { .tiles { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.tile { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; }
+.tile .k { font-size: 12px; color: var(--ink-2); font-weight: 500; }
+.tile .v { font-family: var(--font-mono); font-size: 24px; font-weight: 500; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.tile .n { font-size: 12px; color: var(--ink-3); }
+.tile.risk { border-left: 3px solid var(--crit); }
+.tile.goodt { border-left: 3px solid var(--good); }
+.chartwrap { position: relative; overflow-x: auto; }
+svg text { font-family: var(--font-body); }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 8px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.12); display: none; white-space: nowrap; z-index: 5; }
+.tip b { font-family: var(--font-mono); font-weight: 500; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-size: 12px; font-weight: 600; color: var(--ink-2); border-bottom: 1px solid var(--rule); padding: 6px 8px; }
+td { border-bottom: 1px solid var(--rule); padding: 7px 8px; vertical-align: top; }
+td.num, th.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+.pill.crit { background: var(--crit-soft); color: var(--crit); }
+.pill.good { background: var(--good-soft); color: var(--good); }
+.pill.neutral { background: var(--accent-soft); color: var(--accent); }
+.tablewrap { overflow-x: auto; }
+.log { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; max-height: 380px; overflow-y: auto; }
+.log li { display: grid; grid-template-columns: 56px 1fr; gap: 8px; font-size: 13px; }
+.log .yr { font-family: var(--font-mono); color: var(--ink-2); }
+.two { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); gap: 20px; }
+@media (max-width: 1100px) { .two { grid-template-columns: 1fr; } }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); margin-top: 6px; }
+.legend i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 6px; }
+footer { color: var(--ink-3); font-size: 12px; max-width: 90ch; }
+footer p { margin: 0 0 6px; }
+#status { font-size: 12px; color: var(--ink-3); margin-top: 6px; min-height: 18px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="tag">Prototype · strategic early warning system</div>
+  <h1>Disney Strategy War Game</h1>
+  <p>Simulates Disney against 12 competitors and 4 startup archetypes over FY27–FY36, thousands of times, then surfaces the themes that keep showing up in the bad futures. Every assumption is a slider for the team to argue with. Illustrative draft assumptions, not a forecast.</p>
+</header>
+<div class="layout">
+  <aside>
+    <div class="ctl">
+      <label for="pb">Disney playbook</label>
+      <select id="pb"></select>
+      <div class="hint" id="pbdesc"></div>
+    </div>
+    <div class="row2">
+      <div class="ctl"><label for="runs">Simulated futures</label>
+        <select id="runs"><option value="200">200</option><option value="1000" selected>1,000</option><option value="5000">5,000</option></select></div>
+      <div class="ctl"><label for="seed">Random seed</label><input id="seed" type="number" value="2026" min="1"></div>
+    </div>
+    <label class="toggle"><input type="checkbox" id="trig" checked><span><b>Early-warning triggers on.</b> Once a threat appears, Disney responds and later hits of the same kind land 30% softer.</span></label>
+    <button class="primary" id="runbtn" type="button">Run simulation</button>
+    <div id="status"></div>
+
+    <details open>
+      <summary>PESTEL shock weights</summary>
+      <p class="hint">How often each category of shock fires. 3 = draft baseline, 1 = rare, 5 = frequent.</p>
+      <div id="pestel"></div>
+    </details>
+    <details>
+      <summary>Competitor aggression</summary>
+      <p class="hint">How likely each player is to make its threatening move in a given year. 50 = draft baseline.</p>
+      <div id="players"></div>
+    </details>
+    <details>
+      <summary>Startup archetypes</summary>
+      <p class="hint">Chance per year that each disruptor arrives. Once it arrives, it stays.</p>
+      <div id="arch"></div>
+    </details>
+    <details>
+      <summary>Save or load assumptions</summary>
+      <p class="hint">Copy your settings to share them, or paste a teammate's and load them.</p>
+      <textarea id="cfg" aria-label="Settings as text"></textarea>
+      <div class="btnrow"><button type="button" id="copycfg">Copy settings</button><button type="button" id="loadcfg">Load pasted</button><button type="button" id="reset">Reset drafts</button></div>
+      <div class="hint" id="cfgmsg"></div>
+    </details>
+  </aside>
+
+  <main>
+    <section class="tiles" aria-label="Headline results">
+      <div class="tile"><div class="k">Median FY36 segment OI</div><div class="v" id="t-med">–</div><div class="n" id="t-med-n"></div></div>
+      <div class="tile risk"><div class="k">Bad case (10th percentile) FY36</div><div class="v" id="t-p10">–</div><div class="n" id="t-p10-n"></div></div>
+      <div class="tile risk"><div class="k">Futures below FY26 profit in FY31</div><div class="v" id="t-below">–</div><div class="n">Share of runs where 5-year OI is under $19.7B</div></div>
+      <div class="tile goodt"><div class="k">Value of early-warning triggers</div><div class="v" id="t-trig">–</div><div class="n" id="t-trig-n">Bad-case FY36 OI, triggers on vs off</div></div>
+    </section>
+
+    <section class="card">
+      <h2 id="fan-title">The range of futures</h2>
+      <p class="sub">Total segment operating income, $B, fiscal years. Shaded band covers the middle 80% of simulated futures; the line is the median.</p>
+      <div class="chartwrap" id="fanwrap"><svg id="fan" viewBox="0 0 720 300" width="100%" role="img" aria-label="Fan chart of simulated Disney operating income"></svg><div class="tip" id="fantip"></div></div>
+      <div class="legend"><span><i style="background:var(--band)"></i>10th–90th percentile</span><span><i style="background:var(--accent);height:3px;vertical-align:3px"></i>Median</span><span><i style="background:var(--ink-3);height:1px;vertical-align:4px"></i>FY26 actual ($19.7B)</span></div>
+    </section>
+
+    <div class="two">
+      <section class="card">
+        <h2>Which playbook holds up</h2>
+        <p class="sub">FY36 segment OI by playbook, same futures for each. Dot = median, whisker = 10th to 90th percentile. Robust playbooks keep the left whisker high.</p>
+        <div class="chartwrap" id="pbwrap"><svg id="pbchart" viewBox="0 0 430 300" width="100%" role="img" aria-label="Playbook comparison"></svg><div class="tip" id="pbtip"></div></div>
+      </section>
+      <section class="card">
+        <h2>One bad future, narrated</h2>
+        <p class="sub" id="story-sub">The run at the 10th percentile for this playbook.</p>
+        <ul class="log" id="story"></ul>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Themes that keep showing up in bad futures</h2>
+      <p class="sub">Sorted by what each event costs when it hits: median FY36 segment OI in futures where it happened, minus futures where it did not. "Bad futures" = the worst 20% of runs. The costliest events are the candidate signposts to monitor.</p>
+      <div class="tablewrap"><table id="themes"><thead><tr><th>Event</th><th>Source</th><th class="num">All futures</th><th class="num">Bad futures</th><th class="num">Cost when it hits</th><th>Read</th></tr></thead><tbody></tbody></table></div>
+    </section>
+
+    <footer>
+      <p><b>Starting point:</b> FY26 actuals from Disney's FY26 Q4 8-K: Experiences $11.19B, Entertainment $5.44B, Sports $3.09B segment operating income (total $19.7B).</p>
+      <p><b>How it works:</b> each simulated year, shocks and competitor moves fire with the probabilities set on the left. Each one cuts (or lifts) segment profit for a set number of years. The chosen playbook sets base growth and how exposed each segment is to each kind of threat. All impacts, probabilities and playbook settings are draft assumptions by Jake Schmidt, built to be overwritten with the team's own views and data.</p>
+      <p><b>Not modeled yet:</b> balance sheet, M&amp;A by Disney, 2019 backtest mode. Built as a prototype for discussion.</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+// ---------- Model data (draft assumptions) ----------
+const START = { exp: 11.19, ent: 5.44, spt: 3.09 };
+const SEGS = ['exp', 'ent', 'spt'];
+const YEARS = 10; // FY27..FY36
+const IMPACT = 1.5; // global severity dial on every shock (draft calibration)
+
+const PLAYBOOKS = [
+  { id: 'A', name: 'A. Current course', desc: '~$60B parks plan, ~$9B buybacks, ~$26B content, capital-light international.', g: { exp: .050, ent: .050, spt: .040 }, sens: {} },
+  { id: 'B', name: 'B. Experiences-heavy', desc: 'Accelerate parks and cruise capex, funded by fewer buybacks. More exposed to recessions, better defended against rival parks.', g: { exp: .065, ent: .040, spt: .035 }, sens: { econ: 1.6, rivalpark: .7, asia: 1.3, climate: 1.3, ai: 1.05 } },
+  { id: 'C', name: 'C. Streaming-first', desc: 'More content spend, Disney+ as the portal for everything, aggressive pricing. Gains if streaming wins, most exposed to AI content.', g: { exp: .045, ent: .075, spt: .035 }, sens: { ai: 1.6, attention: .8, econ: .9, distribution: .7, legal: 1.2 } },
+  { id: 'D', name: 'D. Sports fortress', desc: 'Lock up long rights deals and league equity partnerships. Protected from rights raids, pays for it in lower Entertainment growth.', g: { exp: .048, ent: .040, spt: .060 }, sens: { rights: .45, distribution: .9, attention: 1.15 } },
+  { id: 'E', name: 'E. Asset-light pivot', desc: 'License more parks, sell or spin linear networks. Lower growth, lower downside.', g: { exp: .040, ent: .042, spt: .025 }, sens: { econ: .6, asia: .5, climate: .7, rivalpark: .9, rights: 1.15 } },
+  { id: 'F', name: 'F. AI-forward', desc: 'Early AI production tools, AI-built franchises, physical AI in parks. Turns AI from threat to tool, adds legal and brand risk.', g: { exp: .048, ent: .048, spt: .040 }, sens: { ai: .45, legal: 1.5, physai: 1.6, brand: 1.5 } },
+];
+
+const PESTEL = [
+  { id: 'P', name: 'Political' }, { id: 'E', name: 'Economic' }, { id: 'S', name: 'Social' },
+  { id: 'T', name: 'Technological' }, { id: 'En', name: 'Environmental' }, { id: 'L', name: 'Legal' },
+];
+
+// imp = fraction of segment OI lost (negative) or gained while active; dur in years
+const EVENTS = [
+  { id: 'asia', src: 'P', label: 'Asia parks slump deepens (US–China tension)', p: .10, imp: { exp: -.04 }, dur: 3, tag: 'asia' },
+  { id: 'trade', src: 'P', label: 'Trade war or travel restrictions', p: .06, imp: { exp: -.03, ent: -.01 }, dur: 2, tag: 'econ' },
+  { id: 'recession', src: 'E', label: 'US recession cuts park visits and ad spend', p: .12, imp: { exp: -.12, ent: -.04, spt: -.05 }, dur: 2, tag: 'econ' },
+  { id: 'rates', src: 'E', label: 'Rate spike raises cost of the parks plan', p: .08, imp: { exp: -.03 }, dur: 3, tag: 'econ' },
+  { id: 'genalpha', src: 'S', label: 'Gen Alpha abandons long-form TV and film', p: .06, imp: { ent: -.05, spt: -.01 }, dur: 10, tag: 'attention' },
+  { id: 'boycott', src: 'S', label: 'Culture-war boycott hits the brand', p: .07, imp: { ent: -.04, exp: -.02 }, dur: 1, tag: 'brand' },
+  { id: 'aiflood', src: 'T', label: 'AI-generated content floods supply', p: .10, imp: { ent: -.08 }, dur: 4, tag: 'ai' },
+  { id: 'physai', src: 'T', label: 'Physical AI cuts ride and show costs (upside)', p: .08, imp: { exp: .04 }, dur: 5, tag: 'physai' },
+  { id: 'hurricane', src: 'En', label: 'Major Florida hurricane season', p: .15, imp: { exp: -.05 }, dur: 1, tag: 'climate' },
+  { id: 'heat', src: 'En', label: 'Extreme heat seasons cut attendance', p: .06, imp: { exp: -.03 }, dur: 3, tag: 'climate' },
+  { id: 'aicopy', src: 'L', label: 'AI copyright ruling weakens IP protection', p: .06, imp: { ent: -.05 }, dur: 5, tag: 'legal' },
+  { id: 'antitrust', src: 'L', label: 'Antitrust limits bundling', p: .05, imp: { ent: -.03, spt: -.03 }, dur: 3, tag: 'legal' },
+];
+
+const PLAYERS = [
+  { id: 'netflix', name: 'Netflix', label: 'Netflix wins a top-tier live sports package', p: .12, imp: { spt: -.06, ent: -.02 }, dur: 4, tag: 'rights', def: 60 },
+  { id: 'comcast', name: 'Comcast / Universal', label: 'Universal opens a new park near a Disney market', p: .08, imp: { exp: -.05 }, dur: 4, tag: 'rivalpark', def: 55 },
+  { id: 'youtube', name: 'Alphabet / YouTube', label: 'YouTube carriage fight or creator share gain', p: .12, imp: { spt: -.03, ent: -.03 }, dur: 2, tag: 'distribution', def: 60 },
+  { id: 'amazon', name: 'Amazon', label: 'Amazon outbids Disney for a sports package', p: .10, imp: { spt: -.06 }, dur: 4, tag: 'rights', def: 55 },
+  { id: 'apple', name: 'Apple', label: 'Apple takes a premium sports or film franchise', p: .06, imp: { spt: -.03, ent: -.02 }, dur: 3, tag: 'rights', def: 35 },
+  { id: 'wbd', name: 'Warner Bros. Discovery', label: 'WBD combines into a bigger studio rival', p: .07, imp: { ent: -.04, spt: -.01 }, dur: 5, tag: 'consolidation', def: 50 },
+  { id: 'paramount', name: 'Paramount Skydance', label: 'Paramount buys a studio or network', p: .06, imp: { ent: -.02 }, dur: 4, tag: 'consolidation', def: 50 },
+  { id: 'sony', name: 'Sony', label: 'Sony anime and game IP takes family share', p: .06, imp: { ent: -.02 }, dur: 4, tag: 'attention', def: 40 },
+  { id: 'epic', name: 'Epic / Roblox', label: 'Virtual worlds capture Gen Alpha time', p: .09, imp: { ent: -.03, exp: -.01 }, dur: 4, tag: 'attention', def: 55 },
+  { id: 'tiktok', name: 'TikTok / ByteDance', label: 'Short video takes more youth attention', p: .10, imp: { ent: -.02 }, dur: 3, tag: 'attention', def: 55 },
+  { id: 'china', name: 'Chinese parks and media', label: 'Chinese parks and IP take local share', p: .10, imp: { exp: -.03 }, dur: 4, tag: 'asia', def: 50 },
+  { id: 'leagues', name: 'Leagues (NFL, NBA, others)', label: 'Leagues push rights inflation or go direct', p: .12, imp: { spt: -.07 }, dur: 4, tag: 'rights', def: 55 },
+];
+
+const ARCHETYPES = [
+  { id: 'aistudio', name: 'AI-native studio', label: 'AI-native studio makes film-quality content at a fraction of the cost', imp: { ent: -.06 }, tag: 'ai', def: 10 },
+  { id: 'creator', name: 'Creator-led franchise', label: 'A creator brand becomes a Gen Alpha franchise', imp: { ent: -.03 }, tag: 'attention', def: 8 },
+  { id: 'immersive', name: 'Immersive venue operator', label: 'Immersive venues near cities take day-trip share', imp: { exp: -.03 }, tag: 'rivalpark', def: 6 },
+  { id: 'aimedia', name: 'Personalized AI media', label: 'Personalized AI stories cut demand for fixed films and shows', imp: { ent: -.07 }, tag: 'ai', def: 6 },
+];
+
+const SRC_NAME = { P: 'Political', E: 'Economic', S: 'Social', T: 'Technological', En: 'Environmental', L: 'Legal' };
+
+function defaults() {
+  return {
+    playbook: 'A', runs: 1000, seed: 2026, triggers: true,
+    pestel: Object.fromEntries(PESTEL.map(c => [c.id, 3])),
+    players: Object.fromEntries(PLAYERS.map(p => [p.id, p.def])),
+    arch: Object.fromEntries(ARCHETYPES.map(a => [a.id, a.def])),
+  };
+}
+let S = defaults();
+
+// ---------- RNG ----------
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function gauss(rng) { let u = 0, v = 0; while (u === 0) u = rng(); v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+
+// ---------- Build the unified event list for a settings object ----------
+function eventList(s) {
+  const list = [];
+  EVENTS.forEach(e => list.push({ ...e, kind: 'pestel', srcName: SRC_NAME[e.src], prob: e.p * (s.pestel[e.src] / 3) }));
+  PLAYERS.forEach(p => list.push({ ...p, kind: 'player', srcName: p.name, prob: p.p * (s.players[p.id] / 50) }));
+  ARCHETYPES.forEach(a => list.push({ ...a, kind: 'arch', srcName: 'Startup: ' + a.name, prob: s.arch[a.id] / 100, dur: YEARS, once: true }));
+  return list;
+}
+
+// ---------- One simulated future ----------
+function simulateOne(pb, evs, rng, triggers) {
+  const base = { ...START };
+  const active = [];
+  const mitig = {};
+  const first = {};
+  const log = [];
+  const totals = [START.exp + START.ent + START.spt];
+  for (let y = 1; y <= YEARS; y++) {
+    for (const e of evs) {
+      if (e.once && first[e.id]) continue;
+      if (rng() < e.prob) {
+        if (first[e.id] === undefined) first[e.id] = y;
+        const sens = pb.sens[e.tag] ?? 1;
+        const m = mitig[e.tag] ?? 1;
+        const scale = {};
+        for (const k in e.imp) scale[k] = e.imp[k] * IMPACT * sens * (e.imp[k] < 0 ? m : 1);
+        active.push({ until: y + e.dur - 1, imp: scale });
+        log.push({ y, e });
+        if (triggers && Object.values(e.imp).some(v => v < 0)) mitig[e.tag] = 0.7;
+      }
+    }
+    const factor = { exp: 1, ent: 1, spt: 1 };
+    for (const a of active) if (y <= a.until) for (const k in a.imp) factor[k] += a.imp[k];
+    let tot = 0;
+    for (const k of SEGS) {
+      base[k] *= 1 + pb.g[k] + 0.02 * gauss(rng);
+      tot += base[k] * Math.max(0.3, factor[k]);
+    }
+    totals.push(tot);
+  }
+  return { totals, first, log };
+}
+
+function runSet(pb, s, triggers) {
+  const rng = mulberry32(s.seed);
+  const evs = eventList(s);
+  const out = [];
+  for (let i = 0; i < s.runs; i++) out.push(simulateOne(pb, evs, rng, triggers));
+  return out;
+}
+
+function pct(sorted, q) { const i = (sorted.length - 1) * q, lo = Math.floor(i), hi = Math.ceil(i); return sorted[lo] + (sorted[hi] - sorted[lo]) * (i - lo); }
+
+// ---------- UI construction ----------
+const $ = id => document.getElementById(id);
+const fmtB = v => '$' + v.toFixed(1) + 'B';
+
+function slider(container, id, name, min, max, step, value, unit, onInput) {
+  const wrap = document.createElement('div');
+  wrap.className = 'slider';
+  wrap.innerHTML = `<span class="name"><label for="${id}">${name}</label></span><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${value}"><output for="${id}" id="${id}-o">${value}${unit}</output>`;
+  container.appendChild(wrap);
+  const inp = wrap.querySelector('input'), o = wrap.querySelector('output');
+  inp.addEventListener('input', () => { o.textContent = inp.value + unit; onInput(+inp.value); });
+}
+
+function buildControls() {
+  const pbSel = $('pb');
+  pbSel.innerHTML = PLAYBOOKS.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  pbSel.value = S.playbook;
+  $('pbdesc').textContent = PLAYBOOKS.find(p => p.id === S.playbook).desc;
+  $('runs').value = String(S.runs);
+  $('seed').value = S.seed;
+  $('trig').checked = S.triggers;
+  $('pestel').innerHTML = ''; $('players').innerHTML = ''; $('arch').innerHTML = '';
+  PESTEL.forEach(c => slider($('pestel'), 'w-' + c.id, c.name, 1, 5, 1, S.pestel[c.id], '', v => { S.pestel[c.id] = v; schedule(); }));
+  PLAYERS.forEach(p => slider($('players'), 'a-' + p.id, p.name, 0, 100, 5, S.players[p.id], '', v => { S.players[p.id] = v; schedule(); }));
+  ARCHETYPES.forEach(a => slider($('arch'), 'r-' + a.id, a.name, 0, 30, 1, S.arch[a.id], '%', v => { S.arch[a.id] = v; schedule(); }));
+}
+
+let timer = null;
+function schedule() { clearTimeout(timer); $('status').textContent = 'Updating…'; timer = setTimeout(runAll, 250); }
+
+$('pb').addEventListener('change', e => { S.playbook = e.target.value; $('pbdesc').textContent = PLAYBOOKS.find(p => p.id === S.playbook).desc; schedule(); });
+$('runs').addEventListener('change', e => { S.runs = +e.target.value; schedule(); });
+$('seed').addEventListener('change', e => { S.seed = Math.max(1, +e.target.value || 1); schedule(); });
+$('trig').addEventListener('change', e => { S.triggers = e.target.checked; schedule(); });
+$('runbtn').addEventListener('click', runAll);
+$('copycfg').addEventListener('click', async () => {
+  const txt = JSON.stringify(S);
+  $('cfg').value = txt;
+  try { await navigator.clipboard.writeText(txt); $('cfgmsg').textContent = 'Copied. Paste it to a teammate.'; }
+  catch { $('cfgmsg').textContent = 'Copy blocked here. Select the text above and copy it.'; }
+});
+$('loadcfg').addEventListener('click', () => {
+  try {
+    const d = defaults(), j = JSON.parse($('cfg').value);
+    S = { ...d, ...j, pestel: { ...d.pestel, ...(j.pestel || {}) }, players: { ...d.players, ...(j.players || {}) }, arch: { ...d.arch, ...(j.arch || {}) } };
+    buildControls(); runAll(); $('cfgmsg').textContent = 'Loaded.';
+  } catch { $('cfgmsg').textContent = 'That text is not valid settings. Copy it again from "Copy settings".'; }
+});
+$('reset').addEventListener('click', () => { S = defaults(); buildControls(); runAll(); $('cfgmsg').textContent = 'Reset to draft assumptions.'; });
+
+// ---------- Run everything ----------
+function runAll() {
+  const t0 = performance.now();
+  const pb = PLAYBOOKS.find(p => p.id === S.playbook);
+  const main = runSet(pb, S, S.triggers);
+  const alt = runSet(pb, S, !S.triggers);
+  const comp = PLAYBOOKS.map(p => {
+    const r = p.id === pb.id ? main : runSet(p, S, S.triggers);
+    const fin = r.map(x => x.totals[YEARS]).sort((a, b) => a - b);
+    return { pb: p, p10: pct(fin, .1), p50: pct(fin, .5), p90: pct(fin, .9), below: r.filter(x => x.totals[5] < 19.72).length / r.length };
+  });
+  renderTiles(main, alt);
+  renderFan(main, pb);
+  renderPlaybooks(comp, pb);
+  renderThemes(main);
+  renderStory(main, pb);
+  $('status').textContent = `${(S.runs * (PLAYBOOKS.length + 1)).toLocaleString()} futures simulated in ${Math.round(performance.now() - t0)} ms`;
+}
+
+function renderTiles(main, alt) {
+  const fin = main.map(x => x.totals[YEARS]).sort((a, b) => a - b);
+  const finAlt = alt.map(x => x.totals[YEARS]).sort((a, b) => a - b);
+  const med = pct(fin, .5), p10 = pct(fin, .1);
+  $('t-med').textContent = fmtB(med);
+  $('t-med-n').textContent = `${med >= 19.72 ? '+' : ''}${((med / 19.72 - 1) * 100).toFixed(0)}% vs FY26`;
+  $('t-p10').textContent = fmtB(p10);
+  $('t-p10-n').textContent = `${((p10 / 19.72 - 1) * 100).toFixed(0)}% vs FY26`;
+  const below = main.filter(x => x.totals[5] < 19.72).length / main.length;
+  $('t-below').textContent = (below * 100).toFixed(0) + '%';
+  const on = S.triggers ? p10 : pct(finAlt, .1), off = S.triggers ? pct(finAlt, .1) : p10;
+  $('t-trig').textContent = (on - off >= 0 ? '+' : '−') + fmtB(Math.abs(on - off));
+  $('t-trig-n').textContent = `Bad-case FY36 OI: ${fmtB(on)} with triggers, ${fmtB(off)} without`;
+}
+
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent, text) { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (text !== undefined) n.textContent = text; if (parent) parent.appendChild(n); return n; }
+
+function niceTicks(lo, hi, n) {
+  const span = hi - lo, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0))), r = step0 / mag;
+  const step = (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * mag;
+  const t = []; for (let v = Math.floor(lo / step) * step; v <= hi + 1e-9; v += step) t.push(+v.toFixed(6));
+  return t;
+}
+
+function renderFan(main, pb) {
+  const svg = $('fan'); svg.innerHTML = '';
+  const W = 720, H = 300, L = 52, R = 70, T = 16, B = 34;
+  const stats = [];
+  for (let y = 0; y <= YEARS; y++) {
+    const v = main.map(x => x.totals[y]).sort((a, b) => a - b);
+    stats.push({ y, p10: pct(v, .1), p50: pct(v, .5), p90: pct(v, .9) });
+  }
+  const lo = Math.min(...stats.map(s => s.p10), 19.72) * 0.92, hi = Math.max(...stats.map(s => s.p90)) * 1.04;
+  const ticks = niceTicks(lo, hi, 5);
+  const y0 = ticks[0], y1 = Math.max(hi, ticks.at(-1));
+  const X = i => L + (i / YEARS) * (W - L - R), Y = v => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
+  const css = getComputedStyle(document.documentElement);
+  ticks.forEach(t => { el('line', { x1: L, x2: W - R, y1: Y(t), y2: Y(t), stroke: 'var(--rule)' }, svg); el('text', { x: L - 8, y: Y(t) + 4, 'text-anchor': 'end', 'font-size': 11, fill: 'var(--ink-3)' }, svg, '$' + t + 'B'); });
+  for (let i = 0; i <= YEARS; i += 2) el('text', { x: X(i), y: H - 12, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--ink-3)' }, svg, 'FY' + (26 + i));
+  el('line', { x1: L, x2: W - R, y1: Y(19.72), y2: Y(19.72), stroke: 'var(--ink-3)', 'stroke-dasharray': '3 4' }, svg);
+  let band = 'M' + stats.map(s => `${X(s.y)},${Y(s.p90)}`).join('L') + 'L' + stats.slice().reverse().map(s => `${X(s.y)},${Y(s.p10)}`).join('L') + 'Z';
+  el('path', { d: band, fill: 'var(--band)' }, svg);
+  el('path', { d: 'M' + stats.map(s => `${X(s.y)},${Y(s.p50)}`).join('L'), fill: 'none', stroke: 'var(--accent)', 'stroke-width': 2, 'stroke-linejoin': 'round' }, svg);
+  const last = stats[YEARS];
+  el('circle', { cx: X(YEARS), cy: Y(last.p50), r: 4, fill: 'var(--accent)', stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
+  el('text', { x: X(YEARS) + 8, y: Y(last.p50) + 4, 'font-size': 12, 'font-weight': 600, fill: 'var(--ink)' }, svg, fmtB(last.p50));
+  el('text', { x: X(YEARS) + 8, y: Y(last.p90) + 4, 'font-size': 11, fill: 'var(--ink-2)' }, svg, fmtB(last.p90));
+  el('text', { x: X(YEARS) + 8, y: Y(last.p10) + 4, 'font-size': 11, fill: 'var(--ink-2)' }, svg, fmtB(last.p10));
+  $('fan-title').textContent = `The range of futures under ${pb.name.slice(3)}`;
+  // hover
+  const cross = el('line', { y1: T, y2: H - B, stroke: 'var(--ink-3)', 'stroke-width': 1, visibility: 'hidden' }, svg);
+  const dot = el('circle', { r: 5, fill: 'var(--accent)', stroke: 'var(--surface)', 'stroke-width': 2, visibility: 'hidden' }, svg);
+  const hit = el('rect', { x: L, y: T, width: W - L - R, height: H - T - B, fill: 'transparent' }, svg);
+  const tip = $('fantip');
+  const move = ev => {
+    const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+    const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    const i = Math.max(0, Math.min(YEARS, Math.round((p.x - L) / (W - L - R) * YEARS)));
+    const s = stats[i];
+    cross.setAttribute('x1', X(i)); cross.setAttribute('x2', X(i)); cross.setAttribute('visibility', 'visible');
+    dot.setAttribute('cx', X(i)); dot.setAttribute('cy', Y(s.p50)); dot.setAttribute('visibility', 'visible');
+    tip.innerHTML = `<div><b>FY${26 + i}</b></div><div>90th pct <b>${fmtB(s.p90)}</b></div><div>Median <b>${fmtB(s.p50)}</b></div><div>10th pct <b>${fmtB(s.p10)}</b></div>`;
+    tip.style.display = 'block';
+    const box = $('fanwrap').getBoundingClientRect();
+    let left = ev.clientX - box.left + 14; if (left > box.width - 150) left -= 170;
+    tip.style.left = left + 'px'; tip.style.top = (ev.clientY - box.top - 10) + 'px';
+  };
+  hit.addEventListener('pointermove', move);
+  hit.addEventListener('pointerleave', () => { tip.style.display = 'none'; cross.setAttribute('visibility', 'hidden'); dot.setAttribute('visibility', 'hidden'); });
+}
+
+function renderPlaybooks(comp, sel) {
+  const svg = $('pbchart'); svg.innerHTML = '';
+  const W = 430, rowH = 36, T = 10, L = 150, R = 20, B = 30, H = T + comp.length * rowH + B;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const lo = Math.min(...comp.map(c => c.p10), 19.72) * 0.95, hi = Math.max(...comp.map(c => c.p90)) * 1.03;
+  const ticks = niceTicks(lo, hi, 4); const x0 = ticks[0], x1 = Math.max(hi, ticks.at(-1));
+  const X = v => L + (v - x0) / (x1 - x0) * (W - L - R);
+  ticks.forEach(t => { el('line', { x1: X(t), x2: X(t), y1: T, y2: H - B, stroke: 'var(--rule)' }, svg); el('text', { x: X(t), y: H - 12, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--ink-3)' }, svg, '$' + t + 'B'); });
+  el('line', { x1: X(19.72), x2: X(19.72), y1: T, y2: H - B, stroke: 'var(--ink-3)', 'stroke-dasharray': '3 4' }, svg);
+  const tip = $('pbtip');
+  comp.forEach((c, i) => {
+    const cy = T + i * rowH + rowH / 2, on = c.pb.id === sel.id, col = on ? 'var(--accent)' : 'var(--ink-3)';
+    el('text', { x: L - 12, y: cy + 4, 'text-anchor': 'end', 'font-size': 12, 'font-weight': on ? 600 : 400, fill: on ? 'var(--ink)' : 'var(--ink-2)' }, svg, c.pb.name);
+    el('line', { x1: X(c.p10), x2: X(c.p90), y1: cy, y2: cy, stroke: col, 'stroke-width': 2, 'stroke-linecap': 'round' }, svg);
+    el('circle', { cx: X(c.p50), cy, r: on ? 6 : 5, fill: col, stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
+    const hit = el('rect', { x: 0, y: cy - rowH / 2, width: W, height: rowH, fill: 'transparent' }, svg);
+    hit.addEventListener('pointermove', ev => {
+      tip.innerHTML = `<div><b>${c.pb.name}</b></div><div>10th pct <b>${fmtB(c.p10)}</b> · median <b>${fmtB(c.p50)}</b> · 90th <b>${fmtB(c.p90)}</b></div><div>Below FY26 profit in FY31: <b>${(c.below * 100).toFixed(0)}%</b> of futures</div>`;
+      tip.style.display = 'block';
+      const box = $('pbwrap').getBoundingClientRect();
+      let left = ev.clientX - box.left + 14; if (left > box.width - 280) left = Math.max(0, left - 300);
+      tip.style.left = left + 'px'; tip.style.top = (ev.clientY - box.top + 12) + 'px';
+    });
+    hit.addEventListener('pointerleave', () => { tip.style.display = 'none'; });
+    hit.addEventListener('click', () => { S.playbook = c.pb.id; $('pb').value = c.pb.id; $('pbdesc').textContent = c.pb.desc; runAll(); });
+    hit.style.cursor = 'pointer';
+  });
+}
+
+function renderThemes(main) {
+  const n = main.length;
+  const sorted = main.map((r, i) => ({ i, f: r.totals[YEARS] })).sort((a, b) => a.f - b.f);
+  const badSet = new Set(sorted.slice(0, Math.max(1, Math.floor(n * 0.2))).map(o => o.i));
+  const evs = eventList(S);
+  const med = a => a.length ? pct(a.slice().sort((x, y) => x - y), .5) : NaN;
+  const rows = evs.map(e => {
+    let all = 0, bad = 0; const hit = [], miss = [];
+    main.forEach((r, i) => { const f = r.totals[YEARS]; if (r.first[e.id] !== undefined) { all++; hit.push(f); if (badSet.has(i)) bad++; } else miss.push(f); });
+    return { e, pAll: all / n, pBad: bad / badSet.size, cost: (hit.length && miss.length) ? med(hit) - med(miss) : 0, upside: Object.values(e.imp).some(v => v > 0) };
+  }).filter(r => r.pAll >= 0.03 && r.pAll <= 0.97).sort((a, b) => a.cost - b.cost);
+  const neg = rows.filter(r => !r.upside);
+  $('themes').querySelector('tbody').innerHTML = rows.map(r => {
+    const rank = neg.indexOf(r);
+    let pill;
+    if (r.upside) pill = '<span class="pill good">Upside</span>';
+    else if (rank > -1 && rank < 5) pill = '<span class="pill crit">Signpost: monitor</span>';
+    else if (rank > -1 && rank < 10) pill = '<span class="pill neutral">Watch</span>';
+    else pill = '<span class="pill neutral" style="opacity:.7">Lower priority</span>';
+    const c = r.cost;
+    return `<tr><td>${r.e.label}</td><td>${r.e.srcName}</td><td class="num">${(r.pAll * 100).toFixed(0)}%</td><td class="num">${(r.pBad * 100).toFixed(0)}%</td><td class="num">${c >= 0 ? '+' : '−'}$${Math.abs(c).toFixed(1)}B</td><td>${pill}</td></tr>`;
+  }).join('');
+}
+
+function renderStory(main, pb) {
+  const sorted = main.map((r, i) => ({ r, f: r.totals[YEARS] })).sort((a, b) => a.f - b.f);
+  const pick = sorted[Math.floor(sorted.length * 0.1)].r;
+  $('story-sub').textContent = `The run at the 10th percentile under ${pb.name.slice(3)}: FY36 segment OI of ${fmtB(pick.totals[YEARS])}.`;
+  const items = pick.log.map(l => {
+    const neg = Object.values(l.e.imp).some(v => v < 0);
+    return `<li><span class="yr">FY${26 + l.y}</span><span>${neg ? '' : '<span class="pill good">Upside</span> '}${l.e.label} <span style="color:var(--ink-3)">· ${l.e.srcName}</span></span></li>`;
+  });
+  $('story').innerHTML = items.length ? items.join('') : '<li><span class="yr">–</span><span>No shocks in this run.</span></li>';
+}
+
+buildControls();
+runAll();
+</script>
+</body>
+</html>
