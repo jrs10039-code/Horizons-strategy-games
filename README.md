@@ -8,6 +8,8 @@
 
 ## What it answers
 
+- **What could knock Disney off course, and what can it do today?** For each of 1,000 futures the tool ranks that future's costliest threats. It then finds the threats that keep recurring and picks the three low-cost actions that cover the most serious-threat damage. Finally it re-runs every future with those actions in place to measure the effect. With default assumptions, three actions address about half of serious threats and lift the bad decade by about $1.4B. See [docs/examples.md](docs/examples.md).
+
 - **Which playbook holds up?** Six Disney playbooks run against the *same* simulated futures, so the comparison is fair. Robust playbooks keep the bad case (10th percentile) high, not just the median.
 - **What should we watch?** Each event is ranked by what it costs when it hits. The costliest ones become **signposts**: observable signals worth monitoring.
 - **Would it have worked before?** Backtest mode starts in FY19 with only a 2019 view of the world and compares the simulated futures with what Disney actually reported through FY26. Results are in [docs/methodology.md](docs/methodology.md#5-backtest-fy19-to-fy26).
@@ -35,6 +37,8 @@ Every number lives in [`config/assumptions.json`](config/assumptions.json). Disa
 | `run.py` | Command-line runner: playbook comparison plus the costliest events. |
 | `config/assumptions.json` | Every assumption: players, events, impacts, probabilities, playbooks. |
 | `docs/competitors.md` | The 109-company roster by arena and tier, with each one's threatening move. |
+| `docs/examples.md` | Example results: the three-action thesis, recurring threats, sample futures. |
+| `docs/stress-test.md` | Pressure tests, the bug found and fixed, and suggestions. |
 | `docs/methodology.md` | Mechanics, calibration, backtest results and known limits. |
 | `tests/` | Checks for reproducibility, the starting point, trigger value, and pure compounding. |
 
@@ -64,6 +68,10 @@ No dependencies beyond Python 3.9+ (pytest for the tests).
 ## Roadmap
 
 - [x] **2019 backtest:** 10 of 11 listed threats happened; the COVID trough lands at the 2nd–4th percentile with a tail event; the recovery outran the model.
+- [x] Risk-and-actions analysis with re-simulation (browser)
+- [ ] Port the risk-and-actions analysis to the Python engine
+- [ ] Correlated shocks, and competitors that react to Disney
+- [ ] Real financial data via SEC EDGAR and Capital IQ/FactSet (needs a small backend)
 - [ ] Streaming margin as its own variable, plus rebound dynamics after shocks (the main backtest miss)
 - [ ] Disney M&A moves and a balance sheet (cash and debt limits on moves)
 - [ ] Phase 2 monitoring pilot

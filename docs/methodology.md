@@ -18,7 +18,7 @@ Each simulated year:
    - **PESTEL shocks:** 13 events. Base probability × category weight / 3.
    - **Competitor moves:** 109 companies. Tier probability × company aggression / 50 × arena aggression / 50.
    - **Startup archetypes:** 4. Each arrives once at most, then stays.
-2. **Impacts apply.** Each event changes one or more segments' operating income by a set fraction for a set number of years. Impacts from different events add up. A segment cannot fall below 5% of its underlying level.
+2. **Impacts apply.** Each event changes one or more segments' operating income by a set fraction for a set number of years. Impacts from different events add up. A segment cannot fall below 5% of its underlying level. A move cannot repeat while its last occurrence is still playing out (cooldown).
 3. **Playbook exposure.** The chosen playbook multiplies impacts by threat type. For example, Sports fortress halves the impact of rights moves, and Experiences-heavy makes recessions 1.6× worse.
 4. **Underlying growth.** Each segment compounds at the playbook's growth rate, plus random noise (2% standard deviation per year).
 5. **Triggers.** With triggers on, after the first negative hit of a threat type, later hits of that type land 30% softer.
@@ -39,8 +39,8 @@ Each competitor move lasts 4 years. The full roster is in [competitors.md](compe
 
 The global severity scale (1.5) and the tier impacts were set so that, under default assumptions and the Current course playbook:
 
-- the median FY36 outcome ($26.1B) implies about 3% a year compound growth. That is below Disney's FY27 guidance of about +8%, because shocks drag on the underlying 4–5% growth;
-- roughly a quarter to a third of futures sit below FY26 profit in FY31, so the downside is real but not dominant;
+- the median FY36 outcome (about $26.8B) implies about 3% a year compound growth. That is below Disney's FY27 guidance of about +8%, because shocks drag on the underlying 4–5% growth;
+- roughly a fifth to a quarter of futures sit below FY26 profit in FY31, so the downside is real but not dominant;
 - the 2019 backtest ends near Disney's actual FY26 result (see below).
 
 These are judgment calls, chosen to make the tool useful for discussion. The model is not fitted statistically.
@@ -54,12 +54,12 @@ These are judgment calls, chosen to make the tool useful for discussion. The mod
 | Fiscal year | Sim 10th pct | Sim median | Sim 90th pct | Actual | Actual percentile |
 | --- | --- | --- | --- | --- | --- |
 | FY20 | 13.3 | 14.8 | 15.3 | 8.1 | 2nd |
-| FY21 | 12.8 | 14.7 | 15.6 | 7.8 | 4th |
-| FY22 | 12.8 | 14.9 | 15.9 | 12.1 | 5th |
-| FY23 | 13.2 | 15.2 | 16.3 | 12.9 | 8th |
-| FY24 | 14.0 | 16.0 | 17.2 | 15.6 | 38th |
-| FY25 | 14.4 | 16.6 | 17.9 | 17.6 | 82nd |
-| FY26 | 15.1 | 17.3 | 18.8 | 19.7 | 99th |
+| FY21 | 12.8 | 14.8 | 15.6 | 7.8 | 4th |
+| FY22 | 13.2 | 15.0 | 16.0 | 12.1 | 4th |
+| FY23 | 13.6 | 15.4 | 16.4 | 12.9 | 5th |
+| FY24 | 14.4 | 16.3 | 17.4 | 15.6 | 29th |
+| FY25 | 14.8 | 17.0 | 18.2 | 17.6 | 74th |
+| FY26 | 15.7 | 17.6 | 19.0 | 19.7 | 98th |
 
 All values are total segment operating income in $B. Actuals come from Disney's annual earnings releases. Segment definitions changed in FY20, FY21 and FY23, and FY20 and FY26 had 53 weeks.
 
@@ -67,11 +67,15 @@ All values are total segment operating income in $B. Actuals come from Disney's 
 
 1. **The threat deck was right.** 10 of the 11 threats a 2019 team could have listed happened by FY26: rivals moved into sports rights (Amazon, Netflix, YouTube, the NBA's 2024 deals), studios consolidated (Warner Bros. Discovery, Paramount Skydance), Universal opened Epic Universe, Asia parks weakened, and hurricanes hit. The one that did not happen was a non-pandemic US recession.
 2. **Tail events matter.** With a 1.5%-a-year pandemic-class event, the COVID trough lands at the 2nd–4th percentile. Without it, the trough falls outside every simulated future. Lesson: always carry low-probability, high-severity shocks.
-3. **The recovery outran the model.** Actual FY26 landed at the 99th percentile. The model has no rebound dynamics (pent-up demand, pricing power after reopening) and no streaming turnaround (Disney went from roughly $4B of DTC losses in FY22 to profit). Next fix: model streaming margin as its own variable.
+3. **The recovery outran the model.** Actual FY26 landed at the 98th percentile. The model has no rebound dynamics (pent-up demand, pricing power after reopening) and no streaming turnaround (Disney went from roughly $4B of DTC losses in FY22 to profit). Next fix: model streaming margin as its own variable.
 
 Run it yourself with `python run.py --backtest`, or the Backtest switch on the site.
 
-## 6. Known limits
+## 6. Risks and actions
+
+For each future the tool records how much profit each threat took over the decade. A threat costing $0.5B+ in a future counts as serious; $1.5B+ counts as high-impact. A library of 10 low-cost actions maps each action to the threat types it softens, by a draft 20–35%. The tool greedily picks the three actions that cover the most serious-threat damage, then re-runs the same futures with them in place. Results and caveats are in [examples.md](examples.md) and [stress-test.md](stress-test.md).
+
+## 7. Known limits
 
 - No balance sheet: moves are not limited by cash or debt.
 - No Disney M&A, and competitors do not react to Disney's moves (the interaction is one way).
@@ -79,7 +83,7 @@ Run it yourself with `python run.py --backtest`, or the Backtest switch on the s
 - No rebound or mean reversion after shocks.
 - Probabilities and impacts are draft judgment from public information, not estimates from data.
 
-## 7. How to change an assumption
+## 8. How to change an assumption
 
 - **On the site:** move the slider. Use "Save or load assumptions" to share settings as text.
 - **In code:** edit `config/assumptions.json` and rerun `python run.py`. The site and the Python engine use the same model; the JSON is exported from the site's assumptions.

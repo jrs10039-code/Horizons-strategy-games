@@ -89,12 +89,17 @@ def simulate_one(cfg: dict, playbook: dict, events: list[Event],
     run = Run(totals=[sum(base.values())])
     active: list[tuple[int, dict]] = []     # (last active year, scaled impact)
     mitigation: dict[str, float] = {}
+    busy: dict[str, int] = {}
 
     for y in range(1, years + 1):
         for e in events:
             if e.once and e.id in run.first_seen:
                 continue
-            if rng.random() < e.prob:
+            hit = rng.random() < e.prob
+            if y <= busy.get(e.id, 0):
+                continue  # cooldown: a move can't repeat while its last one is still playing out
+            if hit:
+                busy[e.id] = y + e.duration - 1
                 run.first_seen.setdefault(e.id, y)
                 run.log.append((y, e))
                 exposure = playbook["sens"].get(e.tag, 1.0)
