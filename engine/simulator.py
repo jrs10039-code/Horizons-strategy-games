@@ -5,7 +5,7 @@ Python reference implementation of the model behind the browser prototype
 team would own and extend: pure functions, no UI, every assumption read from
 config/assumptions.json.
 
-Model, in one paragraph: each simulated year, PESTEL shocks, moves by 109 competitors
+Model, in one paragraph: each simulated year, PESTLE shocks (political, economic, social, technological, legal, environmental), moves by 109 competitors
 and startup archetypes fire with set probabilities. Each one cuts (or lifts)
 segment operating income by a set fraction for a set number of years. The
 chosen Disney playbook sets each segment's base growth and how exposed it is

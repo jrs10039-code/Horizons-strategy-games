@@ -233,7 +233,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
     <div class="tiles" id="risk-tiles"></div>
     <div class="card">
       <h2>Three of the 1,000 futures, and what would have helped</h2>
-      <p class="sub">A bad decade, a typical one and a good one, each with its five costliest threats and the action that addresses each.</p>
+      <p class="sub">A bad decade, a typical one and a good one, each with its five costliest threats and the action that addresses each. Even good decades take hits; they end well because the hits are fewer, smaller or later.</p>
       <div class="futures" id="futures"></div>
     </div>
     <div class="two">
@@ -905,10 +905,12 @@ function renderForward(pb, main, alt, A, mitRuns, comp) {
 
   // three example futures
   const order = main.map((r, i) => ({ i, v: r.totals[YEARS] })).sort((a, b) => a.v - b.v);
-  const picks = [['A bad decade', .1], ['A typical decade', .5], ['A good decade', .9]].map(([t, q]) => ({ t, i: order[Math.floor((n - 1) * q)].i }));
+  const picks = [['A bad decade', .1], ['A typical decade', .5], ['A good decade, which still took hits', .9]].map(([t, q]) => ({ t, i: order[Math.floor((n - 1) * q)].i }));
   $('futures').innerHTML = picks.map(p => {
     const r = main[p.i], top = A.perRun[p.i].slice(0, 5);
-    return `<div class="future"><h3>${p.t}</h3><div class="res">Fiscal ${end} profit: ${fmtB(r.totals[YEARS])}</div><ol>${top.map(x => {
+    const lost = Object.values(r.dmg).reduce((a, v) => a + v, 0);
+    const serious = Object.values(r.dmg).filter(v => v >= MED).length;
+    return `<div class="future"><h3>${p.t}</h3><div class="res">Fiscal ${end} profit: <b>${fmtB(r.totals[YEARS])}</b> · ${serious} serious threats · ${fmtB(lost)} of profit lost over the decade</div><ol>${top.map(x => {
       const m = mitFor(x.e.tag);
       return `<li>${esc(x.e.label)} <span class="note">· ${fmtB(x.v)} lost</span><span class="fix">${m ? '→ ' + esc(m.title) : '→ No low-cost fix; monitor'}</span></li>`;
     }).join('') || '<li>No serious threats.</li>'}</ol></div>`;

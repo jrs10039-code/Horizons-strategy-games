@@ -6,7 +6,7 @@ How Horizons works, how it is calibrated, how it scores against history, and wha
 
 The model is an early warning system, not a forecast. It is built to answer three questions:
 
-1. **Which Disney playbook holds up across many futures?** Robust means a high bad case, not just a high median.
+1. **Which Disney strategy holds up across many futures?** A strategy that holds up still does reasonably well in its worst futures. The tool judges strategies on their bad-decade result (the 10th percentile: 1 in 10 futures end lower), not only on their typical result.
 2. **Which threats cost the most when they hit?** Those become signposts to monitor.
 3. **Is early warning worth paying for?** This is measured as the lift in the bad case when Disney responds after the first hit of a threat type.
 
@@ -15,7 +15,7 @@ The model is an early warning system, not a forecast. It is built to answer thre
 Each simulated year:
 
 1. **Events fire.** Each event has an annual probability:
-   - **PESTEL shocks:** 13 events. Base probability × category weight / 3.
+   - **PESTLE shocks:** 13 events across six categories: Political, Economic, Social, Technological, Legal and Environmental. Probability = base probability × category weight / 3.
    - **Competitor moves:** 109 companies. Tier probability × company aggression / 50 × arena aggression / 50.
    - **Startup archetypes:** 4. Each arrives once at most, then stays.
 2. **Impacts apply.** Each event changes one or more segments' operating income by a set fraction for a set number of years. Impacts from different events add up. A segment cannot fall below 5% of its underlying level. A move cannot repeat while its last occurrence is still playing out (cooldown).

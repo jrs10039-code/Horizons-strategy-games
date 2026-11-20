@@ -39,7 +39,7 @@ The model starts in FY19 with only what was knowable then, and is compared with 
 
 1. **Starting point:** FY26 segment operating income from Disney's FY26 Q4 8-K: Experiences $11.19B, Entertainment $5.44B, Sports $3.09B.
 2. **Each simulated year**, events fire with set annual probabilities:
-   - **PESTEL shocks** (recession, AI content flood, hurricanes, copyright rulings, and so on), weighted by category
+   - **PESTLE shocks**, meaning Political, Economic, Social, Technological, Legal and Environmental (recession, AI content flood, hurricanes, copyright rulings, and so on), weighted by category
    - **Competitor moves** by 109 companies (Netflix wins a sports package, Universal opens a nearby park, Qiddiya opens Gulf giga-parks, and so on). Each company has a tier that sets how much it can hurt: tier 1 can move a whole segment, tier 3 is early or narrow. Aggression can be set per arena or per company. Full list: [`docs/competitors.md`](docs/competitors.md)
    - **Startup archetypes** (AI-native studio, personalized AI media, and so on), which arrive once and stay
 3. Each event cuts or lifts segment OI by a set fraction for a set number of years.
