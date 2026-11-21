@@ -156,6 +156,21 @@ details.singles { border: 0; padding: 0 0 8px; margin-top: -4px; }
 details.singles summary { font-size: 13px; font-weight: 600; color: var(--accent); justify-content: flex-start; }
 details.singles summary::after { content: ""; }
 details.share { border-bottom: 0; }
+.as-summary { margin: 2px 0 0; font-size: 14px; color: var(--ink-2); }
+.as-head { align-items: center; }
+.as-buttons { display: flex; gap: 8px; }
+details.more { border: 0; padding: 0; margin-top: 14px; }
+details.more > summary { display: inline-flex; font-size: 14px; font-weight: 600; color: var(--accent); padding: 6px 0; }
+details.more > summary::after { content: " ▾"; margin-left: 6px; color: var(--accent); }
+details.more[open] > summary::after { content: " ▴"; }
+.more-body { padding-top: 8px; display: grid; gap: 14px; }
+.mt { margin-top: 8px; }
+.card h3 { font-size: 16px; margin: 0; }
+.answer p { font-size: 19px; }
+.hero { padding: 24px 0 4px; }
+.hero h1 { font-size: 30px; }
+.lede a { font-weight: 600; text-decoration: none; }
+[role=tabpanel] { gap: 14px; }
 /* drawer */
 .scrim { position: fixed; inset: 0; background: rgba(10,15,25,.35); z-index: 20; }
 .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100%); background: var(--surface); z-index: 21; box-shadow: -8px 0 24px rgba(0,0,0,.15); display: flex; flex-direction: column; }
@@ -227,13 +242,12 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
 <div class="wrap">
   <section class="hero">
     <h1>What could knock Disney off course over the next decade, and what can it do about it today?</h1>
-    <p class="lede">This tool plays out 1,000 possible futures for Disney against 109 competitors, economic shocks and new technologies. Then it shows which threats keep coming back and which low-cost actions blunt them.</p>
-    <div class="howto">
-      <h2>How to use it</h2>
+    <p class="lede">Pick a strategy, then let AI rivals play out the decade, or check the numbers behind it. <a href="#" id="howLink">How this works</a></p>
+    <div class="howto" id="howto" hidden>
       <ol>
-        <li><span><b>Pick a strategy</b>Choose one of Disney's six possible strategies in the menu below. Everything updates in about a second.</span></li>
-        <li><span><b>Read the tabs</b>Start with <i>Threats &amp; actions</i>. Then let AI agents play out the decade in the <i>AI War Room</i>, compare strategies, or check the model against 2019–2026.</span></li>
-        <li><span><b>Change the assumptions</b>Disagree with a number? Move a slider in <i>Your assumptions</i> below, for a whole industry or a single company.</span></li>
+        <li><span><b>AI War Room</b>Eight AI agents play Disney and its rivals for ten years, and an AI analyst reports what to do. You can type in any scenario to test.</span></li>
+        <li><span><b>The other tabs</b>A fast simulator plays 1,000 decades in a second to show the biggest threats, the range of profit outcomes, how the strategies compare, and how the model would have done since 2019.</span></li>
+        <li><span><b>Your assumptions</b>Disagree with a number? Change how often shocks hit, how aggressive rivals are, and which startups appear. Every tab updates.</span></li>
       </ol>
     </div>
   </section>
@@ -246,165 +260,194 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
     <div class="pbdesc" id="pbdesc"></div>
   </div>
 
-  <section class="answer" aria-live="polite">
-    <div class="eyebrow">The short answer</div>
-    <p id="answer">Running 1,000 futures…</p>
-  </section>
-
-
   <section class="card assumptions" id="assumptions" aria-labelledby="as-title">
     <div class="as-head">
-      <div><h2 id="as-title">Your assumptions</h2>
-      <p class="sub">Disagree with a number? Move a slider and every tab updates in about a second. These also set the outside shocks and how aggressive rivals are in the AI War Room.</p></div>
-      <button type="button" id="reset">Reset to baseline</button>
+      <div>
+        <h2 id="as-title">Your assumptions</h2>
+        <p class="as-summary" id="as-summary"></p>
+      </div>
+      <div class="as-buttons">
+        <button type="button" id="reset" hidden>Reset to baseline</button>
+        <button type="button" class="primary" id="as-toggle" aria-expanded="false" aria-controls="as-body">Adjust assumptions</button>
+      </div>
     </div>
-    <div class="as-grid">
-      <div class="as-col">
-        <h3>Outside shocks</h3>
-        <p class="hint">How often each kind of shock hits. 3 is normal, 1 is rare, 5 is frequent.</p>
-        <div id="pestel"></div>
-        <label class="toggle"><input type="checkbox" id="tail" checked><span><b>Include a pandemic-type shutdown.</b> Rare (1.5% a year), but it closes parks for two years.</span></label>
-      </div>
-      <div class="as-col">
-        <h3>Competitors</h3>
-        <p class="hint">How aggressive rivals are. 50 is normal; 0 means they stay out of Disney's way, 100 means they come hard.</p>
-        <div id="players"></div>
-      </div>
-      <div class="as-col">
-        <h3>New startups</h3>
-        <p class="hint">Chance each year that a new kind of rival appears. Once it arrives, it stays.</p>
-        <div id="arch"></div>
-        <h3 style="margin-top:14px">How Disney responds</h3>
-        <label class="toggle"><input type="checkbox" id="trig" checked><span><b>Disney gets better at repeat threats.</b> After a threat hits once, the next one like it does 30% less damage.</span></label>
-        <div class="field"><label for="runs">Decades to play out</label><select id="runs"><option value="200">200 (faster)</option><option value="1000" selected>1,000 (recommended)</option><option value="5000">5,000 (most precise)</option></select></div>
-        <details class="share">
-          <summary>Share your settings</summary>
-          <p class="hint">Copy your settings to send to a colleague, or paste theirs and load them.</p>
-          <textarea id="cfg" aria-label="Settings as text"></textarea>
-          <div class="row2"><button type="button" id="copycfg">Copy settings</button><button type="button" id="loadcfg">Load pasted</button></div>
-          <p class="hint" id="cfgmsg"></p>
-        </details>
+    <div id="as-body" hidden>
+      <p class="sub">Move a slider and every tab updates in about a second. These also set the outside shocks and how aggressive rivals are in the AI War Room.</p>
+      <div class="as-grid">
+        <div class="as-col">
+          <h3>Outside shocks</h3>
+          <p class="hint">How often each kind of shock hits. 3 is normal, 1 is rare, 5 is frequent.</p>
+          <div id="pestel"></div>
+          <label class="toggle"><input type="checkbox" id="tail" checked><span><b>Include a pandemic-type shutdown.</b> Rare (1.5% a year), but it closes parks for two years.</span></label>
+        </div>
+        <div class="as-col">
+          <h3>Competitors</h3>
+          <p class="hint">How aggressive rivals are. 50 is normal; 0 means they stay out of Disney's way, 100 means they come hard.</p>
+          <div id="players"></div>
+        </div>
+        <div class="as-col">
+          <h3>New startups</h3>
+          <p class="hint">Chance each year that a new kind of rival appears. Once it arrives, it stays.</p>
+          <div id="arch"></div>
+          <h3 style="margin-top:14px">How Disney responds</h3>
+          <label class="toggle"><input type="checkbox" id="trig" checked><span><b>Disney gets better at repeat threats.</b> After a threat hits once, the next one like it does 30% less damage.</span></label>
+          <div class="field"><label for="runs">Decades to play out</label><select id="runs"><option value="200">200 (faster)</option><option value="1000" selected>1,000 (recommended)</option><option value="5000">5,000 (most precise)</option></select></div>
+          <details class="share">
+            <summary>Share your settings</summary>
+            <p class="hint">Copy your settings to send to a colleague, or paste theirs and load them.</p>
+            <textarea id="cfg" aria-label="Settings as text"></textarea>
+            <div class="row2"><button type="button" id="copycfg">Copy settings</button><button type="button" id="loadcfg">Load pasted</button></div>
+            <p class="hint" id="cfgmsg"></p>
+          </details>
+        </div>
       </div>
     </div>
   </section>
 
   <div class="tabs" role="tablist" aria-label="Results">
-    <button role="tab" id="tab-threats" aria-controls="p-threats" aria-selected="true">Threats &amp; actions</button>
-    <button role="tab" id="tab-warroom" aria-controls="p-warroom" aria-selected="false">AI War Room</button>
+    <button role="tab" id="tab-warroom" aria-controls="p-warroom" aria-selected="true">AI War Room</button>
+    <button role="tab" id="tab-threats" aria-controls="p-threats" aria-selected="false">Biggest threats</button>
     <button role="tab" id="tab-outlook" aria-controls="p-outlook" aria-selected="false">Profit outlook</button>
     <button role="tab" id="tab-strategies" aria-controls="p-strategies" aria-selected="false">Compare strategies</button>
-    <button role="tab" id="tab-history" aria-controls="p-history" aria-selected="false">Test against history</button>
+    <button role="tab" id="tab-history" aria-controls="p-history" aria-selected="false">Would it have worked?</button>
   </div>
 
-  <!-- THREATS & ACTIONS -->
-  <section role="tabpanel" id="p-threats" aria-labelledby="tab-threats">
-    <div class="card">
-      <h2 id="thesis-title">Three low-cost actions Disney could take today</h2>
-      <p class="sub" id="thesis-sub"></p>
-      <div class="actions" id="actions"></div>
-    </div>
-    <div class="tiles" id="risk-tiles"></div>
-    <div class="card">
-      <h2>Three of the 1,000 futures, and what would have helped</h2>
-      <p class="sub">A bad decade, a typical one and a good one, each with its five costliest threats and the action that addresses each. Even good decades take hits; they end well because the hits are fewer, smaller or later.</p>
-      <div class="futures" id="futures"></div>
-    </div>
-    <div class="two">
-      <div class="card">
-        <h2>Threats that keep coming back</h2>
-        <p class="sub">The share of the 1,000 futures in which each threat was one of the five most costly. The higher the share, the more it is worth watching.</p>
-        <div class="tablewrap"><table><thead><tr><th>Threat</th><th>From</th><th class="num">Top 5 in</th></tr></thead><tbody id="common"></tbody></table></div>
-      </div>
-      <div class="card">
-        <h2>Where the serious damage comes from</h2>
-        <p class="sub">Of all the serious damage across the 1,000 futures, the share caused by each type of threat. A serious threat costs Disney $0.5B or more of profit over the decade.</p>
-        <div class="tablewrap"><table><thead><tr><th>Type of threat</th><th class="num">Share of damage</th><th>Covered by</th></tr></thead><tbody id="bytag"></tbody></table></div>
-      </div>
-    </div>
-  </section>
-
-
   <!-- AI WAR ROOM -->
-  <section role="tabpanel" id="p-warroom" aria-labelledby="tab-warroom" hidden>
+  <section role="tabpanel" id="p-warroom" aria-labelledby="tab-warroom">
     <div class="card">
-      <h2>AI War Room: let AI agents play out the decade</h2>
-      <p class="sub">Eight AI agents each play one company, briefed on its real finances, assets and goals as of late 2026. Each turn covers two years: Disney makes its moves, rivals react, and an AI referee judges what every move costs and what it does to Disney's profit. Five turns make one decade. Each click plays 3 games, each with a different kind of newcomer, and no two go the same way. At the end, an AI analyst explains what paid off for Disney, what backfired, and what to do now.</p>
-      <div class="chips" id="wr-players"></div>
-      <p class="note" id="wr-mode-note"></p>
-      <p class="note">Uses the strategy selected above and the shock and rival settings in <i>Your assumptions</i>. Rival players run on Claude Haiku 5.5; Disney and the referee on Claude Sonnet 5.5; the analyst on Claude Opus 5.5. A click takes about 4–8 minutes, and a countdown shows how long is left.</p>
+      <h2>Let AI rivals play out the decade</h2>
+      <p class="sub">Eight AI agents play Disney and its biggest rivals for ten years, an AI referee scores every move, and an AI analyst tells you what Disney should do. Each run plays 3 games, and no two go the same way.</p>
       <form class="wr-controls" id="wr-form">
         <div class="field wide"><label for="wr-hyp">What do you want to test? (optional)</label>
           <textarea id="wr-hyp" rows="2" maxlength="400" placeholder="Describe any situation in your own words, for example: Netflix makes a big push into theme parks."></textarea>
-          <p class="hint">Leave it blank to simply play out the decade. If you fill it in, 3 games play with your scenario and a 4th plays without it, so you can see the difference.</p></div>
+          <p class="hint">Leave it blank to simply play out the decade. If you fill it in, 3 games play with your scenario and a 4th without it, so you can see the difference.</p></div>
         <div class="field"><label for="wr-pass">Passcode</label><input id="wr-pass" type="password" autocomplete="off" placeholder="From Jake's email"></div>
-        <button type="submit" class="primary" id="wr-play">Play 3 games</button>
+        <button type="submit" class="primary" id="wr-play">Play the games</button>
         <button type="button" id="wr-stop" hidden>Stop</button>
         <span class="note" id="wr-status" aria-live="polite"></span>
       </form>
       <div class="wr-progress" id="wr-progress" hidden><div class="bar"><span id="wr-bar" style="width:0%"></span></div><div class="note" id="wr-eta">Estimating time left…</div></div>
+      <details class="more">
+        <summary>How the game works</summary>
+        <div class="more-body">
+          <p class="note" id="wr-mode-note"></p>
+          <div class="chips" id="wr-players"></div>
+          <p class="note">Each player is briefed on its company's real finances, assets and goals as of late 2026. Each turn covers two years: Disney moves, rivals react, and the referee judges what each move costs and how it changes Disney's profit. The strategy above and the shock and rival settings in <i>Your assumptions</i> apply. Rival players run on Claude Haiku 5.5, Disney and the referee on Claude Sonnet 5.5, and the analyst on Claude Opus 5.5. A run takes about 4–8 minutes.</p>
+        </div>
+      </details>
     </div>
     <div class="card" id="wr-insights-card" hidden>
       <div class="bottomline" id="wr-bottom"></div>
-      <h2 style="margin-top:18px">The detail</h2>
-      <div class="insights" id="wr-insights"></div>
+      <details class="more">
+        <summary>See more detail: what worked, what backfired, and the insights behind this</summary>
+        <div class="more-body"><div class="insights" id="wr-insights"></div></div>
+      </details>
     </div>
     <div class="card" id="wr-results-card" hidden>
-      <h2>How the AI games compare</h2>
-      <p class="sub"><b>How to read it:</b> each colored line is one AI-played game, showing Disney's yearly profit. The shaded band is where 8 in 10 of the simulator's 1,000 futures land for the same strategy. A line above the band is a better decade than usual; below it, a worse one.</p>
+      <h2>How the games played out</h2>
+      <p class="sub">Each colored line is one AI game: Disney's yearly profit. The shaded band is where the simulator's futures usually land. Above the band means a better decade than usual; below it, a worse one.</p>
       <div class="chartwrap" id="wrwrap"><svg id="wrchart" viewBox="0 0 720 300" width="100%" role="img" aria-label="AI games compared with the simulator"></svg></div>
       <div class="legend" id="wr-legend"></div>
+      <details class="more">
+        <summary>See the full games, turn by turn</summary>
+        <div class="more-body"><div class="games" id="wr-games"></div></div>
+      </details>
     </div>
-    <div class="games" id="wr-games"></div>
+  </section>
+
+  <!-- BIGGEST THREATS -->
+  <section role="tabpanel" id="p-threats" aria-labelledby="tab-threats" hidden>
+    <section class="answer" aria-live="polite">
+      <div class="eyebrow">The short answer</div>
+      <p id="answer">Running 1,000 futures…</p>
+    </section>
+    <div class="card">
+      <h2>Three low-cost actions Disney could take today</h2>
+      <div class="actions" id="actions"></div>
+      <details class="more">
+        <summary>See more detail: how these were chosen, and the threats behind them</summary>
+        <div class="more-body">
+          <p class="sub" id="thesis-sub"></p>
+          <div class="tiles" id="risk-tiles"></div>
+          <h3 class="mt">Three of the 1,000 futures, and what would have helped</h3>
+          <p class="sub">A bad, typical and good decade, each with its five costliest threats. Even good decades take hits; they end well because the hits are smaller or come earlier.</p>
+          <div class="futures" id="futures"></div>
+          <div class="two mt">
+            <div>
+              <h3>Threats that keep coming back</h3>
+              <p class="sub">How often each threat was one of a future's five most costly.</p>
+              <div class="tablewrap"><table><thead><tr><th>Threat</th><th>From</th><th class="num">Top 5 in</th></tr></thead><tbody id="common"></tbody></table></div>
+            </div>
+            <div>
+              <h3>Where the serious damage comes from</h3>
+              <p class="sub">Share of all serious damage (threats costing $0.5B+ over the decade), by type.</p>
+              <div class="tablewrap"><table><thead><tr><th>Type of threat</th><th class="num">Share</th><th>Covered by</th></tr></thead><tbody id="bytag"></tbody></table></div>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
   </section>
 
   <!-- OUTLOOK -->
   <section role="tabpanel" id="p-outlook" aria-labelledby="tab-outlook" hidden>
-    <div class="tiles" id="outlook-tiles"></div>
+    <section class="answer"><div class="eyebrow">The short answer</div><p id="sum-outlook"></p></section>
     <div class="card">
-      <h2 id="fan-title">The range of outcomes</h2>
+      <h2 id="fan-title">Disney's yearly profit over the next decade</h2>
       <p class="sub" id="fan-sub"></p>
-      <div class="chartwrap" id="fanwrap"><svg id="fan" viewBox="0 0 720 300" width="100%" role="img" aria-label="Range of simulated Disney segment operating income"></svg><div class="tip" id="fantip"></div></div>
-      <div class="legend"><span><i style="background:var(--band)"></i>Middle 80% of futures</span><span><i style="background:var(--accent);height:3px;vertical-align:3px"></i>Most likely (median)</span><span id="leg-base"><i style="background:var(--ink-3);height:1px;vertical-align:4px"></i>Starting point</span><span id="leg-actual" hidden><i style="background:var(--ink);height:3px;vertical-align:3px"></i>What actually happened</span></div>
-    </div>
-    <div class="card">
-      <h2>One bad decade, year by year</h2>
-      <p class="sub" id="story-sub"></p>
-      <ul class="log" id="story"></ul>
+      <div class="chartwrap" id="fanwrap"><svg id="fan" viewBox="0 0 720 300" width="100%" role="img" aria-label="Range of simulated Disney profit"></svg><div class="tip" id="fantip"></div></div>
+      <div class="legend"><span><i style="background:var(--band)"></i>Where 8 in 10 futures land</span><span><i style="background:var(--accent);height:3px;vertical-align:3px"></i>Most likely path</span><span id="leg-base"><i style="background:var(--ink-3);height:1px;vertical-align:4px"></i>Today</span><span id="leg-actual" hidden></span></div>
+      <details class="more">
+        <summary>See more detail: key numbers and one bad decade, year by year</summary>
+        <div class="more-body">
+          <div class="tiles" id="outlook-tiles"></div>
+          <h3 class="mt">One bad decade, year by year</h3>
+          <p class="sub" id="story-sub"></p>
+          <ul class="log" id="story"></ul>
+        </div>
+      </details>
     </div>
   </section>
 
   <!-- STRATEGIES -->
   <section role="tabpanel" id="p-strategies" aria-labelledby="tab-strategies" hidden>
+    <section class="answer"><div class="eyebrow">The short answer</div><p id="sum-strat"></p></section>
     <div class="card">
-      <h2>Which strategy holds up in a bad decade?</h2>
-      <p class="sub" id="pb-sub"></p>
+      <h2>Ten-year profit by strategy</h2>
+      <p class="sub">Further right means more profit. The dot is the most likely result; the line runs from a bad decade to a good one. Click a strategy to select it.</p>
       <div class="chartwrap" id="pbwrap"><svg id="pbchart" viewBox="0 0 640 300" width="100%" role="img" aria-label="Strategy comparison"></svg><div class="tip" id="pbtip"></div></div>
-      <div class="legend"><span><i style="background:var(--navy);border-radius:50%;width:10px;height:10px"></i>Most likely outcome</span><span><i style="background:var(--ink-3);height:2px;vertical-align:4px"></i>Bad decade to good decade (10th–90th percentile)</span></div>
-      <p class="note">Click a strategy to make it the selected one.</p>
+      <details class="more">
+        <summary>See more detail: how to read this chart</summary>
+        <div class="more-body"><p class="sub" id="pb-sub"></p></div>
+      </details>
     </div>
   </section>
 
   <!-- HISTORY -->
   <section role="tabpanel" id="p-history" aria-labelledby="tab-history" hidden>
-    <div class="tiles" id="history-tiles"></div>
+    <section class="answer"><div class="eyebrow">The short answer</div><p id="sum-history"></p></section>
     <div class="card">
-      <h2>If we had built this in 2019, would it have worked?</h2>
-      <p class="sub">The model starts in fiscal 2019 with only what was knowable then (no generative AI), plays out 1,000 futures to 2026, and is compared with what Disney actually reported. <b>How to read it:</b> the shaded band is what the model expected; the black line is what really happened. Where the black line falls below the band (2020–21, COVID), reality was worse than almost every simulated future; where it rises above (2025–26), the recovery beat the model.</p>
+      <h2>If we had built this in 2019</h2>
+      <p class="sub">The shaded band is what the model expected, starting in 2019 with only what was knowable then. The black line is what Disney actually reported.</p>
       <div class="chartwrap" id="btwrap"><svg id="btfan" viewBox="0 0 720 300" width="100%" role="img" aria-label="Backtest: simulated range vs actual results"></svg><div class="tip" id="bttip"></div></div>
-      <div class="legend"><span><i style="background:var(--band)"></i>Middle 80% of simulated futures</span><span><i style="background:var(--accent);height:3px;vertical-align:3px"></i>Simulated median</span><span><i style="background:var(--ink);height:3px;vertical-align:3px"></i>What actually happened</span></div>
-      <h3 style="margin-top:18px">What the test shows</h3>
-      <ol class="lessons" id="bt-lessons"></ol>
-    </div>
-    <div class="card">
-      <h2>Scorecard: threats a 2019 team could have listed</h2>
-      <div class="tablewrap"><table><thead><tr><th>Threat</th><th>Happened by 2026?</th></tr></thead><tbody id="bt-rows"></tbody></table></div>
+      <div class="legend"><span><i style="background:var(--band)"></i>What the model expected</span><span><i style="background:var(--ink);height:3px;vertical-align:3px"></i>What actually happened</span></div>
+      <details class="more">
+        <summary>See more detail: the scorecard and lessons</summary>
+        <div class="more-body">
+          <div class="tiles" id="history-tiles"></div>
+          <h3 class="mt">What the test shows</h3>
+          <ol class="lessons" id="bt-lessons"></ol>
+          <h3 class="mt">Threats a 2019 team could have listed</h3>
+          <div class="tablewrap"><table><thead><tr><th>Threat</th><th>Happened by 2026?</th></tr></thead><tbody id="bt-rows"></tbody></table></div>
+        </div>
+      </details>
     </div>
   </section>
 
   <footer>
     <p><b>Starting point:</b> fiscal 2026 segment operating income from Disney's FY26 Q4 8-K: Experiences $11.19B, Entertainment $5.44B, Sports $3.09B (total $19.7B). "Profit" on this page means total segment operating income.</p>
     <p><b>What the numbers are:</b> draft assumptions by Jake Schmidt, built from public information to be overwritten with a strategy team's own views and data. The tool shows ranges and recurring threats, not a forecast. Action effects are assumptions too.</p>
-    <p><b>Where AI runs:</b> only in the AI War Room tab, which calls Claude (Haiku 5.5 players, Sonnet 5.5 referee, Opus 5.5 analyst). The simulator itself is plain math in your browser: same settings, same answer. <span id="status"></span></p>
+    <p><b>Where AI runs:</b> only in the AI War Room tab, which calls Claude (Haiku 5.5 for rival players, Sonnet 5.5 for Disney and the referee, Opus 5.5 for the analyst). The simulator itself is plain math in your browser: same settings, same answer. <span id="status"></span></p>
   </footer>
 </div>
 
@@ -817,9 +860,9 @@ $('loadcfg').addEventListener('click', () => {
 $('reset').addEventListener('click', () => { S = defaults(); buildControls(); runAll(); $('cfgmsg').textContent = 'Reset to the baseline assumptions.'; });
 
 // tabs (hash routed: #threats, #outlook, #strategies, #history)
-const TABS = ['threats', 'warroom', 'outlook', 'strategies', 'history'];
+const TABS = ['warroom', 'threats', 'outlook', 'strategies', 'history'];
 function showTab(name, focus) {
-  if (!TABS.includes(name)) name = 'threats';
+  if (!TABS.includes(name)) name = 'warroom';
   TABS.forEach(t => { const on = t === name; $('tab-' + t).setAttribute('aria-selected', on); $('tab-' + t).tabIndex = on ? 0 : -1; $('p-' + t).hidden = !on; });
   if (focus) $('tab-' + name).focus();
 }
@@ -922,6 +965,7 @@ function drawStrategies(comp, sel) {
 function tile(k, v, n, cls) { return `<div class="tile ${cls || ''}"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`; }
 
 function runAll() {
+  assumptionSummary();
   const t0 = performance.now();
   // forward
   MODE = 'forward'; START = MODES.forward.start; YEARS = MODES.forward.years; BASE_FY = MODES.forward.base;
@@ -959,9 +1003,7 @@ function renderForward(pb, main, alt, A, mitRuns, comp) {
   const totalV = Object.values(A.byTag).reduce((a, x) => a + x.v, 0) || 1;
   $('actions').innerHTML = A.chosen.map((m, i) => {
     const share = m.tags.reduce((a, t) => a + (A.byTag[t]?.v || 0), 0) / totalV;
-    return `<div class="action"><div class="no">Action ${i + 1}</div><h3>${esc(m.title)}</h3><p>${esc(m.how)}</p>
-      <div class="meta"><span class="pill good">Cost: ${m.cost}</span>${m.tags.map(t => `<span class="pill neutral">${TAG_NAMES[t]}</span>`).join('')}</div>
-      <div><div class="note">Addresses ${(share * 100).toFixed(0)}% of serious threat damage</div><div class="bar"><span style="width:${(share * 100).toFixed(0)}%"></span></div></div></div>`;
+    return `<div class="action"><div class="no">Action ${i + 1}</div><h3>${esc(m.title)}</h3><p>${esc(m.how)}</p><p class="note"><b>Cost:</b> ${m.cost.toLowerCase()} · <b>Guards against:</b> ${m.tags.map(t => TAG_NAMES[t].toLowerCase().replace(/\bai\b/g, 'AI')).join(', ')} (${(share * 100).toFixed(0)}% of serious damage)</p></div>`;
   }).join('');
 
   $('risk-tiles').innerHTML =
@@ -1015,6 +1057,17 @@ function renderForward(pb, main, alt, A, mitRuns, comp) {
   // strategies
   $('pb-sub').innerHTML = `<b>How to read it:</b> further right means more total profit over fiscal ${2000 + BASE_FY + 1}–${end}. The dot is each strategy's most likely result; its line runs from a bad decade (left end) to a good one (right end). The dotted line, ${fmtT(flat)}, is what Disney earns if profit simply stays flat. A strategy whose left end sits further right holds up better when things go wrong. Gaps under about $3B are effectively a tie.`;
   drawStrategies(comp, pb);
+  const p90 = pct(f, .9);
+  $('sum-outlook').innerHTML = `Under <b>${esc(plain(pb.name))}</b>, Disney most likely earns <b>${fmtT(p50)}</b> over the next ten years, with yearly profit reaching ${fmtB(endMed)} by ${end}. In a bad decade (1 in 10 futures) it earns <b>${fmtT(p10)}</b>; in a good one, ${fmtT(p90)}.`;
+  const byBad = comp.slice().sort((x, y) => y.p10 - x.p10), best = byBad[0];
+  const tied = byBad.filter(c => best.p10 - c.p10 < 3), worst = byBad.at(-1), upside = comp.slice().sort((x, y) => y.p90 - x.p90)[0];
+  const stratNames = l => l.map(c => plain(c.pb.name));
+  const joinN = l => l.length < 2 ? l.join('') : l.slice(0, -1).join(', ') + ' and ' + l.at(-1);
+  $('sum-strat').innerHTML = (tied.length > 1
+    ? `In a bad decade, <b>${joinN(stratNames(tied))}</b> hold up about equally well (within $3B of each other over ten years).`
+    : `<b>${plain(best.pb.name)}</b> holds up best in a bad decade, at ${fmtT(best.p10)} over ten years.`)
+    + (tied.includes(worst) ? '' : ` <b>${plain(worst.pb.name)}</b> does worst, at ${fmtT(worst.p10)}.`)
+    + ` <b>${plain(upside.pb.name)}</b> has the most upside in a good decade (${fmtT(upside.p90)}).`;
 }
 
 function renderHistory(bt) {
@@ -1031,6 +1084,7 @@ function renderHistory(bt) {
     tile('Where 2026 landed', ordinal(endRank) + ' percentile', `Actual ${fmtB(ACTUAL[end])} vs ${fmtB(med)} expected`, 'risk') +
     tile('Futures with a COVID-size drop', (deep * 100).toFixed(0) + '%', 'Profit fell 40%+ below 2019', '');
   drawFan('btfan', 'bttip', 'btwrap', bt, ACTUAL);
+  $('sum-history').innerHTML = `Of the ${listed.length} threats a 2019 version of this model could have listed, <b>${happened} actually happened</b>. It caught COVID only as a rare event (${ordinal(trough)} percentile), and it <b>underestimated the recovery</b>: actual 2026 profit beat ${endRank}% of its futures.`;
   $('bt-lessons').innerHTML = [
     `<li><b>It picked the right threats.</b> ${happened} of the ${listed.length} threats a 2019 team could have listed happened by 2026, mostly rivals moving into sports rights and studio mergers.</li>`,
     S.tail
@@ -1377,6 +1431,27 @@ $('wr-form').addEventListener('submit', playWarRoom);
 $('wr-stop').addEventListener('click', () => wrAbort && wrAbort.abort());
 try { const p = localStorage.getItem('horizons-pass'); if (p) $('wr-pass').value = p; } catch {}
 
+function assumptionSummary() {
+  const d = defaults();
+  const word = (v, base) => v > base * 1.15 ? 'higher than normal' : v < base * 0.85 ? 'lower than normal' : 'normal';
+  const avg = o => Object.values(o).reduce((a, v) => a + v, 0) / Object.values(o).length;
+  const singles = Object.keys(S.players).some(k => S.players[k] !== d.players[k]);
+  const parts = [
+    `Outside shocks: ${word(avg(S.pestel), 3)}`,
+    `Rival aggression: ${word(avg(S.arena), 50)}${singles ? ' (some companies tuned)' : ''}`,
+    `New startups: ${word(avg(S.arch), avg(d.arch))}`,
+    `Pandemic risk: ${S.tail ? 'on' : 'off'}`,
+  ];
+  $('as-summary').textContent = parts.join(' · ');
+  $('reset').hidden = JSON.stringify(S) === JSON.stringify({ ...d, playbook: S.playbook });
+}
+$('as-toggle').addEventListener('click', () => {
+  const open = $('as-body').hidden;
+  $('as-body').hidden = !open;
+  $('as-toggle').setAttribute('aria-expanded', open);
+  $('as-toggle').textContent = open ? 'Hide sliders' : 'Adjust assumptions';
+});
+$('howLink').addEventListener('click', e => { e.preventDefault(); $('howto').hidden = !$('howto').hidden; $('howLink').textContent = $('howto').hidden ? 'How this works' : 'Hide'; });
 buildControls();
 showTab(location.hash.slice(1));
 runAll();
