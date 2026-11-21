@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Layout idea: a strategy briefing, not a dashboard. One plain-English answer up top, four tabs that each answer one question, assumptions tucked in a side drawer. */
+/* Layout idea: a strategy briefing, not a dashboard. One plain-English answer up top, four tabs that each answer one question, assumptions in plain view. */
 :root {
   color-scheme: light;
   --bg: #f4f5f7;
@@ -146,6 +146,16 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 footer { color: var(--ink-3); font-size: 13px; padding: 24px 0 48px; display: grid; gap: 6px; max-width: 90ch; }
 footer p { margin: 0; }
 #status { font-size: 12px; color: var(--ink-3); }
+.assumptions { margin-top: 18px; }
+.as-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; flex-wrap: wrap; }
+.as-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 24px; margin-top: 4px; }
+@media (max-width: 900px) { .as-grid { grid-template-columns: 1fr; } }
+.as-col h3 { font-size: 15px; margin: 0; }
+.as-col .hint { margin-top: 2px; }
+details.singles { border: 0; padding: 0 0 8px; margin-top: -4px; }
+details.singles summary { font-size: 13px; font-weight: 600; color: var(--accent); justify-content: flex-start; }
+details.singles summary::after { content: ""; }
+details.share { border-bottom: 0; }
 /* drawer */
 .scrim { position: fixed; inset: 0; background: rgba(10,15,25,.35); z-index: 20; }
 .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100%); background: var(--surface); z-index: 21; box-shadow: -8px 0 24px rgba(0,0,0,.15); display: flex; flex-direction: column; }
@@ -161,10 +171,10 @@ details[open] > summary::after { content: "−"; }
 details details { border-bottom: 1px dashed var(--rule); padding: 8px 0 8px 8px; }
 details details summary { font-size: 14px; font-weight: 600; }
 .hint { font-size: 13px; color: var(--ink-3); margin: 6px 0 8px; }
-.slider { display: grid; grid-template-columns: 1fr 44px; gap: 2px 8px; align-items: center; margin: 8px 0; }
+.slider { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: center; margin: 8px 0; }
 .slider .name { font-size: 14px; grid-column: 1 / -1; }
 .slider input[type=range] { width: 100%; accent-color: var(--navy); }
-.slider output { font-size: 13px; text-align: right; color: var(--ink-2); }
+.slider output { font-size: 13px; text-align: right; color: var(--ink-2); min-width: 32px; white-space: nowrap; }
 .toggle { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; margin: 10px 0; }
 .toggle input { margin-top: 4px; accent-color: var(--navy); }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
@@ -181,6 +191,17 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
 .rulings { margin: 6px 0 0; padding-left: 16px; display: grid; gap: 4px; font-size: 13px; }
 .insights { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
 @media (max-width: 900px) { .insights { grid-template-columns: 1fr; } }
+.wr-controls .field.wide { flex: 1 1 100%; }
+.wr-controls textarea { font-family: var(--font-body); font-size: 15px; min-height: 64px; width: 100%; }
+.bottomline { border-left: 4px solid var(--navy); background: var(--accent-soft); border-radius: 10px; padding: 18px 20px; display: grid; gap: 10px; }
+.bottomline .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--navy); font-weight: 700; }
+.bottomline .big { font-family: var(--font-display); font-size: 24px; line-height: 1.35; margin: 0; }
+.bottomline .verdict { font-size: 16px; margin: 0; }
+.bottomline ol { margin: 0; padding-left: 22px; font-size: 16px; display: grid; gap: 6px; }
+.bottomline .surprise { font-size: 15px; color: var(--ink-2); margin: 0; }
+.games.four { grid-template-columns: repeat(2, minmax(0,1fr)); }
+@media (max-width: 1000px) { .games.four { grid-template-columns: 1fr; } }
+.game.baseline { border-style: dashed; }
 .wr-progress { margin-top: 12px; display: grid; gap: 6px; max-width: 520px; }
 .disney-moves { background: var(--accent-soft); border-radius: 8px; padding: 8px 10px; margin: 8px 0 4px; }
 .disney-moves .lbl { font-size: 12px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: .05em; }
@@ -212,7 +233,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
       <ol>
         <li><span><b>Pick a strategy</b>Choose one of Disney's six possible strategies in the menu below. Everything updates in about a second.</span></li>
         <li><span><b>Read the tabs</b>Start with <i>Threats &amp; actions</i>. Then let AI agents play out the decade in the <i>AI War Room</i>, compare strategies, or check the model against 2019–2026.</span></li>
-        <li><span><b>Change the assumptions</b>Disagree with a number? Open <i>Adjust assumptions</i> and move a slider, for one competitor or a whole industry.</span></li>
+        <li><span><b>Change the assumptions</b>Disagree with a number? Move a slider in <i>Your assumptions</i> below, for a whole industry or a single company.</span></li>
       </ol>
     </div>
   </section>
@@ -223,12 +244,48 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
       <select id="pb"></select>
     </div>
     <div class="pbdesc" id="pbdesc"></div>
-    <button type="button" id="openDrawer">Adjust assumptions</button>
   </div>
 
   <section class="answer" aria-live="polite">
     <div class="eyebrow">The short answer</div>
     <p id="answer">Running 1,000 futures…</p>
+  </section>
+
+
+  <section class="card assumptions" id="assumptions" aria-labelledby="as-title">
+    <div class="as-head">
+      <div><h2 id="as-title">Your assumptions</h2>
+      <p class="sub">Disagree with a number? Move a slider and every tab updates in about a second. These also set the outside shocks and how aggressive rivals are in the AI War Room.</p></div>
+      <button type="button" id="reset">Reset to baseline</button>
+    </div>
+    <div class="as-grid">
+      <div class="as-col">
+        <h3>Outside shocks</h3>
+        <p class="hint">How often each kind of shock hits. 3 is normal, 1 is rare, 5 is frequent.</p>
+        <div id="pestel"></div>
+        <label class="toggle"><input type="checkbox" id="tail" checked><span><b>Include a pandemic-type shutdown.</b> Rare (1.5% a year), but it closes parks for two years.</span></label>
+      </div>
+      <div class="as-col">
+        <h3>Competitors</h3>
+        <p class="hint">How aggressive rivals are. 50 is normal; 0 means they stay out of Disney's way, 100 means they come hard.</p>
+        <div id="players"></div>
+      </div>
+      <div class="as-col">
+        <h3>New startups</h3>
+        <p class="hint">Chance each year that a new kind of rival appears. Once it arrives, it stays.</p>
+        <div id="arch"></div>
+        <h3 style="margin-top:14px">How Disney responds</h3>
+        <label class="toggle"><input type="checkbox" id="trig" checked><span><b>Disney gets better at repeat threats.</b> After a threat hits once, the next one like it does 30% less damage.</span></label>
+        <div class="field"><label for="runs">Decades to play out</label><select id="runs"><option value="200">200 (faster)</option><option value="1000" selected>1,000 (recommended)</option><option value="5000">5,000 (most precise)</option></select></div>
+        <details class="share">
+          <summary>Share your settings</summary>
+          <p class="hint">Copy your settings to send to a colleague, or paste theirs and load them.</p>
+          <textarea id="cfg" aria-label="Settings as text"></textarea>
+          <div class="row2"><button type="button" id="copycfg">Copy settings</button><button type="button" id="loadcfg">Load pasted</button></div>
+          <p class="hint" id="cfgmsg"></p>
+        </details>
+      </div>
+    </div>
   </section>
 
   <div class="tabs" role="tablist" aria-label="Results">
@@ -255,12 +312,12 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
     <div class="two">
       <div class="card">
         <h2>Threats that keep coming back</h2>
-        <p class="sub">How often each threat is among a future's five most costly. Recurring threats are the ones worth monitoring.</p>
+        <p class="sub">The share of the 1,000 futures in which each threat was one of the five most costly. The higher the share, the more it is worth watching.</p>
         <div class="tablewrap"><table><thead><tr><th>Threat</th><th>From</th><th class="num">Top 5 in</th></tr></thead><tbody id="common"></tbody></table></div>
       </div>
       <div class="card">
         <h2>Where the serious damage comes from</h2>
-        <p class="sub">Share of all medium-to-high threat damage, by type of threat. Medium means $0.5B+ of lost profit over the decade; high means $1.5B+.</p>
+        <p class="sub">Of all the serious damage across the 1,000 futures, the share caused by each type of threat. A serious threat costs Disney $0.5B or more of profit over the decade.</p>
         <div class="tablewrap"><table><thead><tr><th>Type of threat</th><th class="num">Share of damage</th><th>Covered by</th></tr></thead><tbody id="bytag"></tbody></table></div>
       </div>
     </div>
@@ -274,8 +331,11 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
       <p class="sub">Eight AI agents each play one company, briefed on its real finances, assets and goals as of late 2026. Each turn covers two years: Disney makes its moves, rivals react, and an AI referee judges what every move costs and what it does to Disney's profit. Five turns make one decade. Each click plays 3 games, each with a different kind of newcomer, and no two go the same way. At the end, an AI analyst explains what paid off for Disney, what backfired, and what to do now.</p>
       <div class="chips" id="wr-players"></div>
       <p class="note" id="wr-mode-note"></p>
-      <p class="note">Uses the strategy selected above and the shock settings in <i>Adjust assumptions</i>. Rival players run on Claude Haiku 5.5; Disney and the referee on Claude Sonnet 5.5; the analyst on Claude Opus 5.5. A click takes about 4–8 minutes, and a countdown shows how long is left.</p>
+      <p class="note">Uses the strategy selected above and the shock and rival settings in <i>Your assumptions</i>. Rival players run on Claude Haiku 5.5; Disney and the referee on Claude Sonnet 5.5; the analyst on Claude Opus 5.5. A click takes about 4–8 minutes, and a countdown shows how long is left.</p>
       <form class="wr-controls" id="wr-form">
+        <div class="field wide"><label for="wr-hyp">What do you want to test? (optional)</label>
+          <textarea id="wr-hyp" rows="2" maxlength="400" placeholder="Describe any situation in your own words, for example: Netflix makes a big push into theme parks."></textarea>
+          <p class="hint">Leave it blank to simply play out the decade. If you fill it in, 3 games play with your scenario and a 4th plays without it, so you can see the difference.</p></div>
         <div class="field"><label for="wr-pass">Passcode</label><input id="wr-pass" type="password" autocomplete="off" placeholder="From Jake's email"></div>
         <button type="submit" class="primary" id="wr-play">Play 3 games</button>
         <button type="button" id="wr-stop" hidden>Stop</button>
@@ -284,13 +344,13 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
       <div class="wr-progress" id="wr-progress" hidden><div class="bar"><span id="wr-bar" style="width:0%"></span></div><div class="note" id="wr-eta">Estimating time left…</div></div>
     </div>
     <div class="card" id="wr-insights-card" hidden>
-      <h2>What the AI analyst found</h2>
-      <p class="sub" id="wr-headline"></p>
+      <div class="bottomline" id="wr-bottom"></div>
+      <h2 style="margin-top:18px">The detail</h2>
       <div class="insights" id="wr-insights"></div>
     </div>
     <div class="card" id="wr-results-card" hidden>
-      <h2>Three AI-played decades vs. 1,000 simulated ones</h2>
-      <p class="sub">Annual profit in each AI game, drawn over the simulator's range for the same strategy. Each AI game shows its ten-year profit and where that ranks among the simulator's 1,000 futures.</p>
+      <h2>How the AI games compare</h2>
+      <p class="sub"><b>How to read it:</b> each colored line is one AI-played game, showing Disney's yearly profit. The shaded band is where 8 in 10 of the simulator's 1,000 futures land for the same strategy. A line above the band is a better decade than usual; below it, a worse one.</p>
       <div class="chartwrap" id="wrwrap"><svg id="wrchart" viewBox="0 0 720 300" width="100%" role="img" aria-label="AI games compared with the simulator"></svg></div>
       <div class="legend" id="wr-legend"></div>
     </div>
@@ -329,7 +389,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
     <div class="tiles" id="history-tiles"></div>
     <div class="card">
       <h2>If we had built this in 2019, would it have worked?</h2>
-      <p class="sub">The model starts in fiscal 2019 with only what was knowable then (no generative AI), plays out 1,000 futures to 2026, and is compared with what Disney actually reported.</p>
+      <p class="sub">The model starts in fiscal 2019 with only what was knowable then (no generative AI), plays out 1,000 futures to 2026, and is compared with what Disney actually reported. <b>How to read it:</b> the shaded band is what the model expected; the black line is what really happened. Where the black line falls below the band (2020–21, COVID), reality was worse than almost every simulated future; where it rises above (2025–26), the recovery beat the model.</p>
       <div class="chartwrap" id="btwrap"><svg id="btfan" viewBox="0 0 720 300" width="100%" role="img" aria-label="Backtest: simulated range vs actual results"></svg><div class="tip" id="bttip"></div></div>
       <div class="legend"><span><i style="background:var(--band)"></i>Middle 80% of simulated futures</span><span><i style="background:var(--accent);height:3px;vertical-align:3px"></i>Simulated median</span><span><i style="background:var(--ink);height:3px;vertical-align:3px"></i>What actually happened</span></div>
       <h3 style="margin-top:18px">What the test shows</h3>
@@ -348,42 +408,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
   </footer>
 </div>
 
-<div class="scrim" id="scrim" hidden></div>
-<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" hidden>
-  <header><h2 id="drawer-title">Adjust assumptions</h2><button type="button" id="closeDrawer" aria-label="Close">Done</button></header>
-  <div class="body">
-    <details open>
-      <summary>Economic and world shocks</summary>
-      <p class="hint">How often each kind of shock happens. 3 is the baseline, 1 is rare, 5 is frequent.</p>
-      <div id="pestel"></div>
-      <label class="toggle"><input type="checkbox" id="tail" checked><span><b>Include a pandemic-class shock.</b> Rare (1.5% a year), but it closes parks for two years.</span></label>
-    </details>
-    <details>
-      <summary>Competitors · 109 companies</summary>
-      <p class="hint">How aggressive each company is. 50 is the baseline. Set a whole industry at once, or open it to tune single companies.</p>
-      <div id="players"></div>
-    </details>
-    <details>
-      <summary>Startups that don't exist yet</summary>
-      <p class="hint">Chance per year that each kind of disruptor arrives. Once it arrives, it stays.</p>
-      <div id="arch"></div>
-    </details>
-    <details>
-      <summary>How Disney responds</summary>
-      <label class="toggle"><input type="checkbox" id="trig" checked><span><b>Disney gets better at handling repeat threats.</b> After a threat hits once, Disney reacts faster and the next one like it does 30% less damage.</span></label>
-      <div class="field" style="margin-top:8px"><label for="runs">How many decades to play out</label><select id="runs"><option value="200">200 (faster)</option><option value="1000" selected>1,000 (recommended)</option><option value="5000">5,000 (most precise)</option></select></div>
-      <p class="hint">The same settings always give the same results, so you and a colleague see identical numbers.</p>
-    </details>
-    <details>
-      <summary>Share your settings</summary>
-      <p class="hint">Copy your settings to send to a colleague, or paste theirs and load them.</p>
-      <textarea id="cfg" aria-label="Settings as text"></textarea>
-      <div class="row2"><button type="button" id="copycfg">Copy settings</button><button type="button" id="loadcfg">Load pasted</button></div>
-      <p class="hint" id="cfgmsg"></p>
-    </details>
-  </div>
-  <div class="foot"><button type="button" id="reset">Reset to baseline</button><button type="button" class="primary" id="doneDrawer">Show results</button></div>
-</aside>
+
 <script>
 // ---------- Model data (draft assumptions) ----------
 // Two modes. Forward: FY26 actuals, 10 years out. Backtest: FY19, 7 years to FY26, compared with what actually happened.
@@ -754,14 +779,15 @@ function buildControls() {
   $('runs').value = String(S.runs); $('trig').checked = S.triggers; $('tail').checked = S.tail;
   ['pestel', 'players', 'arch'].forEach(id => { $(id).innerHTML = ''; });
   PESTEL.forEach(c => slider($('pestel'), 'w-' + c.id, c.name, 1, 5, 1, S.pestel[c.id], '', v => { S.pestel[c.id] = v; schedule(); }));
+  const ARENA_SHORT = { exp: 'Parks, cruise and resort rivals', ent: 'Streaming, studio and gaming rivals', spt: 'Sports and ESPN rivals' };
   ARENAS.forEach(ar => {
     const list = PLAYERS.filter(p => p.arena === ar.id);
-    const d = document.createElement('details');
-    d.innerHTML = `<summary>${ar.name} · ${list.length}</summary>`;
+    slider($('players'), 'ar-' + ar.id, `${ARENA_SHORT[ar.id]} <span style="color:var(--ink-3)">· ${list.length} companies</span>`, 0, 100, 5, S.arena[ar.id], '', v => { S.arena[ar.id] = v; schedule(); });
+    const d = document.createElement('details'); d.className = 'singles';
+    d.innerHTML = `<summary>Tune single companies (${list.length})</summary>`;
     $('players').appendChild(d);
     const box = document.createElement('div'); d.appendChild(box);
-    slider(box, 'ar-' + ar.id, '<b>Whole industry</b>', 0, 100, 5, S.arena[ar.id], '', v => { S.arena[ar.id] = v; schedule(); });
-    const h = document.createElement('p'); h.className = 'hint'; h.textContent = 'Single companies. Tier 1 can move a whole Disney segment; tier 3 is early or narrow.'; box.appendChild(h);
+    const h = document.createElement('p'); h.className = 'hint'; h.textContent = 'Tier 1 can move a whole Disney segment; tier 3 is early or narrow.'; box.appendChild(h);
     list.forEach(p => slider(box, 'a-' + p.id, `${esc(p.name)} <span style="color:var(--ink-3)">· tier ${p.tier}</span>`, 0, 100, 5, S.players[p.id], '', v => { S.players[p.id] = v; schedule(); }));
   });
   ARCHETYPES.forEach(a => slider($('arch'), 'r-' + a.id, a.name, 0, 30, 1, S.arch[a.id], '% a year', v => { S.arch[a.id] = v; schedule(); }));
@@ -770,15 +796,7 @@ function buildControls() {
 let timer = null;
 function schedule() { clearTimeout(timer); $('status').textContent = 'Updating…'; timer = setTimeout(runAll, 250); }
 
-// drawer
-let lastFocus = null;
-function openDrawer() { lastFocus = document.activeElement; $('drawer').hidden = false; $('scrim').hidden = false; $('closeDrawer').focus(); }
-function closeDrawer() { $('drawer').hidden = true; $('scrim').hidden = true; if (lastFocus) lastFocus.focus(); }
-$('openDrawer').addEventListener('click', openDrawer);
-$('closeDrawer').addEventListener('click', closeDrawer);
-$('doneDrawer').addEventListener('click', closeDrawer);
-$('scrim').addEventListener('click', closeDrawer);
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('drawer').hidden) closeDrawer(); });
+
 
 $('pb').addEventListener('change', e => { S.playbook = e.target.value; $('pbdesc').textContent = PLAYBOOKS.find(p => p.id === S.playbook).desc; runAll(); });
 $('runs').addEventListener('change', e => { S.runs = +e.target.value; schedule(); });
@@ -984,7 +1002,7 @@ function renderForward(pb, main, alt, A, mitRuns, comp) {
     tile(`Annual profit in ${end}, most likely`, fmtB(endMed), `${(below * 100).toFixed(0)}% of futures dip below today in ${2000 + BASE_FY + MID()}`, 'base') +
     tile('Value of handling repeat threats better', (on - off >= 0 ? '+' : '−') + fmtT(Math.abs(on - off)), 'Bad decade, with vs without', 'goodt');
   $('fan-title').textContent = `Disney's profit under ${plain(pb.name)}, fiscal ${2000 + BASE_FY}–${end}`;
-  $('fan-sub').textContent = 'Total segment operating income, $B. The shaded band holds the middle 80% of the 1,000 futures; the line is the most likely path. Hover to see each year.';
+  $('fan-sub').innerHTML = '<b>How to read it:</b> each of the 1,000 futures is a path of Disney\'s yearly profit (total segment operating income). The shaded band is where 8 in 10 of those paths fall, the blue line is the most likely path, and the dotted line is today\'s profit. A wider band means more uncertainty. Hover to see any year.';
   $('leg-base').lastChild.textContent = `Today (${fmtB(startTotal())})`;
   drawFan('fan', 'fantip', 'fanwrap', main, null);
   const pick = main[order[Math.floor((n - 1) * .1)].i];
@@ -995,7 +1013,7 @@ function renderForward(pb, main, alt, A, mitRuns, comp) {
   }).join('') || '<li><span class="yr">–</span><span>No events in this future.</span></li>';
 
   // strategies
-  $('pb-sub').textContent = `Ten-year profit, fiscal ${2000 + BASE_FY + 1}–${end}. Each strategy runs against the same 1,000 futures, so the comparison is fair. The dot is the most likely total; the line runs from a bad decade to a good one. A strategy that holds up keeps the left end of its line high. The dashed line is ${fmtT(flat)}, today's profit held flat for ten years. Differences smaller than about $3B are within normal run-to-run variation, so treat them as a tie.`;
+  $('pb-sub').innerHTML = `<b>How to read it:</b> further right means more total profit over fiscal ${2000 + BASE_FY + 1}–${end}. The dot is each strategy's most likely result; its line runs from a bad decade (left end) to a good one (right end). The dotted line, ${fmtT(flat)}, is what Disney earns if profit simply stays flat. A strategy whose left end sits further right holds up better when things go wrong. Gaps under about $3B are effectively a tie.`;
   drawStrategies(comp, pb);
 }
 
@@ -1016,8 +1034,8 @@ function renderHistory(bt) {
   $('bt-lessons').innerHTML = [
     `<li><b>It picked the right threats.</b> ${happened} of the ${listed.length} threats a 2019 team could have listed happened by 2026, mostly rivals moving into sports rights and studio mergers.</li>`,
     S.tail
-      ? `<li><b>Rare shocks have to be in the model.</b> With a 1.5%-a-year pandemic-class event, COVID lands at the ${ordinal(trough)} percentile. Turn that event off in <i>Adjust assumptions</i> and COVID falls outside every simulated future.</li>`
-      : `<li><b>Rare shocks have to be in the model.</b> With the pandemic-class event off, COVID falls outside the simulated range (${ordinal(trough)} percentile). Turn it back on in <i>Adjust assumptions</i>.</li>`,
+      ? `<li><b>Rare shocks have to be in the model.</b> With a 1.5%-a-year pandemic-class event, COVID lands at the ${ordinal(trough)} percentile. Turn that event off in <i>Your assumptions</i> and COVID falls outside every simulated future.</li>`
+      : `<li><b>Rare shocks have to be in the model.</b> With the pandemic-class event off, COVID falls outside the simulated range (${ordinal(trough)} percentile). Turn it back on in <i>Your assumptions</i>.</li>`,
     `<li><b>It underestimated the recovery.</b> Actual 2026 profit of ${fmtB(ACTUAL[end])} beat ${endRank}% of simulated futures. The model has no bounce-back after a shock and no streaming turnaround, from about $4B of losses in 2022 to profit. That is the next thing to build.</li>`,
   ].join('');
   $('bt-rows').innerHTML = SCORECARD.map(([t, , h]) => {
@@ -1036,8 +1054,8 @@ const AGENT_API = 'https://horizons-strategy-games.vercel.app/api/agent';
 const WR_MODELS = { player: 'claude-haiku-5-5', disney: 'claude-sonnet-5-5', referee: 'claude-sonnet-5-5', analyst: 'claude-opus-5-5' };
 const WR_TIERS = { player: 'quick', disney: 'default', referee: 'default', analyst: 'complex' };
 const WR_TURNS = 5, WR_SPAN = 2; // five two-year turns = one decade
-const WR_COLORS = ['var(--navy)', '#c2410c', '#0f766e'];
-const WR_TOTAL_CALLS = 3 * WR_TURNS * 9 + 1;
+const WR_COLORS = ['var(--navy)', '#c2410c', '#0f766e', 'var(--ink-3)'];
+let WR_TOTAL_CALLS = 3 * WR_TURNS * 9 + 1;
 
 // Shared rule for every AI in the game: write for a smart reader outside the industry.
 const PLAIN = 'Write in plain, everyday English for a smart reader who does not work in media. No jargon, acronyms or finance-speak (for example: no "FEC", "make-good", "tranche", "cat bond", "seller note", "hyperscaler", "capex", "TAM"). If an industry term is truly needed, explain it in the same sentence. Short sentences.';
@@ -1155,7 +1173,8 @@ function rollWorldEvent(fromYear) {
   return hits.length ? [hits[Math.floor(Math.random() * hits.length)]] : [];
 }
 
-async function playGame(g, pb, wild, signal, run, onUpdate) {
+async function playGame(g, pb, wild, signal, run, onUpdate, hyp) {
+  const scen = hyp ? `\n\nSCENARIO FOR THIS GAME, treat it as true for the whole decade: "${hyp}". If it describes something your company does, make it happen in your own way. If it describes the world or another company, plan around it.` : '';
   const base = { ...MODES.forward.start };
   const effects = [];
   const totals = [startTotal()];
@@ -1183,7 +1202,7 @@ async function playGame(g, pb, wild, signal, run, onUpdate) {
         ? (wildName ? `YOU ARE ${wildName}. You are ${wild.type}.` : `You are a brand-new company: ${wild.type}. Invent a name and a one-line description on this first turn.`)
         : p.brief;
       const agg = p.agg ? aggWord(p.agg()) : null;
-      const system = `You are the head of strategy for ${isWild && wildName ? wildName.split(':')[0] : p.name} in a business war game about the entertainment, media and experiences industry. It is fiscal ${fy1}–${fy2}. Act in your own company's interest${isDisney ? '' : ', not Disney\'s'}. Pursue your company's own priorities from your briefing; do not copy other players' themes. Be specific and realistic, and willing to surprise: partnerships, acquisitions, pricing, new products, technology, or moves outside your usual lane. Only make moves you can afford. ${isDisney ? 'Most of the game is about your decisions: make bold, concrete strategic moves, respond directly to what rivals did, and say what each move costs.' : 'React to what Disney did last turn where it matters to you.'} Respond with JSON only.`;
+      const system = `You are the head of strategy for ${isWild && wildName ? wildName.split(':')[0] : p.name} in a business war game about the entertainment, media and experiences industry. It is fiscal ${fy1}–${fy2}. Act in your own company's interest${isDisney ? '' : ', not Disney\'s'}. Pursue your company's own priorities from your briefing; do not copy other players' themes. Be specific and realistic, and willing to surprise: partnerships, acquisitions, pricing, new products, technology, or moves outside your usual lane. Only make moves you can afford. ${isDisney ? 'Most of the game is about your decisions: make bold, concrete strategic moves, respond directly to what rivals did, and say what each move costs.' : 'React to what Disney did last turn where it matters to you.'}${scen} Respond with JSON only.`;
       const prompt = `${MARKET_BRIEF}\n\nYOUR COMPANY:\n${brief}${agg ? `\nYour posture: ${agg}.` : ''}\nMoney you can spend on new moves this turn: about $${chest[p.id].toFixed(0)}B.\n\nOutside world this turn: ${worldText}\n\nWhat happened last turn:\n${lastTurn}\n\n${disneyNow}\n\nMake ${p.moves || '1 or 2'} moves for these two years. Return exactly: {"moves":[{"move":"one specific sentence","why":"one short reason","cost_billions":0}]${isWild && !wildName ? ',"company":"Name: one-line description"' : ''}}`;
       const out = parseJSON(await askClaude(isDisney ? 'disney' : 'player', system, prompt, signal)) || { moves: [] };
       if (isWild && out.company && !wildName) wildName = String(out.company).slice(0, 160);
@@ -1199,7 +1218,7 @@ Calibration:
 - Most rival moves barely touch Disney: 0 to -2. A strong rival move: -3 to -5. Only a truly major move reaches -8.
 - Disney's own moves: give a realistic up-front cost as a negative effect in the first year (cost_now), and a benefit that starts after a delay of 0-2 years. Benefits are usually +1 to +3 and never above +4. Bad or poorly timed Disney moves can have zero or negative benefit. Be skeptical: big promises rarely pay in full.
 - Unrealistic or unaffordable moves get no effect.
-- "novel": true only for moves a normal strategy deck would not already list.
+- "novel": true only for moves a normal strategy deck would not already list.${hyp ? `\nSCENARIO FOR THIS GAME, true for the whole decade: "${hyp}". Make sure its effects show up in your rulings and narrative, realistically sized.` : ''}
 Respond with JSON only.`;
     const refPrompt = `Fiscal ${fy1}–${fy2}. Outside world: ${worldText}\n${disneyNow}\n\nMoves this turn:\n${moveText}\n\nReturn exactly: {"narrative":"2-3 plain sentences. Start with what Disney did and how rivals responded; mention the outside world only if it mattered","rulings":[{"player":"name","move":"short plain restatement","realistic":true,"cost_billions":0,"exp":0,"ent":0,"spt":0,"cost_now":{"exp":0,"ent":0,"spt":0},"delay":0,"years":3,"novel":false,"responds_to_disney":false,"why":"one plain line"}]}. One ruling per move, in the same order.`;
     const ref = parseJSON(await askClaude('referee', refSystem, refPrompt, signal)) || { narrative: 'The referee could not rule this turn.', rulings: [] };
@@ -1231,7 +1250,7 @@ Respond with JSON only.`;
     turns.push({ fy1, fy2, world, narrative: String(ref.narrative || ''), rulings });
     onUpdate({ g, totals, turns, wildName });
   }
-  return { totals, turns, wildName, wildType: wild.type, decade: totals.slice(1).reduce((a, v) => a + v, 0) };
+  return { totals, turns, wildName, wildType: wild.type, hyp, decade: totals.slice(1).reduce((a, v) => a + v, 0) };
 }
 
 function impactText(r) {
@@ -1278,28 +1297,29 @@ function drawWarRoomChart(games) {
   let lastY = -99;
   labels.forEach(l => { let yy = Y(l.v) + 4; if (yy - lastY < 16) yy = lastY + 16; lastY = yy; l.yy = yy; });
   games.forEach((g, i) => {
-    el('path', { d: 'M' + g.totals.map((v, j) => `${X(j)},${Y(v)}`).join('L'), fill: 'none', stroke: WR_COLORS[i], 'stroke-width': 2.5, 'stroke-linejoin': 'round' }, svg);
+    el('path', { d: 'M' + g.totals.map((v, j) => `${X(j)},${Y(v)}`).join('L'), fill: 'none', stroke: WR_COLORS[i], 'stroke-width': 2.5, 'stroke-linejoin': 'round', 'stroke-dasharray': g.baseline ? '6 5' : 'none' }, svg);
     el('circle', { cx: X(Y10), cy: Y(g.totals.at(-1)), r: 4, fill: WR_COLORS[i], stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
-    el('text', { x: X(Y10) + 10, y: labels.find(x => x.i === i).yy, 'font-size': 12, 'font-weight': 600, fill: 'var(--ink)' }, svg, `Game ${i + 1}: ${fmtB(g.totals.at(-1))}`);
+    el('text', { x: X(Y10) + 10, y: labels.find(x => x.i === i).yy, 'font-size': 12, 'font-weight': 600, fill: 'var(--ink)' }, svg, `${g.baseline ? 'Without scenario' : 'Game ' + (i + 1)}: ${fmtB(g.totals.at(-1))}`);
   });
   $('wr-legend').innerHTML = '<span><i style="background:var(--band)"></i>Simulator: middle 80% of 1,000 futures</span>' + games.map((g, i) => {
     const rank = Math.round(100 * ranked.filter(v => v <= g.decade).length / ranked.length);
-    return `<span><i style="background:${WR_COLORS[i]};height:3px;vertical-align:3px"></i>Game ${i + 1}: ${fmtT(g.decade)} over ten years (${ordinal(rank)} percentile)</span>`;
+    return `<span><i style="background:${WR_COLORS[i]};height:3px;vertical-align:3px"></i>${g.baseline ? 'Game 4, without your scenario' : 'Game ' + (i + 1)}: ${fmtT(g.decade)} over ten years (better than ${rank}% of simulated futures)</span>`;
   }).join('');
 }
 
-async function runAnalyst(games, pb, signal) {
+async function runAnalyst(games, pb, signal, hyp) {
   const sim = decades(LAST_FORWARD.main);
-  const summary = games.map((g, i) => `GAME ${i + 1}: ten-year profit $${g.decade.toFixed(0)}B. Newcomer: ${g.wildName || g.wildType}\n` + g.turns.map(tn =>
+  const summary = games.map((g, i) => `GAME ${i + 1}${g.baseline ? ' (WITHOUT the scenario, for comparison)' : hyp ? ' (with the scenario)' : ''}: ten-year profit $${g.decade.toFixed(0)}B. Newcomer: ${g.wildName || g.wildType}\n` + g.turns.map(tn =>
     `FY${tn.fy1}-${tn.fy2}: ${tn.narrative}${tn.world.length ? ` [outside shock: ${tn.world[0].e.label}]` : ''}\n` + tn.rulings.filter(r => r.ok).map(r => `  * ${r.isDisney ? 'DISNEY' : r.player}${r.novel ? ' [NEW IDEA]' : ''}${r.responds ? ' [reacting to Disney]' : ''}: ${r.move} -> ${impactText(r) || 'no direct effect on Disney'}`).join('\n')).join('\n')).join('\n\n');
-  const system = `You advise Disney's corporate strategy team after three AI-played war games. Your job: tell them what Disney's decisions did, what rivals did that Disney should prepare for, and what to do now.
+  const system = `You advise Disney's corporate strategy team after AI-played war games. Be brief and concrete.
 Rules:
-- Focus on Disney's choices and rivals' reactions to them. Outside shocks (storms, recessions) are background: mention them only if they shaped Disney's choices in at least two games.
-- Separate patterns from flukes: say which games each point appeared in. Lead with things seen in two or three games.
+- Focus on Disney's choices and rivals' reactions. Outside shocks are background; mention them only if they shaped Disney's choices in two or more games.
+- Separate patterns from flukes: say which games each point came from, and lead with points seen in two or more games.
 - Skip the obvious (recessions hurt parks, AI disrupts content, rivals bid for sports) unless you have a specific new angle.
-- Every action must be concrete, low-cost and something Disney could start within a year.
+- Actions must be concrete, low-cost, and startable within a year.
+- Keep every field short: one sentence, as few words as possible.${hyp ? `\n- The user is testing this scenario: "${hyp}". Games 1-3 include it; Game 4 does not. Judge how the scenario changed Disney's decade. One comparison game is noisy, so also compare against the simulator, and say plainly if the difference could just be luck.` : ''}
 Respond with JSON only.`;
-  const prompt = `Disney's strategy going in: ${pb.desc}\nFor comparison, the rules-based simulator gives this strategy a typical ten-year profit of $${pct(sim, .5).toFixed(0)}B (bad decade $${pct(sim, .1).toFixed(0)}B).\n\n${summary}\n\nReturn exactly: {"headline":"one plain sentence: the single most useful takeaway","worked":["Disney move that paid off, and in which games"],"backfired":["Disney move that did not pay off or invited a strong response, and in which games"],"insights":[{"title":"short and plain","seen_in":"Games 1 and 3","what_happened":"plain description naming the specific moves and players","why_it_matters":"one or two sentences","action":"a low-cost step Disney can start this year","signpost":"a concrete thing to watch for in the news"}],"biggest_surprise":"one plain sentence"}. Give 2-3 items for worked and backfired, and 3 or 4 insights.`;
+  const prompt = `Disney's strategy going in: ${pb.desc}\nThe rules-based simulator gives this strategy a typical ten-year profit of $${pct(sim, .5).toFixed(0)}B (bad decade $${pct(sim, .1).toFixed(0)}B, good decade $${pct(sim, .9).toFixed(0)}B).\n\n${summary}\n\nReturn exactly: {"bottom_line":"the single most useful takeaway, max 30 words",${hyp ? '"scenario_verdict":"max 40 words: how the scenario changed Disney\'s decade vs Game 4 and the simulator, and whether that difference looks real or could be luck",' : ''}"top_actions":["3 things Disney could start doing this year, max 18 words each"],"biggest_surprise":"max 25 words","worked":["max 2 Disney moves that paid off, with games, max 18 words each"],"backfired":["max 2 Disney moves that did not pay off, with games, max 18 words each"],"insights":[{"title":"max 8 words","seen_in":"Games 1 and 3","what":"max 25 words","action":"max 18 words","watch":"max 15 words: a sign in the news that this is starting"}]}. Give 3 or 4 insights.`;
   return parseJSON(await askClaude('analyst', system, prompt, signal));
 }
 
@@ -1315,27 +1335,37 @@ async function playWarRoom(ev) {
   $('wr-insights-card').hidden = true; $('wr-results-card').hidden = true;
   $('wr-progress').hidden = false;
   wrCallsDone = 0; wrStart = Date.now(); updateEta();
-  const wilds = WILDCARDS.slice().sort(() => Math.random() - 0.5).slice(0, 3);
-  $('wr-games').innerHTML = [0, 1, 2].map(i => `<div class="card game" id="wr-game-${i}"><h3>Game ${i + 1} · ${esc(plain(pb.name))}</h3><div class="res"></div><div class="note wild">Newcomer type: ${esc(wilds[i].type)}</div><ol class="turns"></ol></div>`).join('');
-  $('wr-status').textContent = 'Playing 3 games…';
+  const hyp = $('wr-hyp').value.trim().replace(/\s+/g, ' ').slice(0, 400) || null;
+  const plan = hyp ? [hyp, hyp, hyp, null] : [null, null, null];
+  WR_TOTAL_CALLS = plan.length * WR_TURNS * 9 + 1;
+  wrCallsDone = 0; updateEta();
+  const wilds = WILDCARDS.slice().sort(() => Math.random() - 0.5).slice(0, plan.length);
+  $('wr-games').className = 'games' + (plan.length === 4 ? ' four' : '');
+  $('wr-games').innerHTML = plan.map((h, i) => `<div class="card game${hyp && !h ? ' baseline' : ''}" id="wr-game-${i}"><h3>Game ${i + 1} · ${esc(plain(pb.name))}${hyp ? (h ? ' · with your scenario' : ' · without your scenario') : ''}</h3><div class="res"></div><div class="note wild">Newcomer type: ${esc(wilds[i].type)}</div><ol class="turns"></ol></div>`).join('');
+  $('wr-status').textContent = hyp ? 'Playing 3 games with your scenario and 1 without…' : 'Playing 3 games…';
   const run = limiter(WR_MODE === 'claude' ? 6 : 8);
-  const state = [{}, {}, {}];
+  const state = plan.map(() => ({}));
   const onUpdate = u => { Object.assign(state[u.g], u); renderGame(u.g, state[u.g], u.phase); };
   try {
-    const games = await Promise.all([0, 1, 2].map(g => playGame(g, pb, wilds[g], signal, run, onUpdate)));
+    const games = await Promise.all(plan.map((h, g) => playGame(g, pb, wilds[g], signal, run, onUpdate, h)));
+    games.forEach((gm, i) => { gm.baseline = !!hyp && !plan[i]; });
     $('wr-results-card').hidden = false;
     drawWarRoomChart(games);
-    $('wr-status').textContent = 'Games done. The analyst is reading all three…';
-    const a = await runAnalyst(games, pb, signal);
+    $('wr-status').textContent = 'Games done. The analyst is reading them…';
+    const a = await runAnalyst(games, pb, signal, hyp);
     if (a) {
-      $('wr-headline').textContent = a.headline || '';
-      const list = (title, items, cls) => items && items.length ? `<div class="action"><div class="no">${title}</div><ul class="rulings">${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '';
-      $('wr-insights').innerHTML = list("What paid off for Disney", a.worked) + list('What backfired', a.backfired) +
-        (a.insights || []).map((x, i) => `<div class="action"><div class="no">Insight ${i + 1}${x.seen_in ? ` · ${esc(x.seen_in)}` : ''}</div><h3>${esc(x.title || '')}</h3><p><b>What happened:</b> ${esc(x.what_happened || '')}</p><p><b>Why it matters:</b> ${esc(x.why_it_matters || '')}</p><p><b>Low-cost action:</b> ${esc(x.action || '')}</p><p><b>Signpost to watch:</b> ${esc(x.signpost || '')}</p></div>`).join('') +
-        (a.biggest_surprise ? `<p class="note" style="grid-column:1/-1"><b>Biggest surprise:</b> ${esc(a.biggest_surprise)}</p>` : '');
+      const arr = x => Array.isArray(x) ? x.filter(Boolean) : [];
+      $('wr-bottom').innerHTML = `<div class="eyebrow">The bottom line</div>${hyp ? `<p class="surprise" style="margin:0"><b>Your scenario:</b> ${esc(hyp)}</p>` : ''}
+        <p class="big">${esc(a.bottom_line || '')}</p>
+        ${hyp && a.scenario_verdict ? `<p class="verdict"><b>Did your scenario matter?</b> ${esc(a.scenario_verdict)}</p>` : ''}
+        ${arr(a.top_actions).length ? `<div><div class="eyebrow">What Disney could start doing now</div><ol>${arr(a.top_actions).slice(0, 3).map(x => `<li>${esc(x)}</li>`).join('')}</ol></div>` : ''}
+        ${a.biggest_surprise ? `<p class="surprise"><b>Biggest surprise:</b> ${esc(a.biggest_surprise)}</p>` : ''}`;
+      const list = (title, items) => arr(items).length ? `<div class="action"><div class="no">${title}</div><ul class="rulings">${arr(items).map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '';
+      $('wr-insights').innerHTML = list('What paid off for Disney', a.worked) + list('What backfired', a.backfired) +
+        arr(a.insights).slice(0, 4).map((x, i) => `<div class="action"><div class="no">Insight ${i + 1}${x.seen_in ? ` · ${esc(x.seen_in)}` : ''}</div><h3>${esc(x.title || '')}</h3><p>${esc(x.what || '')}</p><p><b>Do:</b> ${esc(x.action || '')}</p><p><b>Watch for:</b> ${esc(x.watch || '')}</p></div>`).join('');
       $('wr-insights-card').hidden = false;
     }
-    $('wr-status').textContent = `Done in ${Math.max(1, Math.round((Date.now() - wrStart) / 60000))} min. Play again for three new decades.`;
+    $('wr-status').textContent = `Done in ${Math.max(1, Math.round((Date.now() - wrStart) / 60000))} min. Play again for new decades.`;
   } catch (e) {
     $('wr-status').textContent = e instanceof StopError ? 'Stopped.' : e.message;
     if (!(e instanceof StopError)) wrAbort.abort();
