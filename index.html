@@ -377,7 +377,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
         <div class="more-body">
           <p class="note" id="wr-mode-note"></p>
           <div class="chips" id="wr-players"></div>
-          <p class="note">At the start of each game, a casting AI picks three newcomers to fit the moment and your scenario: one real company and two invented ones built on emerging technology. One player speaks for the ~100 smaller rivals the simulator tracks (regional parks, cruise lines, smaller studios), plus a light background drag of about 6% for everyday pressure. Each player is briefed on its company's real finances, assets and goals as of late 2026. Each turn covers two years: Disney moves, rivals react, and the referee judges what each move costs and how it changes Disney's profit. The strategy above and the shock and rival settings in <i>Your assumptions</i> apply. Rival players run on Claude Haiku 5.5, Disney and the referee on Claude Sonnet 5.5, and the analyst on Claude Opus 5.5. A run takes about 5–7 minutes. To keep it quick, rivals are run in three desks each turn (streaming rivals, parks and TV rivals, and the smaller players), with each company still acting only for itself. Disney and the referee each think alone.</p>
+          <p class="note">At the start of each game, a casting AI picks three newcomers to fit the moment and your scenario: one real company and two invented ones built on emerging technology. One player speaks for the ~100 smaller rivals the simulator tracks (regional parks, cruise lines, smaller studios), plus a light background drag of about 6% for everyday pressure. Each player is briefed on its company's real finances, assets and goals as of late 2026. Each turn covers two years: Disney moves, rivals react, and the referee judges what each move costs and how it changes Disney's profit. The strategy above and the shock and rival settings in <i>Your assumptions</i> apply. Rival players run on Claude Haiku 5.5, Disney and the referee on Claude Sonnet 5.5, and the analyst on Claude Opus 5.5. A run takes about 8–12 minutes on a Claude account (5–8 on the hosted version). To keep it quick, rivals are run in three desks each turn (streaming rivals, parks and TV rivals, and the smaller players), with each company still acting only for itself. Disney and the referee each think alone.</p>
         </div>
       </details>
     </div>
@@ -1305,7 +1305,7 @@ function updateEta() {
   const mins = Math.floor(elapsed / 60);
   const turn = Math.min(WR_TURNS, Math.floor(WR_TURNS_DONE / Math.max(1, WR_GAMES_NOW)) + 1);
   const stage = WR_TURNS_DONE >= WR_GAMES_NOW * WR_TURNS ? 'The analyst is reading the games' : `Turn ${turn} of ${WR_TURNS}`;
-  $('wr-eta').textContent = `${stage} · ${mins ? mins + ' min' : 'under a minute'} so far (usually 5–7 min). Keep this tab open; closing it stops the games.`;
+  $('wr-eta').textContent = `${stage} · ${mins ? mins + ' min' : 'under a minute'} so far (usually ${wrMins(WR_GAMES_NOW)} min). Keep this tab open; closing it stops the games.`;
 }
 
 // A long referee answer can get cut off mid-list; keep every ruling that arrived whole.
@@ -1421,7 +1421,7 @@ Calibration:
 - cost_now is the up-front operating cost as a percent of that segment's yearly profit (use the scale line). Building costs that are paid from cash flow, not profit, get little or no cost_now.
 - Disney's own moves: give a realistic up-front cost as a negative effect in the first year (cost_now), and a benefit that starts after a delay of 0-4 years (new parks and ships take 3-4 years to open). Work out the extra yearly profit in dollars first (for example: 3,000 rooms x $350 a night x 65% full x 40% margin = about $0.1B a year), then turn it into a percent with the scale line, and put that arithmetic in "why". Benefits are never above +4. A new ship, terminal or park that mostly serves guests Disney already has gets credit only for the new guests. For any move over $1B, say in "why" roughly when it pays back. If the payoff inside the decade is below the cost, say so and give 0 or a negative benefit. Be skeptical: big promises rarely pay in full.
 - Unrealistic or unaffordable moves get no effect. Check real-world patterns: a big theme park takes about 5 to 7 years from decision to opening; parks outside a company's home country are usually paid for by local partners who license the brand; regulators slow big mergers. If a move breaks these patterns, rule it at the realistic size and timing, or unrealistic, and say why.
-- "basis": what the effect's size rests on. "fact" = reported numbers or a signed, public deal; "stated" = the company has announced or guided to it; "assumption" = your own estimate from comparable cases (the default; leave the field out); "hypothesis" = a speculative bet with no close precedent; "contradicted" = the move conflicts with known facts (also set realistic false and say which fact in "why").
+- "basis": what the effect's size rests on. "fact" = reported numbers or a signed, public deal; "stated" = the company has announced or guided to it; "assumption" = your own estimate from comparable cases (the default; leave the field out); "hypothesis" = a speculative bet with no close precedent; "contradicted" = the move conflicts with known facts (also set realistic false and say which fact in "why"). Use "hypothesis" only for genuinely new kinds of business (a new technology, a format nobody has run at scale); a bigger, earlier or pricier version of a common deal (sports rights, a new land or hotel, a ship, a bundle, a price cut) is an "assumption". Use "fact" when the effect is sized mainly from a reported number in the market brief or a deal that is already signed (for example ESPN's $3.1B profit, the NFL's 10% stake in ESPN, Skydance owning Warner Bros.), and "stated" when it rests on something a company has publicly announced or guided (for example Disney's $60B parks plan, Netflix House Las Vegas in 2027, Universal's 2031 UK park). Expect most rulings to be assumptions, with a few facts or stated items when a move builds on real deals.
 - "novel": true only for moves a normal strategy deck would not already list.${hyp ? '\n- "scenario_effect": true only for the ruling(s) that carry the scenario\'s direct effect on Disney.' : ''}${hyp ? `\nSCENARIO FOR THIS GAME, certain to happen: "${hyp}". It takes effect on the date it gives (early in the decade if none); before then, only preparation moves matter. Make sure its effects show up in your rulings and narrative, sized from real-world numbers (for example: a big new theme park costs $5B to $10B and takes 3 to 4 years to build, as Epic Universe did at about $7B; a top NFL package costs about $2B to $3B a year). Rule the main event once, in the turn it takes effect, with scenario_effect true: if no player's move covers it, add your own ruling with n 0 for the event itself. Set delay so it starts in the scenario's year. Announcements and construction before then are preparation with 0 effect. Disney's responses to the scenario are normal Disney rulings, not scenario_effect.` : ''}
 Respond with JSON only.`;
     const scale = `For scale: 1% of Experiences is about $${(seg.exp * 10).toFixed(0)}M of profit a year, 1% of Entertainment about $${(seg.ent * 10).toFixed(0)}M, 1% of Sports about $${(seg.spt * 10).toFixed(0)}M. Size Disney's benefits so a move's total payoff is believable against what it costs; a well-chosen move should pay back within the decade, a weak or copycat move usually does not.`;
@@ -1556,7 +1556,7 @@ function drawWarRoomChart(games) {
   });
   // Label the big outside shocks right on the chart, so a sudden dip explains itself.
   const marks = {};
-  games.forEach(g => (g.shocks || []).filter(x => x.decadeHit <= -2).forEach(x => {
+  games.forEach(g => (g.shocks || []).filter(x => x.decadeHit <= -3).sort((a, b) => a.decadeHit - b.decadeHit).slice(0, 1).forEach(x => {
     const m = marks[x.fy + x.short] = marks[x.fy + x.short] || { x, j: Math.min(Y10, x.fy - 2026), who: new Set(), y: Infinity };
     m.who.add(WR.hyp ? 'P' + (g.pair + 1) : 'G' + (g.idx + 1)); m.y = Math.min(m.y, Y(g.totals[m.j]));
   }));
@@ -1639,12 +1639,12 @@ function scoreboard(games, hyp) {
   const direct = all.filter(r => r.scen).reduce((a, r) => a + r.value, 0) / withS.length;
   const cell = (big, small) => `<div><b>${big}</b><span>${small}</span></div>`;
   const seen = new Set();
-  const shockLines = games.filter(g => !g.broken).flatMap(g => (g.shocks || []).filter(x => Math.abs(x.decadeHit) >= 1).map(x => {
+  const shockLines = games.filter(g => !g.broken).flatMap(g => (g.shocks || []).filter(x => x.decadeHit <= -2).sort((a, b) => a.decadeHit - b.decadeHit).slice(0, 2).map(x => {
     const who = hyp ? `Pair ${g.pair + 1} (both games)` : gameLabel(g), key = who + x.label + x.fy;
     if (seen.has(key)) return null; seen.add(key);
-    return `<b>${esc(who)}:</b> ${esc(x.short.toLowerCase())} in FY${x.fy}, ${money(x.decadeHit)} to profit by FY2036`;
+    return `<b>${esc(who)}:</b> ${esc(x.short)} in FY${x.fy}, ${money(x.decadeHit)} to profit by FY2036`;
   })).filter(Boolean);
-  const shocksHtml = shockLines.length ? `<p class="note" style="margin:6px 0 0"><b>Outside shocks behind the dips in the chart:</b> ${shockLines.join(' · ')}</p>` : '';
+  const shocksHtml = shockLines.length ? `<p class="note" style="margin:6px 0 0"><b>Biggest outside shocks:</b> ${shockLines.join(' · ')}</p>` : '';
   const agree = diffs.length > 1 && (diffs.every(v => v < 0) || diffs.every(v => v > 0));
   return `<div class="scoreboard">
     ${cell(fmtB(avg / 10), `Disney's average yearly profit, FY27-36${hyp ? ', with your scenario' : ''} (today: ${fmtB(startTotal())}; average of ${withS.length} game${withS.length > 1 ? 's' : ''})`)}
@@ -1759,7 +1759,8 @@ const WR_EXAMPLES = [
 ];
 $('wr-examples').innerHTML = '<span class="note" style="align-self:center">Try one:</span>' + WR_EXAMPLES.map(x => `<button type="button">${esc(x)}</button>`).join('');
 $('wr-examples').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { $('wr-hyp').value = b.textContent; $('wr-hyp').focus(); } });
-const playLabel = () => { if (!$('wr-play').disabled) $('wr-play').textContent = $('wr-hyp').value.trim() ? 'Play 4 games: 2 pairs, with and without your scenario (about 5–7 min)' : 'Play 3 games (about 5–7 min)'; };
+const wrMins = n => WR_MODE === 'claude' ? (n >= 4 ? '10–12' : '8–10') : (n >= 4 ? '6–8' : '5–7');
+const playLabel = () => { if (!$('wr-play').disabled) $('wr-play').textContent = $('wr-hyp').value.trim() ? `Play 4 games: 2 pairs, with and without your scenario (about ${wrMins(4)} min)` : `Play 3 games (about ${wrMins(3)} min)`; };
 ['input', 'change', 'keyup', 'paste', 'blur'].forEach(ev => $('wr-hyp').addEventListener(ev, () => setTimeout(playLabel, 0)));
 $('wr-examples').addEventListener('click', playLabel);
 playLabel();
