@@ -365,13 +365,10 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
       <div id="arch"></div>
     </details>
     <details>
-      <summary>Disney's response</summary>
-      <label class="toggle"><input type="checkbox" id="trig" checked><span><b>Disney learns as it goes.</b> After a threat first hits, later hits of the same kind land 30% softer.</span></label>
-      <div class="row2">
-        <div class="field"><label for="runs">Futures to simulate</label><select id="runs"><option value="200">200</option><option value="1000" selected>1,000</option><option value="5000">5,000</option></select></div>
-        <div class="field"><label for="seed">Random seed</label><input id="seed" type="number" value="2026" min="1"></div>
-      </div>
-      <p class="hint">Same seed and settings always give the same futures.</p>
+      <summary>How Disney responds</summary>
+      <label class="toggle"><input type="checkbox" id="trig" checked><span><b>Disney gets better at handling repeat threats.</b> After a threat hits once, Disney reacts faster and the next one like it does 30% less damage.</span></label>
+      <div class="field" style="margin-top:8px"><label for="runs">How many decades to play out</label><select id="runs"><option value="200">200 (faster)</option><option value="1000" selected>1,000 (recommended)</option><option value="5000">5,000 (most precise)</option></select></div>
+      <p class="hint">The same settings always give the same results, so you and a colleague see identical numbers.</p>
     </details>
     <details>
       <summary>Share your settings</summary>
@@ -750,7 +747,7 @@ function buildControls() {
   $('pb').innerHTML = PLAYBOOKS.map(p => `<option value="${p.id}">${plain(p.name)}</option>`).join('');
   $('pb').value = S.playbook;
   $('pbdesc').textContent = PLAYBOOKS.find(p => p.id === S.playbook).desc;
-  $('runs').value = String(S.runs); $('seed').value = S.seed; $('trig').checked = S.triggers; $('tail').checked = S.tail;
+  $('runs').value = String(S.runs); $('trig').checked = S.triggers; $('tail').checked = S.tail;
   ['pestel', 'players', 'arch'].forEach(id => { $(id).innerHTML = ''; });
   PESTEL.forEach(c => slider($('pestel'), 'w-' + c.id, c.name, 1, 5, 1, S.pestel[c.id], '', v => { S.pestel[c.id] = v; schedule(); }));
   ARENAS.forEach(ar => {
@@ -781,7 +778,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('drawer
 
 $('pb').addEventListener('change', e => { S.playbook = e.target.value; $('pbdesc').textContent = PLAYBOOKS.find(p => p.id === S.playbook).desc; runAll(); });
 $('runs').addEventListener('change', e => { S.runs = +e.target.value; schedule(); });
-$('seed').addEventListener('change', e => { S.seed = Math.max(1, +e.target.value || 1); schedule(); });
 $('trig').addEventListener('change', e => { S.triggers = e.target.checked; schedule(); });
 $('tail').addEventListener('change', e => { S.tail = e.target.checked; schedule(); });
 $('copycfg').addEventListener('click', async () => {
@@ -982,7 +978,7 @@ function renderForward(pb, main, alt, A, mitRuns, comp) {
     tile('Ten-year profit, most likely', fmtT(p50), `vs ${fmtT(flat)} if profit stayed flat`, 'base') +
     tile('Ten-year profit, bad decade', fmtT(p10), '1 in 10 futures earn less', 'risk') +
     tile(`Annual profit in ${end}, most likely`, fmtB(endMed), `${(below * 100).toFixed(0)}% of futures dip below today in ${2000 + BASE_FY + MID()}`, 'base') +
-    tile('Value of learning as it goes', (on - off >= 0 ? '+' : '−') + fmtT(Math.abs(on - off)), 'Bad decade, Disney adapting vs not', 'goodt');
+    tile('Value of handling repeat threats better', (on - off >= 0 ? '+' : '−') + fmtT(Math.abs(on - off)), 'Bad decade, with vs without', 'goodt');
   $('fan-title').textContent = `Disney's profit under ${plain(pb.name)}, fiscal ${2000 + BASE_FY}–${end}`;
   $('fan-sub').textContent = 'Total segment operating income, $B. The shaded band holds the middle 80% of the 1,000 futures; the line is the most likely path. Hover to see each year.';
   $('leg-base').lastChild.textContent = `Today (${fmtB(startTotal())})`;
@@ -995,7 +991,7 @@ function renderForward(pb, main, alt, A, mitRuns, comp) {
   }).join('') || '<li><span class="yr">–</span><span>No events in this future.</span></li>';
 
   // strategies
-  $('pb-sub').textContent = `Ten-year profit, fiscal ${2000 + BASE_FY + 1}–${end}. Each strategy runs against the same 1,000 futures, so the comparison is fair. The dot is the most likely total; the line runs from a bad decade to a good one. A strategy that holds up keeps the left end of its line high. The dashed line is ${fmtT(flat)}, today's profit held flat for ten years. Differences smaller than about $3B are within simulation noise (they shift when you change the random seed).`;
+  $('pb-sub').textContent = `Ten-year profit, fiscal ${2000 + BASE_FY + 1}–${end}. Each strategy runs against the same 1,000 futures, so the comparison is fair. The dot is the most likely total; the line runs from a bad decade to a good one. A strategy that holds up keeps the left end of its line high. The dashed line is ${fmtT(flat)}, today's profit held flat for ten years. Differences smaller than about $3B are within normal run-to-run variation, so treat them as a tie.`;
   drawStrategies(comp, pb);
 }
 
