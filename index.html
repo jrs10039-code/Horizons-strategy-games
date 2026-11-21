@@ -1154,6 +1154,7 @@ const AGENT_API = 'https://horizons-strategy-games.vercel.app/api/agent';
 const WR_MODELS = { player: 'claude-haiku-5-5', disney: 'claude-sonnet-5-5', referee: 'claude-sonnet-5-5', analyst: 'claude-opus-5-5' };
 const WR_TIERS = { player: 'quick', disney: 'default', referee: 'default', analyst: 'complex' };
 const WR_TURNS = 5, WR_SPAN = 2; // five two-year turns = one decade
+const WR_TAIL = 5; // no moves are played after FY2036, but effects already set in motion are counted through FY2041
 const WR_COLORS = ['var(--navy)', '#c2410c', '#0f766e', '#7c3aed', '#a16207', '#be185d', '#475569'];
 const gameColor = g => WR_COLORS[(g.pair ?? 0) % WR_COLORS.length];
 const gameLabel = g => g.hyp !== undefined && WR.hyp ? `Pair ${g.pair + 1}, ${g.baseline ? 'without' : 'with'} scenario` : `Game ${g.idx + 1}`;
@@ -1364,7 +1365,7 @@ async function playGame(g, pb, cast, signal, run, onUpdate, hyp, worldPlan) {
     const rivalRule = 'Pick the one Disney move from last turn that matters most to you and answer it by name (copy it, block it or go around it), or say in "why" that none matters. Every move must name a place, a price or number, and a date; "why" must give the real reason (for example "families pay $40 less than at Disney"), never one word.';
     const pastOf = (p, isDisney) => {
       const mine = hist[p.id].slice(isDisney ? -9 : -4);
-      return mine.length ? `\nIts moves so far (build on them; never repeat one):\n${mine.map(h => `- FY${h.fy}: ${h.move}${isDisney ? ` (cost $${h.cost.toFixed(1)}B; referee projects ${money(h.value)} of profit over the decade, net ${money(h.value - h.cost)})` : ''}`).join('\n')}${isDisney ? '\nKeep investing in what is working; fix or drop what is not.' : ''}` : '';
+      return mine.length ? `\nIts moves so far (build on them; never repeat one):\n${mine.map(h => `- FY${h.fy}: ${h.move}${isDisney ? ` (cost $${h.cost.toFixed(1)}B; referee projects ${money(h.value)} of profit through 2041, net ${money(h.value - h.cost)})` : ''}`).join('\n')}${isDisney ? '\nKeep investing in what is working; fix or drop what is not.' : ''}` : '';
     };
     const clean = (list, isDisney) => (list || []).slice(0, 2).map(m => ({ move: String(m.move || '').slice(0, 320), why: String(m.why || '').slice(0, 200), cost: num(m.cost_billions, 0, 100) })).filter(m => m.move.length >= 25 || isDisney);
     // The biggest rivals each think on their own; the long tail (gaming, leagues, the rest of the market, newcomers) shares one call, each still acting for itself.
@@ -1431,7 +1432,7 @@ Respond with JSON only.`;
       const cost = ok ? num(r.cost_billions, 0, 100) : 0;
       if (who.id) chest[who.id] = Math.max(0, chest[who.id] - cost);
       // What the move is worth to Disney in dollars over the rest of the decade (our arithmetic, not the AI's claim)
-      const span = Math.max(0, Math.min(years, WR_TURNS * WR_SPAN - (y1 + delay) + 1));
+      const span = Math.max(0, Math.min(years, WR_TURNS * WR_SPAN + WR_TAIL - (y1 + delay) + 1));
       const value = SEGS.reduce((a, k) => a + imp[k] * seg[k] * span + now[k] * seg[k], 0);
       return { id: who.id, isDisney, player: String(r.player || ''), move: String(r.move || ''), ok, imp, now, delay, years, cost, value, fy: fy1, scen: !isDisney && !!r.scenario_effect, novel: !!r.novel, responds: !isDisney && !!String(r.responds_to || '').trim(), respTo: String(r.responds_to || '').slice(0, 120), why: String(r.why || '') };
     });
@@ -1454,11 +1455,20 @@ Respond with JSON only.`;
       for (const k of SEGS) { base[k] *= 1 + pb.g[k]; segNow[k] = base[k] * Math.max(0.05, f[k]) * drag; tot += segNow[k]; }
       totals.push(tot); segHist.push(segNow);
     }
-    lastTurn = rulings.filter(r => r.ok).map(r => `- ${r.player}: ${r.move} (cost $${r.cost.toFixed(1)}B${Math.abs(r.value) >= 0.05 ? `; ${money(r.value)} to Disney over the decade` : ''})`).join('\n') + `\nReferee: ${ref.narrative || ''}`;
+    lastTurn = rulings.filter(r => r.ok).map(r => `- ${r.player}: ${r.move} (cost $${r.cost.toFixed(1)}B${Math.abs(r.value) >= 0.05 ? `; ${money(r.value)} to Disney through 2041` : ''})`).join('\n') + `\nReferee: ${ref.narrative || ''}`;
     turns.push({ fy1, fy2, world, narrative: String(ref.narrative || ''), rulings, moves: moves.map(m => ({ player: m.player, moves: m.moves })) });
     onUpdate({ g, totals, turns });
   }
-  return { totals, turns, cast, hyp, segHist, issues, refFails, broken: refFails >= 2, decade: totals.slice(1).reduce((a, v) => a + v, 0) };
+  // After FY2036: play no new moves, but let effects already in motion run on for five more years.
+  let tail = 0;
+  const b2 = { ...base };
+  for (let y = WR_TURNS * WR_SPAN + 1; y <= WR_TURNS * WR_SPAN + WR_TAIL; y++) {
+    const f = { exp: 1, ent: 1, spt: 1 }, riv = { exp: 0, ent: 0, spt: 0 };
+    effects.forEach(e => { if (y >= e.from && y <= e.until) for (const k in e.imp) (e.rival ? riv : f)[k] += e.imp[k]; });
+    for (const k in riv) f[k] += Math.max(-0.12, riv[k]);
+    for (const k of SEGS) { b2[k] *= 1 + pb.g[k]; tail += b2[k] * (Math.max(0.05, f[k]) - 1) * 0.94; }
+  }
+  return { totals, turns, cast, hyp, segHist, issues, refFails, tail, broken: refFails >= 2, decade: totals.slice(1).reduce((a, v) => a + v, 0) };
 }
 
 const money = v => (v >= 0 ? '+' : '−') + '$' + Math.abs(v).toFixed(Math.abs(v) < 1 ? 2 : 1) + 'B';
@@ -1480,7 +1490,7 @@ function renderGame(i, game, phase) {
   const box = $('wr-game-' + i);
   if (!box) return;
   const done = game && game.totals && game.totals.length > WR_TURNS * WR_SPAN;
-  box.querySelector('.res').innerHTML = done ? `Ten-year profit <b>${fmtT(game.totals.slice(1).reduce((a, v) => a + v, 0))}</b> · 2036 profit ${fmtB(game.totals.at(-1))}` : esc(phase || 'Waiting…');
+  box.querySelector('.res').innerHTML = done ? `Ten-year profit <b>${fmtT(game.totals.slice(1).reduce((a, v) => a + v, 0))}</b> · 2036 profit ${fmtB(game.totals.at(-1))}${game.tail != null ? ` · still to come after 2036: ${money(game.tail)}` : ''}` : esc(phase || 'Waiting…');
   if (game && game.cast) box.querySelector('.wild').textContent = 'Newcomers: ' + game.cast.map(c => c.name + (c.kind === 'real' ? ' (real)' : ' (invented)')).join(', ');
   if (!game || !game.turns) return;
   box.querySelector('ol').innerHTML = game.turns.map(tn => {
@@ -1531,8 +1541,8 @@ function drawWarRoomChart(games) {
 
 async function runAnalyst(games, pb, signal, hyp) {
   const sim = decades(LAST_FORWARD.main);
-  const summary = games.map((g, i) => `${g.broken ? '[UNRELIABLE: the referee failed in ' + g.refFails + ' of 5 turns, so leave this game out of comparisons] ' : ''}GAME ${i + 1}${hyp ? ` (pair ${g.pair + 1}, ${g.baseline ? 'WITHOUT the scenario' : `WITH the scenario; moves tied directly to it: ${money(g.turns.flatMap(tn => tn.rulings).filter(r => r.ok && r.scen).reduce((a, r) => a + r.value, 0))}`})` : ''}: ten-year profit $${g.decade.toFixed(0)}B. Newcomers: ${(g.cast || []).map(c => `${c.name} (${c.kind}: ${c.what})`).join('; ')}\n` + g.turns.map(tn =>
-    `FY${tn.fy1}-${tn.fy2}: ${tn.narrative}${tn.world.length ? ` [outside shock: ${tn.world[0].e.label}]` : ''}\n` + tn.rulings.filter(r => r.ok).map(r => `  * ${r.isDisney ? `DISNEY [referee: ${r.why.slice(0, 160)}]` : r.player}${r.novel ? ' [NEW IDEA]' : ''}${r.responds ? ` [answering Disney's "${r.respTo}"]` : ''}: ${r.move} (cost $${r.cost.toFixed(1)}B) -> ${Math.abs(r.value) >= 0.05 ? money(r.value) + ' to Disney over the decade' : 'no direct effect on Disney'}`).join('\n')).join('\n')).join('\n\n');
+  const summary = games.map((g, i) => `${g.broken ? '[UNRELIABLE: the referee failed in ' + g.refFails + ' of 5 turns, so leave this game out of comparisons] ' : ''}GAME ${i + 1}${hyp ? ` (pair ${g.pair + 1}, ${g.baseline ? 'WITHOUT the scenario' : `WITH the scenario; moves tied directly to it: ${money(g.turns.flatMap(tn => tn.rulings).filter(r => r.ok && r.scen).reduce((a, r) => a + r.value, 0))}`})` : ''}: ten-year profit $${g.decade.toFixed(0)}B, plus ${money(g.tail || 0)} still to come in 2037-2041 from effects already in motion. Newcomers: ${(g.cast || []).map(c => `${c.name} (${c.kind}: ${c.what})`).join('; ')}\n` + g.turns.map(tn =>
+    `FY${tn.fy1}-${tn.fy2}: ${tn.narrative}${tn.world.length ? ` [outside shock: ${tn.world[0].e.label}]` : ''}\n` + tn.rulings.filter(r => r.ok).map(r => `  * ${r.isDisney ? `DISNEY [referee: ${r.why.slice(0, 160)}]` : r.player}${r.novel ? ' [NEW IDEA]' : ''}${r.responds ? ` [answering Disney's "${r.respTo}"]` : ''}: ${r.move} (cost $${r.cost.toFixed(1)}B) -> ${Math.abs(r.value) >= 0.05 ? money(r.value) + ' to Disney through 2041' : 'no direct effect on Disney'}`).join('\n')).join('\n')).join('\n\n');
   const all = games.flatMap((g, i) => g.baseline ? [] : g.turns.flatMap(tn => tn.rulings.filter(r => r.ok).map(r => ({ ...r, game: i + 1 }))));
   const top = (list, n) => list.slice(0, n).map(r => `  Game ${r.game}, FY${r.fy}: ${r.isDisney ? 'Disney' : r.player}: ${r.move} (${money(r.value)}${r.isDisney ? `, cost $${r.cost.toFixed(1)}B` : ''})`).join('\n');
   const dis = all.filter(r => r.isDisney).sort((a, b) => (b.value - b.cost) - (a.value - a.cost));
@@ -1546,6 +1556,7 @@ Rules:
 - Skip the obvious (recessions hurt parks, AI disrupts content, rivals bid for sports) unless you have a specific new angle.
 - Actions must be concrete, low-cost, and startable within a year.
 - Keep every field short: one sentence, as few words as possible.
+- The game plays moves for ten years (FY2027-2036); dollar values also count each move's effects through 2041, so long-lived bets get fair credit.
 - Judge Disney's moves fairly: parks, lands, hotels and ships normally pay back over 10 to 20 years, so not paying back inside this ten-year game is normal and is NOT a finding. Use the referee's payback estimate (in its reasons). Call out only moves that lose money outright or will never pay back, and moves that pay back unusually fast.
 - Write like a sharp strategy memo to Disney's CEO: name companies, years and dollar amounts; no hedging filler ("could potentially", "it is important to").
 - Each action must be something a Disney team could approve this year, with a rough cost or a first step (a pilot, a deal to open talks on, an option to buy, a team to set up). Never "monitor", "explore" or "consider".${hyp ? `\n- The user is testing this scenario: "${hyp}". Games come in matched pairs: both games in a pair have the same outside shocks and the same newcomers, and only one has the scenario. Judge the scenario by the difference within each pair, not by comparing across pairs. ${pairEvidence(games)} If it is too close to call, start the verdict with "Too close to call:" and then say what the games show about how players reacted. Lead with the direct effect of the moves tied to the scenario, then the knock-on effects (how Disney and rivals changed course). Say plainly if the difference is small enough to be luck.` : ''}
@@ -1579,13 +1590,16 @@ function scoreboard(games, hyp) {
   const best = all.filter(r => r.isDisney).sort((a, b) => (b.value - b.cost) - (a.value - a.cost))[0];
   const hit = all.filter(r => !r.isDisney).sort((a, b) => a.value - b.value)[0];
   const diffs = pairDiffs(games);
+  const tailAvg = withS.reduce((a, g) => a + (g.tail || 0), 0) / withS.length;
+  const tailGaps = pairList(games).map(p => (p.on.tail || 0) - (p.off.tail || 0));
   const base = diffs.length ? diffs.reduce((a, v) => a + v, 0) / diffs.length : null;
   const direct = all.filter(r => r.scen).reduce((a, r) => a + r.value, 0) / withS.length;
   const cell = (big, small) => `<div><b>${big}</b><span>${small}</span></div>`;
   return `<div class="scoreboard">
     ${cell(fmtT(avg), `Disney's ten-year profit, average of ${withS.length} game${withS.length > 1 ? 's' : ''}${hyp ? ' with your scenario' : ''}`)}
     ${hyp && base != null ? cell(money(base), `what your scenario did to Disney's ten-year profit (average gap within ${diffs.length} matched pair${diffs.length > 1 ? 's' : ''}: ${diffs.map(money).join(', ')}${diffs.length > 1 && !(diffs.every(v => v < 0) || diffs.every(v => v > 0)) ? '; the pairs disagree, so treat as too close to call' : ''}). Biggest hit by business: ${(() => { const ps = pairList(games); const g = ['exp', 'ent', 'spt'].map(k => [k, ps.reduce((a, p) => a + segSum(p.on, k) - segSum(p.off, k), 0) / ps.length]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))[0]; return `${SEGN[g[0]]} ${money(g[1])}`; })()}`) : cell(money(avg - sim), 'versus a typical simulated decade (' + fmtT(sim) + ')')}
-    ${best && best.value > 0 ? cell(money(best.value), `profit for $${best.cost.toFixed(1)}B spent. Disney's best move (${esc(gameLabel(games[best.game - 1]))}): ${esc(best.move.length > 70 ? best.move.slice(0, 68) + '…' : best.move)}`) : ''}
+    ${hyp && tailGaps.length ? cell(money(tailGaps.reduce((a, v) => a + v, 0) / tailGaps.length), `what your scenario adds after 2036, from effects already in motion (2037-2041; gaps ${tailGaps.map(money).join(', ')})`) : cell(money(tailAvg), 'still to come after 2036: what moves already made add or cost in 2037-2041')}
+    ${best && best.value > 0 ? cell(money(best.value), `profit through 2041 for $${best.cost.toFixed(1)}B spent. Disney's best move (${esc(gameLabel(games[best.game - 1]))}): ${esc(best.move.length > 70 ? best.move.slice(0, 68) + '…' : best.move)}`) : ''}
     ${hit && hit.value < 0 ? cell(money(hit.value), `Costliest rival move (${esc(gameLabel(games[hit.game - 1]))}): ${esc(hit.player)}, ${esc(hit.move.length > 60 ? hit.move.slice(0, 58) + '…' : hit.move)}`) : ''}
   </div>`;
 }
