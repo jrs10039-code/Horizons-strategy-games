@@ -1334,6 +1334,7 @@ const num = (v, lo, hi) => Math.max(lo, Math.min(hi, Number(v) || 0));
 const SEGN = { exp: 'Experiences', ent: 'Entertainment', spt: 'Sports' };
 
 // World shocks: same deck as the simulator, but in the War Room they are background, at most one per two-year turn.
+const shortShock = label => String(label).split(/ (closes|cuts|hits|raises|floods|weakens|halts|keeps|pushes|slows|drives|spikes|sends)\b/)[0];
 function rollWorldEvent(fromYear) {
   const hits = [];
   for (let y = fromYear; y < fromYear + WR_SPAN; y++) for (const e of EVENTS) {
@@ -1356,7 +1357,7 @@ async function playGame(g, pb, cast, signal, run, onUpdate, hyp, worldPlan) {
   const turns = [];
   let lastTurn = 'Nothing yet: this is the first turn.';
   const hist = Object.fromEntries(players.map(p => [p.id, []]));
-  const ruled = [], issues = [];
+  const ruled = [], issues = [], shocks = [];
   let refFails = 0;
   for (let t = 0; t < WR_TURNS; t++) {
     const y1 = 1 + t * WR_SPAN, fy1 = 2026 + y1, fy2 = fy1 + WR_SPAN - 1;
@@ -1365,6 +1366,10 @@ async function playGame(g, pb, cast, signal, run, onUpdate, hyp, worldPlan) {
       const imp = {};
       for (const k in w.e.imp) imp[k] = w.e.imp[k] * IMPACT * (pb.sens[w.e.tag] ?? 1);
       effects.push({ from: w.y, until: w.y + w.e.dur - 1, imp });
+      // What the shock costs Disney through 2041, in dollars, so the write-up can explain dips in the chart.
+      const segNow = segHist.at(-1) || START, span = Math.max(0, Math.min(w.e.dur, WR_TURNS * WR_SPAN + WR_TAIL - w.y + 1));
+      const inDecade = Math.max(0, Math.min(w.e.dur, WR_TURNS * WR_SPAN - w.y + 1));
+      shocks.push({ fy: 2026 + w.y, label: w.e.label, short: shortShock(w.e.label), value: SEGS.reduce((a, k) => a + (imp[k] || 0) * segNow[k] * span, 0), decadeHit: SEGS.reduce((a, k) => a + (imp[k] || 0) * segNow[k] * inDecade, 0) });
     });
     const worldText = world.length ? `${world[0].e.label} (FY${2026 + world[0].y})` : 'No major outside shock.';
     const seg = segHist.at(-1) || START;
@@ -1482,7 +1487,7 @@ Respond with JSON only.`;
     for (const k in riv) f[k] += Math.max(-0.12, riv[k]);
     for (const k of SEGS) { b2[k] *= 1 + pb.g[k]; tail += b2[k] * (Math.max(0.05, f[k]) - 1) * 0.94; }
   }
-  return { totals, turns, cast, hyp, segHist, issues, refFails, tail, broken: refFails >= 2, decade: totals.slice(1).reduce((a, v) => a + v, 0) };
+  return { totals, turns, cast, hyp, segHist, issues, refFails, tail, shocks, broken: refFails >= 2, decade: totals.slice(1).reduce((a, v) => a + v, 0) };
 }
 
 const money = v => (v >= 0 ? '+' : '−') + '$' + Math.abs(v).toFixed(Math.abs(v) < 1 ? 2 : 1) + 'B';
@@ -1513,7 +1518,7 @@ function renderGame(i, game, phase) {
   const box = $('wr-game-' + i);
   if (!box) return;
   const done = game && game.totals && game.totals.length > WR_TURNS * WR_SPAN;
-  box.querySelector('.res').innerHTML = done ? `Ten-year profit <b>${fmtT(game.totals.slice(1).reduce((a, v) => a + v, 0))}</b> · 2036 profit ${fmtB(game.totals.at(-1))}${game.tail != null ? ` · still to come after 2036: ${money(game.tail)}` : ''}` : esc(phase || 'Waiting…');
+  box.querySelector('.res').innerHTML = done ? `Average yearly profit <b>${fmtB(game.totals.slice(1).reduce((a, v) => a + v, 0) / 10)}</b> (today ${fmtB(game.totals[0])}) · 2036 profit ${fmtB(game.totals.at(-1))}${game.tail != null ? ` · still to come after 2036: ${money(game.tail)}` : ''}` : esc(phase || 'Waiting…');
   if (game && game.cast) box.querySelector('.wild').textContent = 'Newcomers: ' + game.cast.map(c => c.name + (c.kind === 'real' ? ' (real)' : ' (invented)')).join(', ');
   if (!game || !game.turns) return;
   box.querySelector('ol').innerHTML = game.turns.map(tn => {
@@ -1549,22 +1554,32 @@ function drawWarRoomChart(games) {
     el('circle', { cx: X(Y10), cy: Y(g.totals.at(-1)), r: 4, fill: gameColor(g), stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
     if (games.length <= 6) el('text', { x: X(Y10) + 10, y: labels.find(x => x.i === i).yy, 'font-size': 12, 'font-weight': 600, fill: 'var(--ink)' }, svg, `${WR.hyp ? `P${g.pair + 1} ${g.baseline ? 'without' : 'with'}` : 'Game ' + (i + 1)}: ${fmtB(g.totals.at(-1))}`);
   });
+  // Label the big outside shocks right on the chart, so a sudden dip explains itself.
+  const marks = {};
+  games.forEach(g => (g.shocks || []).filter(x => x.decadeHit <= -2).forEach(x => {
+    const m = marks[x.fy + x.short] = marks[x.fy + x.short] || { x, j: Math.min(Y10, x.fy - 2026), who: new Set(), y: Infinity };
+    m.who.add(WR.hyp ? 'P' + (g.pair + 1) : 'G' + (g.idx + 1)); m.y = Math.min(m.y, Y(g.totals[m.j]));
+  }));
+  Object.values(marks).forEach(m => {
+    el('line', { x1: X(m.j), x2: X(m.j), y1: m.y - 6, y2: m.y - 26, stroke: 'var(--ink-3)', 'stroke-dasharray': '2 2' }, svg);
+    el('text', { x: X(m.j), y: m.y - 30, 'text-anchor': m.j > 8 ? 'end' : 'middle', 'font-size': 11, fill: 'var(--ink-2)' }, svg, `${m.x.short} (${[...m.who].join(', ')})`);
+  });
   const band = '<span><i style="background:var(--band)"></i>Simulator: middle 80% of 1,000 futures</span>';
   const rankOf = g => Math.round(100 * ranked.filter(v => v <= g.decade).length / ranked.length);
   if (WR.hyp) {
     const pairs = [...new Set(games.map(g => g.pair))];
     $('wr-legend').innerHTML = band + '<span><i style="border-top:2px dashed var(--ink-3);height:0;vertical-align:3px"></i>dashed = same game without your scenario</span>' + pairs.map(p => {
       const on = games.find(g => g.pair === p && !g.baseline), off = games.find(g => g.pair === p && g.baseline);
-      return `<span><i style="background:${gameColor(on || off)};height:3px;vertical-align:3px"></i>Pair ${p + 1}${on && on.title ? ` (${esc(on.title)})` : ''}: ${on ? fmtT(on.decade) : '–'} with, ${off ? fmtT(off.decade) : '–'} without${on && off ? `, so your scenario: <b>${money(on.decade - off.decade)}</b>` : ''}</span>`;
+      return `<span><i style="background:${gameColor(on || off)};height:3px;vertical-align:3px"></i>Pair ${p + 1}${on && on.title ? ` (${esc(on.title)})` : ''}: ${on ? fmtB(on.decade / 10) : '–'} a year with, ${off ? fmtB(off.decade / 10) : '–'} without${on && off ? `, so your scenario: <b>${money((on.decade - off.decade) / 10)} a year</b>` : ''}</span>`;
     }).join('');
   } else {
-    $('wr-legend').innerHTML = band + games.map((g, i) => `<span><i style="background:${gameColor(g)};height:3px;vertical-align:3px"></i>Game ${i + 1}${g.title ? ` (${esc(g.title)})` : ''}: ${fmtT(g.decade)} over ten years (better than ${rankOf(g)}% of simulated futures)</span>`).join('');
+    $('wr-legend').innerHTML = band + games.map((g, i) => `<span><i style="background:${gameColor(g)};height:3px;vertical-align:3px"></i>Game ${i + 1}${g.title ? ` (${esc(g.title)})` : ''}: ${fmtB(g.decade / 10)} a year on average (better than ${rankOf(g)}% of simulated futures)</span>`).join('');
   }
 }
 
 async function runAnalyst(games, pb, signal, hyp) {
   const sim = decades(LAST_FORWARD.main);
-  const summary = games.map((g, i) => `${g.broken ? '[UNRELIABLE: the referee failed in ' + g.refFails + ' of 5 turns, so leave this game out of comparisons] ' : ''}GAME ${i + 1}${hyp ? ` (pair ${g.pair + 1}, ${g.baseline ? 'WITHOUT the scenario' : `WITH the scenario; moves tied directly to it: ${money(g.turns.flatMap(tn => tn.rulings).filter(r => r.ok && r.scen).reduce((a, r) => a + r.value, 0))}`})` : ''}: ten-year profit $${g.decade.toFixed(0)}B, plus ${money(g.tail || 0)} still to come in 2037-2041 from effects already in motion. Newcomers: ${(g.cast || []).map(c => `${c.name} (${c.kind}: ${c.what})`).join('; ')}\n` + g.turns.map(tn =>
+  const summary = games.map((g, i) => `${g.broken ? '[UNRELIABLE: the referee failed in ' + g.refFails + ' of 5 turns, so leave this game out of comparisons] ' : ''}GAME ${i + 1}${hyp ? ` (pair ${g.pair + 1}, ${g.baseline ? 'WITHOUT the scenario' : `WITH the scenario; moves tied directly to it: ${money(g.turns.flatMap(tn => tn.rulings).filter(r => r.ok && r.scen).reduce((a, r) => a + r.value, 0))}`})` : ''}: average yearly profit $${(g.decade / 10).toFixed(1)}B (today $${startTotal().toFixed(1)}B), plus ${money(g.tail || 0)} still to come in 2037-2041 from effects already in motion. Outside shocks: ${(g.shocks || []).length ? g.shocks.map(x => `${x.label} in FY${x.fy} (${money(x.decadeHit)} by FY2036, ${money(x.value)} through 2041)`).join('; ') : 'none'}. Newcomers: ${(g.cast || []).map(c => `${c.name} (${c.kind}: ${c.what})`).join('; ')}\n` + g.turns.map(tn =>
     `FY${tn.fy1}-${tn.fy2}: ${tn.narrative}${tn.world.length ? ` [outside shock: ${tn.world[0].e.label}]` : ''}\n` + tn.rulings.filter(r => r.ok).map(r => `  * ${r.isDisney ? `DISNEY [referee: ${r.why.slice(0, 160)}]` : r.player}${r.novel ? ' [NEW IDEA]' : ''}${r.basis !== 'assumption' ? ` [${r.basis.toUpperCase()}]` : ''}${r.responds ? ` [answering Disney's "${r.respTo}"]` : ''}: ${r.move} (cost $${r.cost.toFixed(1)}B) -> ${Math.abs(r.value) >= 0.05 ? money(r.value) + ' to Disney through 2041' : 'no direct effect on Disney'}`).join('\n')).join('\n')).join('\n\n');
   const all = games.flatMap((g, i) => g.baseline ? [] : g.turns.flatMap(tn => tn.rulings.filter(r => r.ok).map(r => ({ ...r, game: i + 1 }))));
   const top = (list, n) => list.slice(0, n).map(r => `  Game ${r.game}, FY${r.fy}: ${r.isDisney ? 'Disney' : r.player}: ${r.move} (${money(r.value)}${r.isDisney ? `, cost $${r.cost.toFixed(1)}B` : ''})`).join('\n');
@@ -1581,6 +1596,7 @@ Rules:
 - Keep every field short: one sentence, as few words as possible.
 - The game plays moves for ten years (FY2027-2036); dollar values also count each move's effects through 2041, so long-lived bets get fair credit.
 - Each move's dollar value is the change in Disney's profit through 2041 after the move's own costs are charged: a $3B land worth +$0.9B is a winner, not a loss.
+- If an outside shock hurt a game more than any company's move did, say so plainly in the bottom line or the scenario verdict, naming the shock and when it hit; every big dip in the chart must be explained somewhere.
 - Never write "G1" or "Game 2" or long labels like "the pandemic NFL-exit game"; say "in 3 of 4 games", "in both games with the scenario" or "in one game".
 - Use at most one dollar figure per sentence. Across several games give one total or a range ("lost $0.4B-$1.0B"), never a list of three numbers. If a move names a product the game invented (for example "Disney+ House"), say in a few words what it is. Do not use the word "noise"; say "within the normal swing between games".
 - Rulings tagged [FACT] or [STATED] rest on reported or announced numbers; untagged ones are the referee's estimates; [HYPOTHESIS] ones are speculative. Lean on the firmer ones, and say so when a finding rests mainly on a hypothesis.
@@ -1588,7 +1604,7 @@ Rules:
 - Write like a sharp strategy memo to Disney's CEO: name companies, years and dollar amounts; no hedging filler ("could potentially", "it is important to").
 - Each action must be something a Disney team could approve this year, with a rough cost or a first step (a pilot, a deal to open talks on, an option to buy, a team to set up). Never "monitor", "explore" or "consider".${hyp ? `\n- The user is testing this scenario: "${hyp}". Games come in matched pairs: both games in a pair have the same outside shocks and the same newcomers, and only one has the scenario. Judge the scenario by the difference within each pair, not by comparing across pairs. ${pairEvidence(games)} If it is too close to call, start the verdict with "Too close to call:" and then say what the games show about how players reacted. Lead with the direct effect of the moves tied to the scenario, then the knock-on effects (how Disney and rivals changed course). Say plainly if the difference is small enough to be luck.` : ''}
 Respond with JSON only.`;
-  const prompt = `Disney's strategy going in: ${pb.desc}\nThe rules-based simulator gives this strategy a typical ten-year profit of $${pct(sim, .5).toFixed(0)}B (bad decade $${pct(sim, .1).toFixed(0)}B, good decade $${pct(sim, .9).toFixed(0)}B).\n\n${summary}\n\n${ranked}\n\nUse the dollar values above (they are calculated, so trust them over the narratives) when judging what worked. Name real dollar amounts where they make a point. Return exactly: {"bottom_line":"the single most useful takeaway, max 25 words, with a dollar figure if one makes the point","game_titles":["a 5-9 word headline for each game, in order, naming what decided it"],${hyp ? '"scenario_verdict":"max 40 words: how the scenario changed Disney\'s decade, using the within-pair gaps (especially in the business it hits), and whether that looks real or could be luck",' : ''}"findings":[{"headline":"max 9 words: the point, in plain words","happened":"the specific move(s) from the games behind this: who did what, where, when and for how much, and in which games, named by what set them apart (for example: all four games, both games with the scenario, the recession games), never by number (max 32 words)","matters":"why it helped or hurt Disney, in plain cause-and-effect words tied to this move's own result; give money once, as 'cost $X, added (or lost) $Y of profit through 2041' (max 26 words)","do":"one business decision Disney could approve this year: which team does what, by when, for roughly how much; never a review process, an approval rule or a model to build (max 22 words)","true_if":"the one or two things that would have to be true in the real world for this action to pay off, specific enough to check (max 20 words)","basis":"fact, stated, assumption or hypothesis: the weakest kind of evidence this finding depends on"}]}. Give exactly 4 findings, most important first. Every finding must be built on specific moves listed above that a reader could find in the game log; if you cannot name the moves, drop the finding and pick another. No general trends, no jargon, no finding that needs other context to understand.`;
+  const prompt = `Disney's strategy going in: ${pb.desc}\nThe rules-based simulator gives this strategy a typical ten-year profit of $${pct(sim, .5).toFixed(0)}B (bad decade $${pct(sim, .1).toFixed(0)}B, good decade $${pct(sim, .9).toFixed(0)}B).\n\n${summary}\n\n${ranked}\n\nUse the dollar values above (they are calculated, so trust them over the narratives) when judging what worked. Name real dollar amounts where they make a point. Return exactly: {"bottom_line":"one plain sentence a CEO understands cold: how Disney's profit did (average yearly profit versus today's) and the single biggest reason, whether a move or an outside shock; a result, not an action (max 28 words)","game_titles":["a 5-9 word headline for each game, in order, naming what decided it"],${hyp ? '"scenario_verdict":"max 40 words: how the scenario changed Disney\'s decade, using the within-pair gaps (especially in the business it hits), and whether that looks real or could be luck",' : ''}"findings":[{"headline":"max 9 words: the point, in plain words","happened":"the specific move(s) from the games behind this: who did what, where, when and for how much, and in which games, named by what set them apart (for example: all four games, both games with the scenario, the recession games), never by number (max 32 words)","matters":"why it helped or hurt Disney, in plain cause-and-effect words tied to this move's own result; give money once, as 'cost $X, added (or lost) $Y of profit through 2041' (max 26 words)","do":"one business decision Disney could approve this year: which team does what, by when, for roughly how much; never a review process, an approval rule or a model to build (max 22 words)","true_if":"the one or two things that would have to be true in the real world for this action to pay off, specific enough to check (max 20 words)","basis":"fact, stated, assumption or hypothesis: the weakest kind of evidence this finding depends on"}]}. Give exactly 4 findings, most important first. Every finding must be built on specific moves listed above that a reader could find in the game log; if you cannot name the moves, drop the finding and pick another. No general trends, no jargon, no finding that needs other context to understand.`;
   return parseJSON(await askClaude('analyst', system, prompt, signal));
 }
 
@@ -1622,12 +1638,19 @@ function scoreboard(games, hyp) {
   const base = diffs.length ? diffs.reduce((a, v) => a + v, 0) / diffs.length : null;
   const direct = all.filter(r => r.scen).reduce((a, r) => a + r.value, 0) / withS.length;
   const cell = (big, small) => `<div><b>${big}</b><span>${small}</span></div>`;
+  const seen = new Set();
+  const shockLines = games.filter(g => !g.broken).flatMap(g => (g.shocks || []).filter(x => Math.abs(x.decadeHit) >= 1).map(x => {
+    const who = hyp ? `Pair ${g.pair + 1} (both games)` : gameLabel(g), key = who + x.label + x.fy;
+    if (seen.has(key)) return null; seen.add(key);
+    return `<b>${esc(who)}:</b> ${esc(x.short.toLowerCase())} in FY${x.fy}, ${money(x.decadeHit)} to profit by FY2036`;
+  })).filter(Boolean);
+  const shocksHtml = shockLines.length ? `<p class="note" style="margin:6px 0 0"><b>Outside shocks behind the dips in the chart:</b> ${shockLines.join(' · ')}</p>` : '';
   const agree = diffs.length > 1 && (diffs.every(v => v < 0) || diffs.every(v => v > 0));
   return `<div class="scoreboard">
-    ${cell(fmtT(avg), `Disney's ten-year profit${hyp ? ' with your scenario' : ''} (average of ${withS.length} game${withS.length > 1 ? 's' : ''})`)}
-    ${hyp && base != null ? cell(money(base), `what your scenario changed, FY27-36 (pairs: ${diffs.map(money).join(', ')}${diffs.length > 1 ? (agree ? ', same direction' : ', mixed, so too close to call') : ''})`) : cell(money(avg - sim), `versus a typical simulated decade (${fmtT(sim)})`)}
+    ${cell(fmtB(avg / 10), `Disney's average yearly profit, FY27-36${hyp ? ', with your scenario' : ''} (today: ${fmtB(startTotal())}; average of ${withS.length} game${withS.length > 1 ? 's' : ''})`)}
+    ${hyp && base != null ? cell(`${money(base / 10)} a year`, `what your scenario changed, FY27-36 (${money(base)} over the decade; pairs: ${diffs.map(money).join(', ')}${diffs.length > 1 ? (agree ? ', same direction' : ', mixed, so too close to call') : ''})`) : cell(`${money((avg - sim) / 10)} a year`, `versus a typical simulated decade (${fmtB(sim / 10)} a year)`)}
     ${hyp && tailGaps.length ? cell(money(tailGaps.reduce((a, v) => a + v, 0) / tailGaps.length), 'what your scenario adds after 2036 (2037-41), from deals already made') : cell(money(tailAvg), 'still to come after 2036 (2037-41) from moves already made')}
-  </div>`;
+  </div>${shocksHtml}`;
 }
 
 let LAST_FORWARD = null;
@@ -1756,7 +1779,7 @@ function wrReport() {
   if ($('wr-insights').innerText.trim()) L.push('', '## Details', $('wr-insights').innerText.trim());
   WR.games.forEach((g, i) => {
     L.push('', `## ${gameLabel(g)}${g.title ? `: ${g.title}` : ''}`);
-    L.push(`Ten-year profit $${g.decade.toFixed(1)}B; FY2036 $${g.totals.at(-1).toFixed(1)}B${g.broken ? ' · UNRELIABLE (referee failed in ' + g.refFails + ' turns)' : ''}`);
+    L.push(`Average yearly profit $${(g.decade / 10).toFixed(1)}B (ten-year total $${g.decade.toFixed(1)}B); outside shocks: ${(g.shocks || []).map(x => `${x.label} FY${x.fy} (${money(x.value)})`).join(', ') || 'none'}; FY2036 $${g.totals.at(-1).toFixed(1)}B${g.broken ? ' · UNRELIABLE (referee failed in ' + g.refFails + ' turns)' : ''}`);
     L.push(`Newcomers: ${(g.cast || []).map(c => `${c.name} (${c.kind}: ${c.what})`).join('; ')}`);
     if (g.issues && g.issues.length) L.push('Problems:', ...g.issues.map(x => '  ! ' + x));
     g.turns.forEach(tn => {
