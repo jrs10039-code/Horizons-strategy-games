@@ -1715,12 +1715,18 @@ $('wr-copy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(text); $('wr-copymsg').textContent = `Copied (${Math.round(text.length / 1000)}k characters). Paste it into a chat or email.`; $('wr-export').hidden = true; }
   catch { $('wr-export').value = text; $('wr-export').hidden = false; $('wr-export').focus(); $('wr-export').select(); $('wr-copymsg').textContent = 'Your browser blocked copying, so the text is in the box below and already selected: press Ctrl+C (Cmd+C on a Mac).'; }
 });
-$('wr-download').addEventListener('click', () => {
+$('wr-download').addEventListener('click', async () => {
   const text = wrReport();
+  const filename = `horizons-war-room-${new Date().toISOString().slice(0, 10)}.md`;
+  const dl = window.claude && typeof window.claude.use === 'function' ? await window.claude.use('downloads').catch(() => null) : null;
+  if (dl) {
+    try { await dl.save({ filename, data: text }); $('wr-copymsg').textContent = 'Saved.'; } catch { $('wr-copymsg').textContent = 'The download was declined or blocked. Use Copy results instead.'; }
+    return;
+  }
   try {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([text], { type: 'text/markdown' }));
-    a.download = `horizons-war-room-${new Date().toISOString().slice(0, 10)}.md`;
+    a.download = filename;
     document.body.appendChild(a); a.click(); a.remove();
     $('wr-copymsg').textContent = 'Downloaded. If nothing appeared, use Copy results instead.';
   } catch { $('wr-copy').click(); }
