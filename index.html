@@ -209,6 +209,7 @@ details details summary { font-size: 14px; font-weight: 600; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
 textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 12px; min-height: 70px; }
 #wr-hyp { font-family: inherit; font-size: 15px; min-height: 56px; }
+.eta { font-size: 15px; font-weight: 600; color: var(--navy); margin-top: 8px; }
 .feed { list-style: none; padding: 0; margin: 10px 0 0; font-size: 14px; color: var(--ink-2); display: grid; gap: 4px; }
 .feed li { animation: fadein .4s ease; }
 .feed b { color: var(--ink); }
@@ -360,7 +361,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
         <button type="button" id="wr-stop" hidden>Stop</button>
         <span class="note" id="wr-status" aria-live="polite"></span>
       </form>
-      <div class="wr-progress" id="wr-progress" hidden><div class="bar"><span id="wr-bar" style="width:0%"></span></div><div class="note" id="wr-eta">Estimating time left…</div><ul class="feed" id="wr-feed" aria-live="polite"></ul></div>
+      <div class="wr-progress" id="wr-progress" hidden><div class="bar"><span id="wr-bar" style="width:0%"></span></div><div class="eta" id="wr-eta"></div><ul class="feed" id="wr-feed" aria-live="polite"></ul></div>
       <details class="more">
         <summary>How the game works</summary>
         <div class="more-body">
@@ -1232,7 +1233,7 @@ function limiter(n) {
 }
 
 class StopError extends Error {}
-let wrCallsDone = 0, wrStart = 0, WR_MISSES = 0;
+let wrCallsDone = 0, wrStart = 0, WR_MISSES = 0, WR_EST = 8;
 async function askClaude(role, system, prompt, signal) {
   if (signal.aborted) throw new StopError('stopped');
   const out = await askClaudeRaw(role, system + '\n\n' + PLAIN, prompt, signal);
@@ -1278,9 +1279,10 @@ function updateEta() {
   const frac = Math.min(1, wrCallsDone / WR_TOTAL_CALLS);
   $('wr-bar').style.width = (frac * 100).toFixed(1) + '%';
   const elapsed = (Date.now() - wrStart) / 1000;
-  if (wrCallsDone < 6) { $('wr-eta').textContent = 'Estimating time left…'; return; }
+  const keep = ' Keep this tab open; closing it stops the games.';
+  if (wrCallsDone < 12) { $('wr-eta').textContent = `Check back on this tab in about ${WR_EST} minutes.` + keep; return; }
   const left = Math.max(0, elapsed / frac - elapsed);
-  $('wr-eta').textContent = left < 45 ? 'Less than a minute left' : `About ${Math.ceil(left / 60)} min left`;
+  $('wr-eta').textContent = left < 45 ? 'Almost done: less than a minute left.' : `Check back on this tab in about ${Math.ceil(left / 60)} minute${Math.ceil(left / 60) > 1 ? 's' : ''}.` + keep;
 }
 
 function parseJSON(text) {
@@ -1565,6 +1567,7 @@ async function runWarRoom(more) {
   $('wr-play').disabled = true; $('wr-more').disabled = true; $('wr-stop').hidden = false;
   $('wr-progress').hidden = false;
   WR_TOTAL_CALLS = plan.length * WR_CALLS_PER_GAME + groups.length + 1;
+  WR_EST = plan.length >= 4 ? 9 : plan.length === 3 ? 8 : 6;
   wrCallsDone = 0; wrStart = Date.now(); WR_MISSES = 0; updateEta();
   $('wr-games').className = 'games' + (start + plan.length >= 4 ? ' four' : '');
   plan.forEach((pl, k) => {
