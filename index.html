@@ -1235,6 +1235,7 @@ const samplePromise = (window.claude && typeof window.claude.use === 'function')
 samplePromise.then(s => {
   if (s) { sampleFn = s; WR_MODE = 'claude'; }
   renderWarRoomMode();
+  if (typeof playLabel === 'function') playLabel();
 });
 
 function renderWarRoomMode() {
