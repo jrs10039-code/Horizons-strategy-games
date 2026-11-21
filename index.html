@@ -1273,6 +1273,7 @@ async function playGame(g, pb, wild, signal, run, onUpdate, hyp, worldPlan) {
   let lastTurn = 'Nothing yet: this is the first turn.';
   let wildName = null;
   const hist = Object.fromEntries(AI_PLAYERS.map(p => [p.id, []]));
+  const ruled = [];
   for (let t = 0; t < WR_TURNS; t++) {
     const y1 = 1 + t * WR_SPAN, fy1 = 2026 + y1, fy2 = fy1 + WR_SPAN - 1;
     const world = worldPlan ? worldPlan[t] : rollWorldEvent(y1);
@@ -1292,10 +1293,10 @@ async function playGame(g, pb, wild, signal, run, onUpdate, hyp, worldPlan) {
         ? (wildName ? `YOU ARE ${wildName}. You are ${wild.type}.` : `You are a brand-new company: ${wild.type}. Invent a name and a one-line description on this first turn.`)
         : p.brief;
       const agg = p.agg ? aggWord(p.agg()) : null;
-      const system = `You are the head of strategy for ${isWild && wildName ? wildName.split(':')[0] : p.name} in a business war game about the entertainment, media and experiences industry. It is fiscal ${fy1}–${fy2}. Act in your own company's interest${isDisney ? '' : ', not Disney\'s'}. Pursue your company's own priorities from your briefing. If a big prize is in play (a sports package, a studio for sale, a hot franchise), compete for it even if others are too. Be specific and realistic, and willing to surprise: partnerships, acquisitions, pricing, new products, technology, or moves outside your usual lane. Only make moves you can afford and that regulators would likely allow; never repeat a move you already made. ${isDisney ? 'Most of the game is about your decisions: make bold, concrete strategic moves and say what each costs. At least one move each turn must answer a specific rival move' + (scen ? ' or the scenario' : '') + ' by name, naming the partner or target, a dollar amount and a date.' : 'React to what Disney did last turn where it matters to you.'}${scen} Respond with JSON only.`;
-      const mine = hist[p.id].slice(-5);
-      const past = mine.length ? `\n\nYour own moves so far (build on them; do not repeat a move you already made):\n${mine.map(h => `- FY${h.fy}: ${h.move}${isDisney ? ` (so far worth ${money(h.value)} to Disney over the decade, per the referee)` : ''}`).join('\n')}${isDisney ? '\nKeep investing in what is working; fix or drop what is not.' : ''}` : '';
-      const prompt = `${MARKET_BRIEF}\n\nYOUR COMPANY:\n${brief}${past}${agg ? `\nYour posture: ${agg}.` : ''}\nMoney you can spend on new moves this turn: about $${chest[p.id].toFixed(0)}B.${isDisney ? ` The game ends after FY2036, so ${10 - t * WR_SPAN} years are left for moves to pay off.` : ''}\n\nOutside world this turn: ${worldText}\n\nWhat happened last turn:\n${lastTurn}\n\n${disneyNow}\n\nMake ${p.moves || '1 or 2'} moves for these two years. Return exactly: {"moves":[{"move":"one specific sentence","why":"one short reason","cost_billions":0}]${isWild && !wildName ? ',"company":"Name: one-line description"' : ''}}`;
+      const system = `You are the head of strategy for ${isWild && wildName ? wildName.split(':')[0] : p.name} in a business war game about the entertainment, media and experiences industry. It is fiscal ${fy1}–${fy2}. Act in your own company's interest${isDisney ? '' : ', not Disney\'s'}. Pursue your company's own priorities from your briefing. If a big prize is in play (a sports package, a studio for sale, a hot franchise), compete for it even if others are too. Be specific and realistic, and willing to surprise: partnerships, acquisitions, pricing, new products, technology, or moves outside your usual lane. Only make moves you can afford and that regulators would likely allow; never repeat a move you already made. ${isDisney ? 'Most of the game is about your decisions: make bold, concrete strategic moves and say what each costs. At least one move each turn must answer a specific rival move' + (scen ? ' or the scenario' : '') + ' by name, naming the partner or target, a dollar amount and a date.' : 'Pick the one Disney move from last turn that matters most to you and answer it by name (copy it, block it or go around it), or say in "why" that none matters. Every move must name a place, a price or number, and a date; "why" must give the real reason (for example "families pay $40 less than at Disney"), never one word.'}${scen} Respond with JSON only.`;
+      const mine = hist[p.id].slice(isDisney ? -9 : -5);
+      const past = mine.length ? `\n\nYour own moves so far (build on them; do not repeat a move you already made):\n${mine.map(h => `- FY${h.fy}: ${h.move}${isDisney ? ` (cost $${h.cost.toFixed(1)}B; referee projects ${money(h.value)} to Disney over the decade)` : ''}`).join('\n')}${isDisney ? '\nKeep investing in what is working; fix or drop what is not.' : ''}` : '';
+      const prompt = `${MARKET_BRIEF}\n\nYOUR COMPANY:\n${brief}${past}${agg ? `\nYour posture: ${agg}.` : ''}\nMoney you can spend on new moves this turn: about $${chest[p.id].toFixed(0)}B. The game ends after FY2036, so ${10 - t * WR_SPAN} years are left; moves that only pay off after that earn nothing.\n\nOutside world this turn: ${worldText}\n\nWhat happened last turn:\n${lastTurn}\n\n${disneyNow}\n\nMake ${p.moves || '1 or 2'} moves for these two years. Return exactly: {"moves":[{"move":"one specific sentence","why":"one short reason","cost_billions":0}]${isWild && !wildName ? ',"company":"Name: one-line description"' : ''}}`;
       const out = parseJSON(await askClaude(isDisney ? 'disney' : 'player', system, prompt, signal)) || { moves: [] };
       if (isWild && out.company && !wildName) wildName = String(out.company).slice(0, 160);
       const name = isWild && wildName ? wildName.split(':')[0].trim() : p.name;
@@ -1308,15 +1309,15 @@ async function playGame(g, pb, wild, signal, run, onUpdate, hyp, worldPlan) {
     const refSystem = `You referee a business war game centered on Disney. For each move, judge whether it is realistic and affordable for that company. Then decide its effect on Disney's yearly operating profit in three segments: Experiences (parks, cruises, resorts), Entertainment (studios, streaming, TV), Sports (ESPN). Effects are percent changes to that segment's yearly profit, for the years they last.
 Calibration:
 - Most rival moves barely touch Disney: 0 to -2. A strong rival move: -3 to -5. Only a truly major move reaches -8. Losing a major asset (a top sports package, a big franchise, a key distribution deal) can reach -10 to -20 on that segment: size it from the real dollars and show the arithmetic in "why".
-- Count each event once, on the move that causes it. Do not stack the same event across several players' rulings.
+- Count each event once, in the turn it takes effect, on the move that causes it. Do not stack the same event across several players' rulings or across turns.
 - When Disney loses or gives up something, net out the costs it no longer pays (for example, a rights fee it stops paying) against the lost revenue.
 - cost_now is the up-front operating cost as a percent of that segment's yearly profit (use the scale line). Building costs that are paid from cash flow, not profit, get little or no cost_now.
-- Disney's own moves: give a realistic up-front cost as a negative effect in the first year (cost_now), and a benefit that starts after a delay of 0-4 years (new parks and ships take 3-4 years to open). Benefits are usually +1 to +3 and never above +4. Bad or poorly timed Disney moves can have zero or negative benefit. Be skeptical: big promises rarely pay in full.
+- Disney's own moves: give a realistic up-front cost as a negative effect in the first year (cost_now), and a benefit that starts after a delay of 0-4 years (new parks and ships take 3-4 years to open). Work out the extra yearly profit in dollars first (for example: 3,000 rooms x $350 a night x 65% full x 40% margin = about $0.1B a year), then turn it into a percent with the scale line, and put that arithmetic in "why". Benefits are never above +4. If the payoff inside the decade is below the cost, say so and give 0 or a negative benefit. Be skeptical: big promises rarely pay in full.
 - Unrealistic or unaffordable moves get no effect.
-- "novel": true only for moves a normal strategy deck would not already list.${hyp ? '\n- "scenario_effect": true only for the ruling(s) that carry the scenario\'s direct effect on Disney.' : ''}${hyp ? `\nSCENARIO FOR THIS GAME, certain to happen: "${hyp}". It takes effect on the date it gives (early in the decade if none); before then, only preparation moves matter. Make sure its effects show up in your rulings and narrative, realistically sized from the real dollars.` : ''}
+- "novel": true only for moves a normal strategy deck would not already list.${hyp ? '\n- "scenario_effect": true only for the ruling(s) that carry the scenario\'s direct effect on Disney.' : ''}${hyp ? `\nSCENARIO FOR THIS GAME, certain to happen: "${hyp}". It takes effect on the date it gives (early in the decade if none); before then, only preparation moves matter. Make sure its effects show up in your rulings and narrative, sized from real-world numbers (for example: a big new theme park costs $5B to $10B and takes 3 to 4 years to build, as Epic Universe did at about $7B; a top NFL package costs about $2B to $3B a year). Rule the main event once, in the year it takes effect, with scenario_effect true; announcements and construction before then are preparation with 0 effect.` : ''}
 Respond with JSON only.`;
     const scale = `For scale: 1% of Experiences is about $${(seg.exp * 10).toFixed(0)}M of profit a year, 1% of Entertainment about $${(seg.ent * 10).toFixed(0)}M, 1% of Sports about $${(seg.spt * 10).toFixed(0)}M. Size Disney's benefits so a move's total payoff is believable against what it costs; a well-chosen move should pay back within the decade, a weak or copycat move usually does not.`;
-    const refPrompt = `Fiscal ${fy1}–${fy2}. Outside world: ${worldText}\n${disneyNow}\n${scale}\n\nMoves this turn:\n${moveText}\n\nReturn exactly: {"narrative":"2-3 plain sentences: the one thing that changed Disney's position most this turn and roughly what it is worth, then how rivals responded. Vary how you open; mention the outside world only if it mattered","rulings":[{"id":"the player's id","player":"name","move":"short plain restatement","realistic":true,"cost_billions":0,"exp":0,"ent":0,"spt":0,"cost_now":{"exp":0,"ent":0,"spt":0},"delay":0,"years":3,"novel":false,"responds_to_disney":false,${hyp ? '"scenario_effect":false,' : ''}"why":"one plain line"}]}. One ruling per move, in the same order.`;
+    const refPrompt = `Fiscal ${fy1}–${fy2}. Outside world: ${worldText}\n${disneyNow}\n${scale}${ruled.length ? `\n\nAlready ruled in earlier turns (do not rule these again; a later announcement, opening or repeat of the same thing gets 0, and a later move gets an effect only for what is new):\n${ruled.slice(-24).join('\n')}` : ''}\n\nMoves this turn:\n${moveText}\n\nReturn exactly: {"narrative":"2-3 plain sentences: the one thing that changed Disney's position most this turn and roughly what it is worth, then how rivals responded. Vary how you open; mention the outside world only if it mattered","rulings":[{"id":"the player's id","player":"name","move":"short plain restatement","realistic":true,"cost_billions":0,"exp":0,"ent":0,"spt":0,"cost_now":{"exp":0,"ent":0,"spt":0},"delay":0,"years":3,"novel":false,"responds_to_disney":false,${hyp ? '"scenario_effect":false,' : ''}"why":"one plain line"}]}. One ruling per move, in the same order.`;
     const ref = parseJSON(await askClaude('referee', refSystem, refPrompt, signal)) || { narrative: 'The referee could not rule this turn.', rulings: [] };
     const rulings = (ref.rulings || []).map(r => {
       const who = moves.find(m => m.id === r.id) || moves.find(m => m.player === r.player) || moves.find(m => String(r.player || '').toLowerCase().includes(m.player.toLowerCase().split(' ')[0])) || {};
@@ -1333,9 +1334,12 @@ Respond with JSON only.`;
       // What the move is worth to Disney in dollars over the rest of the decade (our arithmetic, not the AI's claim)
       const span = Math.max(0, Math.min(years, WR_TURNS * WR_SPAN - (y1 + delay) + 1));
       const value = SEGS.reduce((a, k) => a + imp[k] * seg[k] * span + now[k] * seg[k], 0);
-      return { id: who.id, isDisney, player: String(r.player || ''), move: String(r.move || ''), ok, imp, now, delay, years, cost, value, fy: fy1, scen: !!r.scenario_effect, novel: !!r.novel, responds: !!r.responds_to_disney, why: String(r.why || '') };
+      return { id: who.id, isDisney, player: String(r.player || ''), move: String(r.move || ''), ok, imp, now, delay, years, cost, value, fy: fy1, scen: !!r.scenario_effect, novel: !!r.novel, responds: !isDisney && !!r.responds_to_disney, why: String(r.why || '') };
     });
-    rulings.forEach(r => { if (r.id && r.ok) hist[r.id].push({ fy: fy1, move: r.move, value: r.value }); });
+    rulings.forEach(r => {
+      if (r.id && r.ok) hist[r.id].push({ fy: fy1, move: r.move, value: r.value, cost: r.cost });
+      if (r.ok && Math.abs(r.value) >= 0.05) ruled.push(`FY${fy1} ${r.player}: ${r.move} (${money(r.value)} to Disney)`);
+    });
     // money comes back each turn (two years of cash flow), capped so nobody hoards forever
     AI_PLAYERS.forEach(p => { const base0 = p.id === 'wildcard' ? wild.chest : p.chest; chest[p.id] = Math.min(base0 * 2, chest[p.id] + base0); });
 
@@ -1350,7 +1354,7 @@ Respond with JSON only.`;
       for (const k of SEGS) { base[k] *= 1 + pb.g[k]; segNow[k] = base[k] * Math.max(0.05, f[k]) * drag; tot += segNow[k]; }
       totals.push(tot); segHist.push(segNow);
     }
-    lastTurn = rulings.filter(r => r.ok).map(r => `- ${r.player}: ${r.move}`).join('\n') + `\nReferee: ${ref.narrative || ''}`;
+    lastTurn = rulings.filter(r => r.ok).map(r => `- ${r.player}: ${r.move} (cost $${r.cost.toFixed(1)}B${Math.abs(r.value) >= 0.05 ? `; ${money(r.value)} to Disney over the decade` : ''})`).join('\n') + `\nReferee: ${ref.narrative || ''}`;
     turns.push({ fy1, fy2, world, narrative: String(ref.narrative || ''), rulings });
     onUpdate({ g, totals, turns, wildName });
   }
@@ -1359,8 +1363,10 @@ Respond with JSON only.`;
 
 const money = v => (v >= 0 ? '+' : '−') + '$' + Math.abs(v).toFixed(Math.abs(v) < 1 ? 2 : 1) + 'B';
 function valText(r) {
-  if (!r.ok || Math.abs(r.value || 0) < 0.05) return '';
-  return ` <span class="val ${r.value > 0 ? 'pos' : 'neg'}">${money(r.value)} to Disney</span>`;
+  if (!r.ok) return '';
+  const cost = r.isDisney && r.cost >= 0.05 ? ` <span class="note">· cost $${r.cost.toFixed(1)}B</span>` : '';
+  if (Math.abs(r.value || 0) < 0.05) return cost;
+  return `${cost} <span class="val ${r.value > 0 ? 'pos' : 'neg'}">${money(r.value)} to Disney</span>`;
 }
 function impactText(r) {
   const parts = [];
@@ -1419,9 +1425,9 @@ function drawWarRoomChart(games) {
 async function runAnalyst(games, pb, signal, hyp) {
   const sim = decades(LAST_FORWARD.main);
   const summary = games.map((g, i) => `GAME ${i + 1}${g.baseline ? ' (WITHOUT the scenario, for comparison)' : hyp ? ` (with the scenario; moves tied directly to it: ${money(g.turns.flatMap(tn => tn.rulings).filter(r => r.ok && r.scen).reduce((a, r) => a + r.value, 0))})` : ''}: ten-year profit $${g.decade.toFixed(0)}B. Newcomer: ${g.wildName || g.wildType}\n` + g.turns.map(tn =>
-    `FY${tn.fy1}-${tn.fy2}: ${tn.narrative}${tn.world.length ? ` [outside shock: ${tn.world[0].e.label}]` : ''}\n` + tn.rulings.filter(r => r.ok).map(r => `  * ${r.isDisney ? 'DISNEY' : r.player}${r.novel ? ' [NEW IDEA]' : ''}${r.responds ? ' [reacting to Disney]' : ''}: ${r.move} -> ${Math.abs(r.value) >= 0.05 ? money(r.value) + ' to Disney over the decade' : 'no direct effect on Disney'}`).join('\n')).join('\n')).join('\n\n');
+    `FY${tn.fy1}-${tn.fy2}: ${tn.narrative}${tn.world.length ? ` [outside shock: ${tn.world[0].e.label}]` : ''}\n` + tn.rulings.filter(r => r.ok).map(r => `  * ${r.isDisney ? 'DISNEY' : r.player}${r.novel ? ' [NEW IDEA]' : ''}${r.responds ? ' [reacting to Disney]' : ''}: ${r.move} (cost $${r.cost.toFixed(1)}B) -> ${Math.abs(r.value) >= 0.05 ? money(r.value) + ' to Disney over the decade' : 'no direct effect on Disney'}`).join('\n')).join('\n')).join('\n\n');
   const all = games.flatMap((g, i) => g.turns.flatMap(tn => tn.rulings.filter(r => r.ok).map(r => ({ ...r, game: i + 1 }))));
-  const top = (list, n) => list.slice(0, n).map(r => `  Game ${r.game}, FY${r.fy}: ${r.isDisney ? 'Disney' : r.player}: ${r.move} (${money(r.value)})`).join('\n');
+  const top = (list, n) => list.slice(0, n).map(r => `  Game ${r.game}, FY${r.fy}: ${r.isDisney ? 'Disney' : r.player}: ${r.move} (${money(r.value)}${r.isDisney ? `, cost $${r.cost.toFixed(1)}B` : ''})`).join('\n');
   const dis = all.filter(r => r.isDisney).sort((a, b) => b.value - a.value);
   const riv = all.filter(r => !r.isDisney).sort((a, b) => a.value - b.value);
   const ranked = `DISNEY'S BEST MOVES BY DOLLAR VALUE:\n${top(dis, 4)}\nDISNEY'S WORST MOVES:\n${top(dis.slice().reverse(), 3)}\nRIVAL MOVES THAT HURT DISNEY MOST:\n${top(riv, 4)}`;
@@ -1432,6 +1438,7 @@ Rules:
 - Skip the obvious (recessions hurt parks, AI disrupts content, rivals bid for sports) unless you have a specific new angle.
 - Actions must be concrete, low-cost, and startable within a year.
 - Keep every field short: one sentence, as few words as possible.
+- For Disney's moves, compare dollars earned with dollars spent. A move that earned less than it cost did not pay, even if its value is positive; say so.
 - Write like a sharp strategy memo to Disney's CEO: name companies, years and dollar amounts; no hedging filler ("could potentially", "it is important to").
 - Each action must be something a Disney team could approve this year, with a rough cost or a first step (a pilot, a deal to open talks on, an option to buy, a team to set up). Never "monitor", "explore" or "consider".${hyp ? `\n- The user is testing this scenario: "${hyp}". Games 1-3 include it; Game 4 does not. Judge how the scenario changed Disney's decade. All four games faced the same outside shocks, so differences come from the scenario and from how players reacted. Lead with the direct effect of the moves tied to the scenario, then the knock-on effects (how Disney and rivals changed course). Say plainly if the difference is small enough to be luck.` : ''}
 Respond with JSON only.`;
@@ -1443,7 +1450,7 @@ function scoreboard(games, hyp) {
   const sim = pct(decades(LAST_FORWARD.main), .5);
   const withS = games.filter(g => !g.baseline);
   const avg = withS.reduce((a, g) => a + g.decade, 0) / withS.length;
-  const all = games.flatMap((g, i) => g.turns.flatMap(tn => tn.rulings.filter(r => r.ok).map(r => ({ ...r, game: i + 1 }))));
+  const all = games.flatMap((g, i) => g.baseline ? [] : g.turns.flatMap(tn => tn.rulings.filter(r => r.ok).map(r => ({ ...r, game: i + 1 }))));
   const best = all.filter(r => r.isDisney).sort((a, b) => b.value - a.value)[0];
   const hit = all.filter(r => !r.isDisney).sort((a, b) => a.value - b.value)[0];
   const base = games.find(g => g.baseline);
@@ -1535,6 +1542,10 @@ const WR_EXAMPLES = [
 ];
 $('wr-examples').innerHTML = '<span class="note" style="align-self:center">Try one:</span>' + WR_EXAMPLES.map(x => `<button type="button">${esc(x)}</button>`).join('');
 $('wr-examples').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { $('wr-hyp').value = b.textContent; $('wr-hyp').focus(); } });
+const playLabel = () => { if (!$('wr-play').disabled) $('wr-play').textContent = $('wr-hyp').value.trim() ? 'Play 4 games (about 6–10 min)' : 'Play 3 games (about 5–8 min)'; };
+$('wr-hyp').addEventListener('input', playLabel);
+$('wr-examples').addEventListener('click', playLabel);
+playLabel();
 $('wr-form').addEventListener('submit', playWarRoom);
 $('wr-stop').addEventListener('click', () => wrAbort && wrAbort.abort());
 try { const p = localStorage.getItem('horizons-pass'); if (p) $('wr-pass').value = p; } catch {}
