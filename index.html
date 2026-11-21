@@ -351,12 +351,12 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
   <section role="tabpanel" id="p-warroom" aria-labelledby="tab-warroom">
     <div class="card">
       <h2>Let AI rivals play out the decade</h2>
-      <p class="sub">Thirteen AI agents play Disney, its biggest rivals and three newcomers for ten years. An AI referee scores every move, and an AI analyst tells you what Disney should do. Each run plays 2 games with different casts of newcomers, and you can add more; no two go the same way.</p>
+      <p class="sub">Thirteen AI agents play Disney, its biggest rivals and three newcomers for ten years. An AI referee scores every move, and an AI analyst tells you what Disney should do. Each run plays 3 games with different casts of newcomers, and you can add more; no two go the same way.</p>
       <form class="wr-controls" id="wr-form">
         <div class="field wide"><label for="wr-hyp">What do you want to test? (optional)</label>
           <textarea id="wr-hyp" rows="2" maxlength="400" placeholder="Describe any situation in your own words, for example: Netflix makes a big push into theme parks."></textarea>
           <div class="examples" id="wr-examples" aria-label="Example scenarios"></div>
-          <p class="hint">Leave it blank to simply play out the decade. If you fill it in, two matching games play, one with your scenario and one without, so you can see what it changes.</p></div>
+          <p class="hint">Leave it blank to simply play out the decade. If you fill it in, 2 pairs of matching games play, each pair with and without your scenario, so you can see what it changes.</p></div>
         <div class="field"><label for="wr-pass">Passcode</label><input id="wr-pass" type="password" autocomplete="off" placeholder="From Jake's email"></div>
         <button type="submit" class="primary" id="wr-play">Play the games</button>
         <button type="button" id="wr-stop" hidden>Stop</button>
@@ -368,7 +368,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
         <div class="more-body">
           <p class="note" id="wr-mode-note"></p>
           <div class="chips" id="wr-players"></div>
-          <p class="note">At the start of each game, a casting AI picks three newcomers to fit the moment and your scenario: one real company and two invented ones built on emerging technology. One player speaks for the ~100 smaller rivals the simulator tracks (regional parks, cruise lines, smaller studios), plus a light background drag of about 6% for everyday pressure. Each player is briefed on its company's real finances, assets and goals as of late 2026. Each turn covers two years: Disney moves, rivals react, and the referee judges what each move costs and how it changes Disney's profit. The strategy above and the shock and rival settings in <i>Your assumptions</i> apply. Rival players run on Claude Haiku 5.5, Disney and the referee on Claude Sonnet 5.5, and the analyst on Claude Opus 5.5. A run takes about 5–6 minutes. To keep it quick, the biggest rivals each think on their own while the smaller players (gaming, leagues, the rest of the market and the newcomers) share one AI per turn, each still acting for itself.</p>
+          <p class="note">At the start of each game, a casting AI picks three newcomers to fit the moment and your scenario: one real company and two invented ones built on emerging technology. One player speaks for the ~100 smaller rivals the simulator tracks (regional parks, cruise lines, smaller studios), plus a light background drag of about 6% for everyday pressure. Each player is briefed on its company's real finances, assets and goals as of late 2026. Each turn covers two years: Disney moves, rivals react, and the referee judges what each move costs and how it changes Disney's profit. The strategy above and the shock and rival settings in <i>Your assumptions</i> apply. Rival players run on Claude Haiku 5.5, Disney and the referee on Claude Sonnet 5.5, and the analyst on Claude Opus 5.5. A run takes about 6–8 minutes. To keep it quick, the biggest rivals each think on their own while the smaller players (gaming, leagues, the rest of the market and the newcomers) share one AI per turn, each still acting for itself.</p>
         </div>
       </details>
     </div>
@@ -1286,7 +1286,7 @@ function updateEta() {
   const mins = Math.floor(elapsed / 60);
   const turn = Math.min(WR_TURNS, Math.floor(WR_TURNS_DONE / Math.max(1, WR_GAMES_NOW)) + 1);
   const stage = WR_TURNS_DONE >= WR_GAMES_NOW * WR_TURNS ? 'The analyst is reading the games' : `Turn ${turn} of ${WR_TURNS}`;
-  $('wr-eta').textContent = `${stage} · ${mins ? mins + ' min' : 'under a minute'} so far (usually 5–6 min). Keep this tab open; closing it stops the games.`;
+  $('wr-eta').textContent = `${stage} · ${mins ? mins + ' min' : 'under a minute'} so far (usually 6–8 min). Keep this tab open; closing it stops the games.`;
 }
 
 // A long referee answer can get cut off mid-list; keep every ruling that arrived whole.
@@ -1603,7 +1603,7 @@ async function runWarRoom(more) {
   const { pb, hyp } = WR;
   // Plain run: 3 independent games (2 more on request). Scenario run: 2 matched pairs (1 more pair on request).
   // In a pair, both games share outside shocks and newcomers; only the scenario differs.
-  const nGroups = hyp ? 1 : 2;
+  const nGroups = hyp ? (more ? 1 : 2) : (more ? 2 : 3);
   const groups = Array.from({ length: nGroups }, () => ({ pair: WR.pairs++ }));
   const plan = groups.flatMap(gr => hyp ? [{ ...gr, hyp }, { ...gr, hyp: null }] : [{ ...gr, hyp: null }]);
   const start = WR.games.length;
@@ -1690,7 +1690,7 @@ const WR_EXAMPLES = [
 ];
 $('wr-examples').innerHTML = '<span class="note" style="align-self:center">Try one:</span>' + WR_EXAMPLES.map(x => `<button type="button">${esc(x)}</button>`).join('');
 $('wr-examples').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { $('wr-hyp').value = b.textContent; $('wr-hyp').focus(); } });
-const playLabel = () => { if (!$('wr-play').disabled) $('wr-play').textContent = $('wr-hyp').value.trim() ? 'Play with and without your scenario (about 5–6 min)' : 'Play 2 games (about 5–6 min)'; };
+const playLabel = () => { if (!$('wr-play').disabled) $('wr-play').textContent = $('wr-hyp').value.trim() ? 'Play 4 games: 2 pairs, with and without your scenario (about 6–8 min)' : 'Play 3 games (about 6–8 min)'; };
 ['input', 'change', 'keyup', 'paste', 'blur'].forEach(ev => $('wr-hyp').addEventListener(ev, () => setTimeout(playLabel, 0)));
 $('wr-examples').addEventListener('click', playLabel);
 playLabel();
