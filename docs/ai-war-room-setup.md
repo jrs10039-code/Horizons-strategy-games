@@ -8,11 +8,12 @@ The page on GitHub never sees your API key. It sends each request to a small pri
 
 | Role | Model | Calls per click |
 | --- | --- | --- |
-| 8 company players | Claude Haiku 5.5 | ~120 |
+| 7 rival players | Claude Haiku 5.5 | 105 |
+| Disney's player | Claude Sonnet 5.5 | 15 |
 | Referee | Claude Sonnet 5.5 | 15 |
 | Analyst | Claude Opus 5.5 | 1 |
 
-Estimated cost: about $0.45–0.55 per click (3 games). Treat this as an estimate and watch your usage page.
+Estimated cost: roughly $0.60–1.00 per click (3 games), since each player now gets a full briefing pack. Treat this as an estimate and watch your usage page.
 
 ## Step 1: Anthropic API account (about 5 minutes)
 
