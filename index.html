@@ -1683,9 +1683,9 @@ function rivalWinners(games, hyp) {
   const m = {};
   if (hyp) {
     const ps = pairList(games); if (!ps.length) return [];
-    const bad = new Set();
-    ps.forEach(p => { const a = tally(p.on), b = tally(p.off); new Set([...Object.keys(a), ...Object.keys(b)]).forEach(k => { const d = (a[k] || 0) - (b[k] || 0); if (d <= 0) bad.add(k); m[k] = (m[k] || 0) + d / ps.length; }); });
-    bad.forEach(k => delete m[k]);
+    const up = {};
+    ps.forEach(p => { const a = tally(p.on), b = tally(p.off); new Set([...Object.keys(a), ...Object.keys(b)]).forEach(k => { const d = (a[k] || 0) - (b[k] || 0); if (d > 0) up[k] = (up[k] || 0) + 1; m[k] = (m[k] || 0) + d / ps.length; }); });
+    Object.keys(m).forEach(k => { if ((up[k] || 0) < ps.length) delete m[k]; });
   } else {
     const ok = games.filter(g => !g.broken); if (!ok.length) return [];
     ok.forEach(g => { const a = tally(g); for (const k in a) m[k] = (m[k] || 0) + a[k] / ok.length; });
