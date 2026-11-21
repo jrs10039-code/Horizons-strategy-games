@@ -365,7 +365,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
         <div class="more-body">
           <p class="note" id="wr-mode-note"></p>
           <div class="chips" id="wr-players"></div>
-          <p class="note">Each player is briefed on its company's real finances, assets and goals as of late 2026. Each turn covers two years: Disney moves, rivals react, and the referee judges what each move costs and how it changes Disney's profit. The strategy above and the shock and rival settings in <i>Your assumptions</i> apply. Rival players run on Claude Haiku 5.5, Disney and the referee on Claude Sonnet 5.5, and the analyst on Claude Opus 5.5. A run takes about 4–8 minutes.</p>
+          <p class="note">The ~100 smaller rivals the simulator tracks are not played by AI; their steady pressure is built in as a background drag of about 10% on profit. Each player is briefed on its company's real finances, assets and goals as of late 2026. Each turn covers two years: Disney moves, rivals react, and the referee judges what each move costs and how it changes Disney's profit. The strategy above and the shock and rival settings in <i>Your assumptions</i> apply. Rival players run on Claude Haiku 5.5, Disney and the referee on Claude Sonnet 5.5, and the analyst on Claude Opus 5.5. A run takes about 4–8 minutes.</p>
         </div>
       </details>
     </div>
@@ -1345,7 +1345,9 @@ Respond with JSON only.`;
       effects.forEach(e => { if (y >= e.from && y <= e.until) for (const k in e.imp) (e.rival ? riv : f)[k] += e.imp[k]; });
       for (const k in riv) f[k] += Math.max(-0.12, riv[k]); // rivals overlap: total rival pressure on a segment tops out around -12%
       const segNow = {}; let tot = 0;
-      for (const k of SEGS) { base[k] *= 1 + pb.g[k]; segNow[k] = base[k] * Math.max(0.05, f[k]); tot += segNow[k]; }
+      // Background drag: steady pressure from the ~100 smaller rivals the simulator tracks but the War Room does not play, about -10% by year 3.
+      const drag = 1 - Math.min(0.10, 0.035 * y);
+      for (const k of SEGS) { base[k] *= 1 + pb.g[k]; segNow[k] = base[k] * Math.max(0.05, f[k]) * drag; tot += segNow[k]; }
       totals.push(tot); segHist.push(segNow);
     }
     lastTurn = rulings.filter(r => r.ok).map(r => `- ${r.player}: ${r.move}`).join('\n') + `\nReferee: ${ref.narrative || ''}`;
