@@ -64,6 +64,7 @@ Every number lives in [`config/assumptions.json`](config/assumptions.json). Disa
 | `api/agent.js` | Private relay for the AI War Room: holds the API key, checks a passcode, picks the model per role. |
 | `docs/ai-war-room-setup.md` | 15-minute setup to switch on live AI games for the public site. |
 | `docs/methodology.md` | Mechanics, calibration, backtest results and known limits. |
+| `docs/landscape.md` | Where Horizons sits among war-gaming and AI strategic-simulation tools (Fuld, BCG, Principle, Simile, Aaru), what the research says, and how Horizons answers the known weaknesses. |
 | `tests/` | Checks for reproducibility, the starting point, trigger value, and pure compounding. |
 
 ```bash
