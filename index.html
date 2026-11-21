@@ -1674,7 +1674,7 @@ function scenarioBridge(games) {
   const mean = f => rows.reduce((a, r) => a + f(r), 0) / rows.length;
   const same = f => rows.length > 1 && (rows.every(r => f(r) < 0) || rows.every(r => f(r) > 0));
   const directClear = Math.abs(mean(r => r.direct)) >= 1 && (rows.length === 1 || same(r => r.direct));
-  const netClear = same(r => r.net) && Math.abs(mean(r => r.net)) >= 8;
+  const netClear = same(r => r.net) && rows.every(r => Math.abs(r.net) >= 2);
   return { rows, mean, same, n: rows.length, directClear, netClear };
 }
 // Rivals' own gains (referee estimates). Scenario runs: what the scenario added to each rival, within pairs.
@@ -1683,7 +1683,9 @@ function rivalWinners(games, hyp) {
   const m = {};
   if (hyp) {
     const ps = pairList(games); if (!ps.length) return [];
-    ps.forEach(p => { const a = tally(p.on), b = tally(p.off); new Set([...Object.keys(a), ...Object.keys(b)]).forEach(k => { m[k] = (m[k] || 0) + ((a[k] || 0) - (b[k] || 0)) / ps.length; }); });
+    const bad = new Set();
+    ps.forEach(p => { const a = tally(p.on), b = tally(p.off); new Set([...Object.keys(a), ...Object.keys(b)]).forEach(k => { const d = (a[k] || 0) - (b[k] || 0); if (d <= 0) bad.add(k); m[k] = (m[k] || 0) + d / ps.length; }); });
+    bad.forEach(k => delete m[k]);
   } else {
     const ok = games.filter(g => !g.broken); if (!ok.length) return [];
     ok.forEach(g => { const a = tally(g); for (const k in a) m[k] = (m[k] || 0) + a[k] / ok.length; });
@@ -1700,7 +1702,7 @@ function pairEvidence(games) {
   if (!b) return '';
   const pr = f => b.n > 1 ? ` (pairs: ${b.rows.map(r => money(f(r))).join(', ')})` : '';
   const win = rivalWinners(games, true);
-  return `What the scenario did to Disney, through 2041, average of ${b.n} pair${b.n > 1 ? 's' : ''}: direct hit from the event ${money(b.mean(r => r.direct))}${pr(r => r.direct)}, ${b.directClear ? 'CLEAR' : 'NOT CLEAR'}; Disney's moves in the scenario games versus without ${money(b.mean(r => r.disney))}${pr(r => r.disney)}; rivals' moves versus without ${money(b.mean(r => r.rivals))}${pr(r => r.rivals)}; net change ${money(b.mean(r => r.net))}${pr(r => r.net)}, ${b.netClear ? 'CLEAR' : 'within the normal swing between games (about $8B-15B)'}. ${segmentText(games, true)}${win.length ? ` Rivals who gained most from the scenario (their own profit through 2041): ${win.map(([k, v]) => `${k} ${money(v)}`).join(', ')}.` : ''}`;
+  return `What the scenario did to Disney, through 2041, average of ${b.n} pair${b.n > 1 ? 's' : ''}: direct hit from the event ${money(b.mean(r => r.direct))}${pr(r => r.direct)}, ${b.directClear ? 'CLEAR' : 'NOT CLEAR'}; Disney's moves in the scenario games versus without ${money(b.mean(r => r.disney))}${pr(r => r.disney)}; rivals' moves versus without ${money(b.mean(r => r.rivals))}${pr(r => r.rivals)}; net change ${money(b.mean(r => r.net))}${pr(r => r.net)}, ${b.netClear ? 'CONSISTENT (both pairs moved the same way by more than $2B)' : 'NOT CONSISTENT: the pairs disagree, so within the normal swing between games'}. ${segmentText(games, true)}${win.length ? ` Rivals who gained most from the scenario (their own profit through 2041): ${win.map(([k, v]) => `${k} ${money(v)}`).join(', ')}.` : ''}`;
 }
 function breakdown(games, hyp) {
   const b = hyp ? scenarioBridge(games) : null;
@@ -1712,7 +1714,7 @@ function breakdown(games, hyp) {
     ${row("Disney's response (how its moves differed)", r => r.disney, b.same(r => r.disney) ? 'same direction' : (b.n > 1 && b.rows.some(r => Math.abs(r.disney) >= 0.1) ? 'mixed' : ''), '')}
     ${row("Rivals' moves (how they differed)", r => r.rivals, '', '')}
     ${Math.abs(b.mean(r => r.other)) >= 1 ? row('Everything else (timing, overlap)', r => r.other, '', '') : ''}
-    ${row('<b>Net change</b>', r => r.net, b.netClear ? 'clear' : 'within the normal swing between games', 'tot')}
+    ${row('<b>Net change</b>', r => r.net, b.netClear ? 'both pairs agree' : 'pairs disagree: within the normal swing between games', 'tot')}
   </table></div>` : '';
   const segRow = k => {
     const avg = w.reduce((a, g) => a + segSum(g, k), 0) / w.length / 10;
