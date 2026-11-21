@@ -219,7 +219,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
 .finds { display: grid; gap: 10px; margin-top: 6px; }
 .find { display: grid; grid-template-columns: 28px 1fr; gap: 10px; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; }
 .find .n { font-weight: 700; color: var(--navy); font-size: 18px; }
-.find p { margin: 0; } .find .hap { font-size: 16px; font-weight: 600; } .find .do { margin-top: 4px; }
+.find p { margin: 2px 0; } .find .hap { font-size: 17px; font-weight: 700; margin-bottom: 4px; } .find .lbl { color: var(--ink-3); font-weight: 600; } .find .do { margin-top: 6px; }
 .imp { display: block; margin-top: 2px; font-weight: 600; font-size: 14px; } .imp.neg { color: #b42318; } .imp.pos { color: #0f766e; }
 .todo li { margin: 6px 0; } .todo li b { font-weight: 600; }
 .examples { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -373,7 +373,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
         <div class="more-body">
           <p class="note" id="wr-mode-note"></p>
           <div class="chips" id="wr-players"></div>
-          <p class="note">At the start of each game, a casting AI picks three newcomers to fit the moment and your scenario: one real company and two invented ones built on emerging technology. One player speaks for the ~100 smaller rivals the simulator tracks (regional parks, cruise lines, smaller studios), plus a light background drag of about 6% for everyday pressure. Each player is briefed on its company's real finances, assets and goals as of late 2026. Each turn covers two years: Disney moves, rivals react, and the referee judges what each move costs and how it changes Disney's profit. The strategy above and the shock and rival settings in <i>Your assumptions</i> apply. Rival players run on Claude Haiku 5.5, Disney and the referee on Claude Sonnet 5.5, and the analyst on Claude Opus 5.5. A run takes about 6–8 minutes. To keep it quick, the biggest rivals each think on their own while the smaller players (gaming, leagues, the rest of the market and the newcomers) share one AI per turn, each still acting for itself.</p>
+          <p class="note">At the start of each game, a casting AI picks three newcomers to fit the moment and your scenario: one real company and two invented ones built on emerging technology. One player speaks for the ~100 smaller rivals the simulator tracks (regional parks, cruise lines, smaller studios), plus a light background drag of about 6% for everyday pressure. Each player is briefed on its company's real finances, assets and goals as of late 2026. Each turn covers two years: Disney moves, rivals react, and the referee judges what each move costs and how it changes Disney's profit. The strategy above and the shock and rival settings in <i>Your assumptions</i> apply. Rival players run on Claude Haiku 5.5, Disney and the referee on Claude Sonnet 5.5, and the analyst on Claude Opus 5.5. A run takes about 5–7 minutes. To keep it quick, rivals are run in three desks each turn (streaming rivals, parks and TV rivals, and the smaller players), with each company still acting only for itself. Disney and the referee each think alone.</p>
         </div>
       </details>
     </div>
@@ -382,10 +382,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
       <div class="more-row" id="wr-share" hidden><button type="button" class="primary" id="wr-copy">Copy results</button><button type="button" id="wr-download">Download</button><button type="button" id="wr-print">Print</button><span class="note" id="wr-copymsg">Copies everything, including every move and any errors, as text you can paste into a chat or email.</span></div>
       <textarea id="wr-export" hidden aria-label="Results as text" style="min-height:160px"></textarea>
       <div class="more-row"><button type="button" id="wr-more" hidden>Play 2 more games</button> <span class="note">Adds games to this run; the analyst re-reads all of them. Same strategy and scenario.</span></div>
-      <details class="more">
-        <summary>See early warning signs to watch</summary>
-        <div class="more-body"><div class="insights" id="wr-insights"></div></div>
-      </details>
+      <div class="insights" id="wr-insights" hidden></div>
     </div>
     <div class="card" id="wr-results-card" hidden>
       <h2>How the games played out</h2>
@@ -1186,7 +1183,13 @@ const AI_PLAYERS = [
   { id: 'leagues', name: 'Sports leagues (NFL, NBA, college)', chest: 2, agg: () => Math.round((S.players.nfl + S.players.nba + S.players.college) / 3), brief: `SPORTS LEAGUES. The NFL earns about $14.5B a year in shared revenue and can exit its TV deals after the 2029 season (ESPN's runs a year longer); it owns 10% of ESPN. The NBA's new 11-year deals (2025) split games across ESPN, NBC and Amazon. College football conferences are consolidating. Goals: get the most money and the widest reach; sell more directly to fans; grow internationally. Weak spots: depend on a few big buyers; younger fans watch highlights more than full games.` },
   { id: 'market', name: 'Rest of the market', chest: 5, agg: () => Math.round(Object.values(S.arena).reduce((a, v) => a + v, 0) / Object.values(S.arena).length), brief: `THE REST OF THE MARKET. You speak for the roughly 100 smaller companies that compete with Disney but are not separate players here: regional theme and water parks (Six Flags, SeaWorld's owner United Parks, Merlin's Legoland), cruise lines (Royal Caribbean, Carnival, Norwegian), smaller streamers and studios (Lionsgate, A24, Apple TV+, Sony Pictures), other sports media (Fox Sports, TNT Sports, DAZN), immersive venues (Meow Wolf, Sphere) and toy and game makers (Mattel, Hasbro, Nintendo). Each turn, report the 1 or 2 most important things this crowd does that affect Disney, naming the companies. Good news for Disney counts too (a rival failing, pulling back or partnering with Disney), and at least one turn in three should bring some. One company per move, named first. Your "money" is the combined spending these companies could plausibly do.` },
 ];
-const WR_GROUPED = new Set(['gaming', 'leagues', 'market']);
+// Who shares an AI call each turn. Disney and the referee always think alone; each company in a desk still acts only for itself.
+const WR_DESKS = [
+  { ids: ['netflix', 'skydance', 'amazon'], label: 'the streaming rivals', moves: '1 or 2 moves' },
+  { ids: ['comcast', 'alphabet'], label: 'the parks and TV rivals', moves: '1 or 2 moves' },
+  { ids: ['gaming', 'leagues', 'market', 'w1', 'w2', 'w3'], label: 'the smaller players', moves: 'its single most important move' },
+];
+const WR_GROUPED = new Set(WR_DESKS.flatMap(d => d.ids));
 const archAgg = () => Math.round(Object.values(S.arch).reduce((a, v) => a + v, 0) / Object.values(S.arch).length * 5);
 const WILDCARDS = [
   { type: 'an AI-native animation studio that makes family films and series at a fraction of Hollywood\'s cost', chest: 3 },
@@ -1297,7 +1300,7 @@ function updateEta() {
   const mins = Math.floor(elapsed / 60);
   const turn = Math.min(WR_TURNS, Math.floor(WR_TURNS_DONE / Math.max(1, WR_GAMES_NOW)) + 1);
   const stage = WR_TURNS_DONE >= WR_GAMES_NOW * WR_TURNS ? 'The analyst is reading the games' : `Turn ${turn} of ${WR_TURNS}`;
-  $('wr-eta').textContent = `${stage} · ${mins ? mins + ' min' : 'under a minute'} so far (usually 6–8 min). Keep this tab open; closing it stops the games.`;
+  $('wr-eta').textContent = `${stage} · ${mins ? mins + ' min' : 'under a minute'} so far (usually 5–7 min). Keep this tab open; closing it stops the games.`;
 }
 
 // A long referee answer can get cut off mid-list; keep every ruling that arrived whole.
@@ -1368,11 +1371,11 @@ async function playGame(g, pb, cast, signal, run, onUpdate, hyp, worldPlan) {
     const rivalRule = 'Pick the one Disney move from last turn that matters most to you and answer it by name (copy it, block it or go around it), or say in "why" that none matters. Every move must name a place, a price or number, and a date; "why" must give the real reason (for example "families pay $40 less than at Disney"), never one word.';
     const pastOf = (p, isDisney) => {
       const mine = hist[p.id].slice(isDisney ? -9 : -4);
-      return mine.length ? `\nIts moves so far (build on them; never repeat one):\n${mine.map(h => `- FY${h.fy}: ${h.move}${isDisney ? ` (cost $${h.cost.toFixed(1)}B; referee projects ${money(h.value)} of profit through 2041, net ${money(h.value - h.cost)})` : ''}`).join('\n')}${isDisney ? '\nKeep investing in what is working; fix or drop what is not.' : ''}` : '';
+      return mine.length ? `\nIts moves so far (build on them; never repeat one):\n${mine.map(h => `- FY${h.fy}: ${h.move}${isDisney ? ` (cost $${h.cost.toFixed(1)}B; referee projects ${money(h.value)} of profit through 2041, after costs)` : ''}`).join('\n')}${isDisney ? '\nKeep investing in what is working; fix or drop what is not.' : ''}` : '';
     };
     const clean = (list, isDisney) => (list || []).slice(0, 2).map(m => ({ move: String(m.move || '').slice(0, 320), why: String(m.why || '').slice(0, 200), cost: num(m.cost_billions, 0, 100) })).filter(m => m.move.length >= 25 || isDisney);
     // The biggest rivals each think on their own; the long tail (gaming, leagues, the rest of the market, newcomers) shares one call, each still acting for itself.
-    const solo = players.filter(p => !p.wild && !WR_GROUPED.has(p.id)), group = players.filter(p => p.wild || WR_GROUPED.has(p.id));
+    const solo = players.filter(p => !WR_GROUPED.has(p.id));
     const soloMoves = solo.map(p => run(async () => {
       const isDisney = p.id === 'disney';
       const agg = p.agg ? aggWord(p.agg()) : null;
@@ -1383,17 +1386,18 @@ async function playGame(g, pb, cast, signal, run, onUpdate, hyp, worldPlan) {
       catch (e) { if (e instanceof StopError || /not allowed|budget/.test(e.message)) throw e; WR_MISSES++; issues.push(`FY${fy1} ${p.name} did not answer: ${e.message}`); out = { moves: [] }; }
       return [{ id: p.id, player: p.name, moves: clean(out.moves, isDisney) }];
     }));
-    const groupMoves = run(async () => {
+    const deskCall = (group, desk) => run(async () => {
       const system = `You run the strategy desks of ${group.length} separate companies in a business war game about the entertainment, media and experiences industry. It is fiscal ${fy1}–${fy2}. Each company acts only in its own interest and does not coordinate with the others, unless a deal between them truly helps both. Be specific and realistic, and willing to surprise. Only make moves a company can afford and that regulators would likely allow; never repeat a move it already made. ${rivalRule}${scen} Respond with JSON only.`;
       const desks = group.map(p => `### ${p.name} [id: ${p.id}]\n${p.brief}${pastOf(p, false)}\nPosture: ${p.agg ? aggWord(p.agg()) : 'normal'}. Money for new moves this turn: about $${chest[p.id].toFixed(0)}B.`).join('\n\n');
-      const prompt = `${MARKET_BRIEF}\n\nTHE COMPANIES YOU PLAY:\n${desks}\n\n${yearsLeft}\n\n${common}\n\nFor each company, make its single most important move for these two years. Return exactly: {"companies":[{"id":"the company's id","moves":[{"move":"one sentence, max 30 words, with a place, a dollar amount and a year","why":"max 15 words","cost_billions":0}]}]}`;
+      const prompt = `${MARKET_BRIEF}\n\nTHE COMPANIES YOU PLAY:\n${desks}\n\n${yearsLeft}\n\n${common}\n\nFor each company, make ${desk.moves} for these two years. Return exactly: {"companies":[{"id":"the company's id","moves":[{"move":"one sentence, max 30 words, with a place, a dollar amount and a year","why":"max 15 words","cost_billions":0}]}]}`;
       let out;
       try { out = parseJSON(await askClaude('player', system, prompt, signal)) || {}; }
-      catch (e) { if (e instanceof StopError || /not allowed|budget/.test(e.message)) throw e; WR_MISSES++; issues.push(`FY${fy1} the smaller players did not answer: ${e.message}`); out = {}; }
+      catch (e) { if (e instanceof StopError || /not allowed|budget/.test(e.message)) throw e; WR_MISSES++; issues.push(`FY${fy1} ${desk.label} did not answer: ${e.message}`); out = {}; }
       const byId = Object.fromEntries((Array.isArray(out.companies) ? out.companies : []).map(c => [String(c.id || ''), c]));
       return group.map(p => ({ id: p.id, player: p.name, moves: clean((byId[p.id] || {}).moves, false) }));
     });
-    const moves = (await Promise.all([...soloMoves, groupMoves])).flat();
+    const deskMoves = WR_DESKS.map(d => [players.filter(p => d.ids.includes(p.id)), d]).filter(([g]) => g.length).map(([g, d]) => deskCall(g, d));
+    const moves = (await Promise.all([...soloMoves, ...deskMoves])).flat();
 
     onUpdate({ g, phase: `Turn ${t + 1} of ${WR_TURNS} (FY${fy1}–${fy2}): the referee is ruling` });
     const numbered = moves.flatMap(m => m.moves.map(x => ({ m, x })));
@@ -1548,7 +1552,7 @@ async function runAnalyst(games, pb, signal, hyp) {
     `FY${tn.fy1}-${tn.fy2}: ${tn.narrative}${tn.world.length ? ` [outside shock: ${tn.world[0].e.label}]` : ''}\n` + tn.rulings.filter(r => r.ok).map(r => `  * ${r.isDisney ? `DISNEY [referee: ${r.why.slice(0, 160)}]` : r.player}${r.novel ? ' [NEW IDEA]' : ''}${r.responds ? ` [answering Disney's "${r.respTo}"]` : ''}: ${r.move} (cost $${r.cost.toFixed(1)}B) -> ${Math.abs(r.value) >= 0.05 ? money(r.value) + ' to Disney through 2041' : 'no direct effect on Disney'}`).join('\n')).join('\n')).join('\n\n');
   const all = games.flatMap((g, i) => g.baseline ? [] : g.turns.flatMap(tn => tn.rulings.filter(r => r.ok).map(r => ({ ...r, game: i + 1 }))));
   const top = (list, n) => list.slice(0, n).map(r => `  Game ${r.game}, FY${r.fy}: ${r.isDisney ? 'Disney' : r.player}: ${r.move} (${money(r.value)}${r.isDisney ? `, cost $${r.cost.toFixed(1)}B` : ''})`).join('\n');
-  const dis = all.filter(r => r.isDisney).sort((a, b) => (b.value - b.cost) - (a.value - a.cost));
+  const dis = all.filter(r => r.isDisney).sort((a, b) => b.value - a.value);
   const riv = all.filter(r => !r.isDisney).sort((a, b) => a.value - b.value);
   const ranked = `DISNEY'S BEST MOVES BY DOLLAR VALUE:\n${top(dis, 4)}\nDISNEY'S WORST MOVES:\n${top(dis.slice().reverse(), 3)}\nRIVAL MOVES THAT HURT DISNEY MOST:\n${top(riv, 4)}`;
   const system = `You advise Disney's corporate strategy team after AI-played war games. Be brief and concrete.
@@ -1560,11 +1564,13 @@ Rules:
 - Actions must be concrete, low-cost, and startable within a year.
 - Keep every field short: one sentence, as few words as possible.
 - The game plays moves for ten years (FY2027-2036); dollar values also count each move's effects through 2041, so long-lived bets get fair credit.
+- Each move's dollar value is the change in Disney's profit through 2041 after the move's own costs are charged: a $3B land worth +$0.9B is a winner, not a loss.
+- Never write "G1" or "Game 2"; describe games by what set them apart. If a move names a product the game invented (for example "Disney+ House"), say in a few words what it is. Do not use the word "noise"; say "within the normal swing between games".
 - Judge Disney's moves fairly: parks, lands, hotels and ships normally pay back over 10 to 20 years, so not paying back inside this ten-year game is normal and is NOT a finding. Use the referee's payback estimate (in its reasons). Call out only moves that lose money outright or will never pay back, and moves that pay back unusually fast.
 - Write like a sharp strategy memo to Disney's CEO: name companies, years and dollar amounts; no hedging filler ("could potentially", "it is important to").
 - Each action must be something a Disney team could approve this year, with a rough cost or a first step (a pilot, a deal to open talks on, an option to buy, a team to set up). Never "monitor", "explore" or "consider".${hyp ? `\n- The user is testing this scenario: "${hyp}". Games come in matched pairs: both games in a pair have the same outside shocks and the same newcomers, and only one has the scenario. Judge the scenario by the difference within each pair, not by comparing across pairs. ${pairEvidence(games)} If it is too close to call, start the verdict with "Too close to call:" and then say what the games show about how players reacted. Lead with the direct effect of the moves tied to the scenario, then the knock-on effects (how Disney and rivals changed course). Say plainly if the difference is small enough to be luck.` : ''}
 Respond with JSON only.`;
-  const prompt = `Disney's strategy going in: ${pb.desc}\nThe rules-based simulator gives this strategy a typical ten-year profit of $${pct(sim, .5).toFixed(0)}B (bad decade $${pct(sim, .1).toFixed(0)}B, good decade $${pct(sim, .9).toFixed(0)}B).\n\n${summary}\n\n${ranked}\n\nUse the dollar values above (they are calculated, so trust them over the narratives) when judging what worked. Name real dollar amounts where they make a point. Return exactly: {"bottom_line":"the single most useful takeaway, max 25 words, with a dollar figure if one makes the point","game_titles":["a 5-9 word headline for each game, in order, naming what decided it"],${hyp ? '"scenario_verdict":"max 40 words: how the scenario changed Disney\'s decade, using the within-pair gaps (especially in the business it hits), and whether that looks real or could be luck",' : ''}"findings":[{"happened":"one line a busy executive understands with no other context: who did what, and when (max 22 words)","impact":"the dollar effect on Disney and where it showed up, e.g. -$0.9B to Disney over the decade (Games 1 and 3) (max 14 words)","do":"one line: what Disney should do about it this year, with a rough cost or first step (max 20 words)","watch":"max 14 words: an early sign in the news, and roughly how many years of warning it gives"}],"surprise":{"happened":"max 22 words","impact":"max 14 words"}}. Give exactly 3 findings, most important first; each must stand on its own.`;
+  const prompt = `Disney's strategy going in: ${pb.desc}\nThe rules-based simulator gives this strategy a typical ten-year profit of $${pct(sim, .5).toFixed(0)}B (bad decade $${pct(sim, .1).toFixed(0)}B, good decade $${pct(sim, .9).toFixed(0)}B).\n\n${summary}\n\n${ranked}\n\nUse the dollar values above (they are calculated, so trust them over the narratives) when judging what worked. Name real dollar amounts where they make a point. Return exactly: {"bottom_line":"the single most useful takeaway, max 25 words, with a dollar figure if one makes the point","game_titles":["a 5-9 word headline for each game, in order, naming what decided it"],${hyp ? '"scenario_verdict":"max 40 words: how the scenario changed Disney\'s decade, using the within-pair gaps (especially in the business it hits), and whether that looks real or could be luck",' : ''}"findings":[{"headline":"max 9 words: the point, in plain words","happened":"the specific move(s) from the games behind this: who did what, where, when and for how much, and in which games, named by what set them apart (for example: all four games, both games with the scenario, the recession games), never by number (max 32 words)","matters":"why it helped or hurt Disney, in plain cause-and-effect words tied to this move's own result; give money as 'cost $X, added (or lost) $Y of profit through 2041' (max 30 words)","do":"one business decision Disney could approve this year: which team does what, by when, for roughly how much; never a review process, an approval rule or a model to build (max 22 words)"}]}. Give exactly 4 findings, most important first. Every finding must be built on specific moves listed above that a reader could find in the game log; if you cannot name the moves, drop the finding and pick another. No general trends, no jargon, no finding that needs other context to understand.`;
   return parseJSON(await askClaude('analyst', system, prompt, signal));
 }
 
@@ -1590,7 +1596,7 @@ function scoreboard(games, hyp) {
   const withS = ok.some(g => !g.baseline) ? ok.filter(g => !g.baseline) : ok;
   const avg = withS.reduce((a, g) => a + g.decade, 0) / withS.length;
   const all = games.flatMap((g, i) => g.baseline ? [] : g.turns.flatMap(tn => tn.rulings.filter(r => r.ok).map(r => ({ ...r, game: i + 1 }))));
-  const best = all.filter(r => r.isDisney).sort((a, b) => (b.value - b.cost) - (a.value - a.cost))[0];
+  const best = all.filter(r => r.isDisney).sort((a, b) => b.value - a.value)[0];
   const hit = all.filter(r => !r.isDisney).sort((a, b) => a.value - b.value)[0];
   const diffs = pairDiffs(games);
   const tailAvg = withS.reduce((a, g) => a + (g.tail || 0), 0) / withS.length;
@@ -1598,19 +1604,18 @@ function scoreboard(games, hyp) {
   const base = diffs.length ? diffs.reduce((a, v) => a + v, 0) / diffs.length : null;
   const direct = all.filter(r => r.scen).reduce((a, r) => a + r.value, 0) / withS.length;
   const cell = (big, small) => `<div><b>${big}</b><span>${small}</span></div>`;
+  const agree = diffs.length > 1 && (diffs.every(v => v < 0) || diffs.every(v => v > 0));
   return `<div class="scoreboard">
-    ${cell(fmtT(avg), `Disney's ten-year profit, average of ${withS.length} game${withS.length > 1 ? 's' : ''}${hyp ? ' with your scenario' : ''}`)}
-    ${hyp && base != null ? cell(money(base), `what your scenario did to Disney's ten-year profit (average gap within ${diffs.length} matched pair${diffs.length > 1 ? 's' : ''}: ${diffs.map(money).join(', ')}${diffs.length > 1 && !(diffs.every(v => v < 0) || diffs.every(v => v > 0)) ? '; the pairs disagree, so treat as too close to call' : ''}). Biggest hit by business: ${(() => { const ps = pairList(games); const g = ['exp', 'ent', 'spt'].map(k => [k, ps.reduce((a, p) => a + segSum(p.on, k) - segSum(p.off, k), 0) / ps.length]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))[0]; return `${SEGN[g[0]]} ${money(g[1])}`; })()}`) : cell(money(avg - sim), 'versus a typical simulated decade (' + fmtT(sim) + ')')}
-    ${hyp && tailGaps.length ? cell(money(tailGaps.reduce((a, v) => a + v, 0) / tailGaps.length), `what your scenario adds after 2036, from effects already in motion (2037-2041; gaps ${tailGaps.map(money).join(', ')})`) : cell(money(tailAvg), 'still to come after 2036: what moves already made add or cost in 2037-2041')}
-    ${best && best.value > 0 ? cell(money(best.value), `profit through 2041 for $${best.cost.toFixed(1)}B spent. Disney's best move (${esc(gameLabel(games[best.game - 1]))}): ${esc(best.move.length > 70 ? best.move.slice(0, 68) + '…' : best.move)}`) : ''}
-    ${hit && hit.value < 0 ? cell(money(hit.value), `Costliest rival move (${esc(gameLabel(games[hit.game - 1]))}): ${esc(hit.player)}, ${esc(hit.move.length > 60 ? hit.move.slice(0, 58) + '…' : hit.move)}`) : ''}
+    ${cell(fmtT(avg), `Disney's ten-year profit${hyp ? ' with your scenario' : ''} (average of ${withS.length} game${withS.length > 1 ? 's' : ''})`)}
+    ${hyp && base != null ? cell(money(base), `what your scenario changed, FY27-36 (pairs: ${diffs.map(money).join(', ')}${diffs.length > 1 ? (agree ? ', same direction' : ', mixed, so too close to call') : ''})`) : cell(money(avg - sim), `versus a typical simulated decade (${fmtT(sim)})`)}
+    ${hyp && tailGaps.length ? cell(money(tailGaps.reduce((a, v) => a + v, 0) / tailGaps.length), 'what your scenario adds after 2036 (2037-41), from deals already made') : cell(money(tailAvg), 'still to come after 2036 (2037-41) from moves already made')}
   </div>`;
 }
 
 let LAST_FORWARD = null;
 // Everything about the current run, so "Play 2 more" can add games to it.
 const WR = { games: [], hyp: null, pb: null, pairs: 0 };
-const WR_CALLS_PER_GAME = WR_TURNS * (AI_PLAYERS.filter(p => !WR_GROUPED.has(p.id)).length + 2);
+const WR_CALLS_PER_GAME = WR_TURNS * (AI_PLAYERS.filter(p => !WR_GROUPED.has(p.id)).length + WR_DESKS.length + 1);
 
 async function playWarRoom(ev) { ev.preventDefault(); return runWarRoom(false); }
 
@@ -1676,14 +1681,13 @@ async function runWarRoom(more) {
     if (a) {
       arr(a.game_titles).forEach((t, i) => { if (!all[i]) return; all[i].title = String(t); const h = document.querySelector(`#wr-game-${i} h3`); if (h) h.innerHTML = `${esc(gameLabel(all[i]))}: ${esc(t)}`; });
       drawWarRoomChart(all);
-      const finds = arr(a.findings).slice(0, 3);
+      const finds = arr(a.findings).slice(0, 4);
       $('wr-bottom').innerHTML = `<div class="eyebrow">The bottom line · ${all.length} game${all.length > 1 ? 's' : ''}</div>${hyp ? `<p class="surprise" style="margin:0"><b>Your scenario:</b> ${esc(hyp)}</p>` : ''}
         <p class="big">${esc(a.bottom_line || '')}</p>
         ${board}
         ${hyp && a.scenario_verdict ? `<p class="verdict"><b>Did your scenario matter?</b> ${esc(a.scenario_verdict)}</p>` : ''}
-        ${finds.length ? `<div class="eyebrow" style="margin-top:14px">What happened, and what Disney should do</div><div class="finds">${finds.map((f, k) => `<div class="find"><div class="n">${k + 1}</div><div><p class="hap">${esc(f.happened || '')}${f.impact ? ` <span class="imp ${/^\s*[−-]/.test(f.impact) ? 'neg' : /^\s*\+/.test(f.impact) ? 'pos' : ''}">${esc(f.impact)}</span>` : ''}</p><p class="do"><b>Do:</b> ${esc(f.do || '')}</p></div></div>`).join('')}</div>` : ''}
-        ${a.surprise && a.surprise.happened ? `<p class="surprise"><b>Biggest surprise:</b> ${esc(a.surprise.happened)}${a.surprise.impact ? ` <span class="note">(${esc(a.surprise.impact)})</span>` : ''}</p>` : ''}`;
-      $('wr-insights').innerHTML = finds.some(f => f.watch) ? `<div class="action"><div class="no">Early warning signs to watch</div><ul class="rulings">${finds.filter(f => f.watch).map(f => `<li>${esc(f.watch)}</li>`).join('')}</ul></div>` : '';
+        ${finds.length ? `<div class="eyebrow" style="margin-top:14px">Four things the games showed</div><div class="finds">${finds.map((f, k) => `<div class="find"><div class="n">${k + 1}</div><div><p class="hap">${esc(f.headline || '')}</p><p><span class="lbl">What happened:</span> ${esc(f.happened || '')}</p><p><span class="lbl">Why it matters:</span> ${esc(f.matters || '')}</p><p class="do"><b>Do:</b> ${esc(f.do || '')}</p></div></div>`).join('')}</div>` : ''}`;
+      $('wr-insights').innerHTML = '';
     } else {
       $('wr-bottom').innerHTML = `<div class="eyebrow">The scoreboard · ${all.length} game${all.length > 1 ? 's' : ''}</div>${board}<p class="note">The analyst did not answer this time; the full games are below.</p>`;
     }
@@ -1714,7 +1718,7 @@ const WR_EXAMPLES = [
 ];
 $('wr-examples').innerHTML = '<span class="note" style="align-self:center">Try one:</span>' + WR_EXAMPLES.map(x => `<button type="button">${esc(x)}</button>`).join('');
 $('wr-examples').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { $('wr-hyp').value = b.textContent; $('wr-hyp').focus(); } });
-const playLabel = () => { if (!$('wr-play').disabled) $('wr-play').textContent = $('wr-hyp').value.trim() ? 'Play 4 games: 2 pairs, with and without your scenario (about 6–8 min)' : 'Play 3 games (about 6–8 min)'; };
+const playLabel = () => { if (!$('wr-play').disabled) $('wr-play').textContent = $('wr-hyp').value.trim() ? 'Play 4 games: 2 pairs, with and without your scenario (about 5–7 min)' : 'Play 3 games (about 5–7 min)'; };
 ['input', 'change', 'keyup', 'paste', 'blur'].forEach(ev => $('wr-hyp').addEventListener(ev, () => setTimeout(playLabel, 0)));
 $('wr-examples').addEventListener('click', playLabel);
 playLabel();
