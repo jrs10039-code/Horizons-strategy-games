@@ -1253,10 +1253,13 @@ function limiter(n) {
 }
 
 class StopError extends Error {}
+let WR_TIMES = {};
 let wrCallsDone = 0, wrStart = 0, WR_MISSES = 0, WR_EST = 6, WR_TURNS_DONE = 0, WR_GAMES_NOW = 1, wrTick = null;
 async function askClaude(role, system, prompt, signal) {
   if (signal.aborted) throw new StopError('stopped');
+  const t0 = Date.now();
   const out = await askClaudeRaw(role, system + '\n\n' + PLAIN, prompt, signal);
+  (WR_TIMES[role] = WR_TIMES[role] || []).push((Date.now() - t0) / 1000);
   wrCallsDone++; updateEta();
   return out;
 }
@@ -1345,14 +1348,20 @@ function rollWorldEvent(fromYear) {
   return hits.length ? [hits[Math.floor(Math.random() * hits.length)]] : [];
 }
 
-async function playGame(g, pb, cast, signal, run, onUpdate, hyp, worldPlan) {
+async function playGame(g, pb, castP, signal, run, onUpdate, hyp, worldPlan) {
+  let cast = [];
   const scen = hyp ? `\n\nSCENARIO FOR THIS GAME, treat it as certain to happen: "${hyp}". It happens on the date it gives (or early in the decade if no date): before then, everyone can see it coming and prepare; after it, live with the consequences. If it describes something your company does, make it happen in your own way. If it describes the world or another company, plan around it.` : '';
   const base = { ...MODES.forward.start };
   const effects = [];
   const totals = [startTotal()];
   const segHist = [];
-  const players = AI_PLAYERS.concat(cast.map((c, j) => ({ id: 'w' + (j + 1), name: c.name, chest: c.chest, agg: archAgg, wild: true,
-    brief: `${c.name.toUpperCase()} (${c.kind === 'real' ? 'a real company' : 'a new company'}): ${c.what}. ${c.brief}` })));
+  // Newcomers are cast while turn 1 plays and join from turn 2, so casting doesn't hold up the start.
+  const players = AI_PLAYERS.slice();
+  const addNewcomers = list => list.forEach((c, j) => {
+    const p = { id: 'w' + (j + 1), name: c.name, chest: c.chest, agg: archAgg, wild: true,
+      brief: `${c.name.toUpperCase()} (${c.kind === 'real' ? 'a real company' : 'a new company'}): ${c.what}. ${c.brief} You join the market in fiscal 2029.` };
+    players.push(p); chest[p.id] = p.chest; hist[p.id] = [];
+  });
   const chest = Object.fromEntries(players.map(p => [p.id, p.chest]));
   const turns = [];
   let lastTurn = 'Nothing yet: this is the first turn.';
@@ -1360,6 +1369,8 @@ async function playGame(g, pb, cast, signal, run, onUpdate, hyp, worldPlan) {
   const ruled = [], issues = [], shocks = [];
   let refFails = 0;
   for (let t = 0; t < WR_TURNS; t++) {
+    if (t === 1) { cast = await castP; addNewcomers(cast); onUpdate({ g, cast }); }
+    const tPlayers0 = Date.now();
     const y1 = 1 + t * WR_SPAN, fy1 = 2026 + y1, fy2 = fy1 + WR_SPAN - 1;
     const world = worldPlan ? worldPlan[t] : rollWorldEvent(y1);
     world.forEach(w => {
@@ -1408,6 +1419,7 @@ async function playGame(g, pb, cast, signal, run, onUpdate, hyp, worldPlan) {
     });
     const deskMoves = WR_DESKS.map(d => [players.filter(p => d.ids.includes(p.id)), d]).filter(([g]) => g.length).map(([g, d]) => deskCall(g, d));
     const moves = (await Promise.all([...soloMoves, ...deskMoves])).flat();
+    const playersSecs = Math.round((Date.now() - tPlayers0) / 1000);
 
     onUpdate({ g, phase: `Turn ${t + 1} of ${WR_TURNS} (FY${fy1}–${fy2}): the referee is ruling` });
     const numbered = moves.flatMap(m => m.moves.map(x => ({ m, x })));
@@ -1426,14 +1438,32 @@ Calibration:
 Respond with JSON only.`;
     const scale = `For scale: 1% of Experiences is about $${(seg.exp * 10).toFixed(0)}M of profit a year, 1% of Entertainment about $${(seg.ent * 10).toFixed(0)}M, 1% of Sports about $${(seg.spt * 10).toFixed(0)}M. Size Disney's benefits so a move's total payoff is believable against what it costs; a well-chosen move should pay back within the decade, a weak or copycat move usually does not.`;
     const refPrompt = `Fiscal ${fy1}–${fy2}. Outside world: ${worldText}\n${disneyNow}\n${scale}${ruled.length ? `\n\nAlready ruled in earlier turns (do not rule these again; a later announcement, opening or repeat of the same thing gets 0, and a later move gets an effect only for what is new):\n${ruled.slice(-40).join('\n')}` : ''}\n\nMoves this turn:\n${moveText}\n\nReturn exactly: {"narrative":"max 2 sentences, 45 words: the one thing that changed Disney's position most this turn and roughly what it is worth, then how rivals responded. Vary how you open; mention the outside world only if it mattered","rulings":[{"n":1,"realistic":true,"cost_billions":0,"exp":0,"ent":0,"spt":0,"cost_now":{"exp":0,"ent":0,"spt":0},"delay":0,"years":3,"basis":"assumption","novel":false,"responds_to":"for rival moves: the Disney move this answers, in a few words, or empty",${hyp ? '"scenario_effect":false,' : ''}"why":"Disney moves: the arithmetic in max 22 words; other players: max 10 words"}]}. To keep it short, leave out any field that is 0, false or empty (except n and years). Refer to each move by its number n. Rule on every Disney move. For other players, rule only on moves that change Disney's profit, are unrealistic, are genuinely new ideas, or answer Disney; skip the rest (they count as no effect).`;
-    let ref = null;
-    for (let k = 0; k < 3 && !ref; k++) {
-      let raw = '';
-      try { raw = await askClaude('referee', refSystem, refPrompt, signal); ref = parseJSON(raw) || salvageRulings(raw); if (!ref) issues.push(`FY${fy1} referee answer unreadable (try ${k + 1}, ${raw.length} chars): ${raw.slice(0, 200)} … ${raw.slice(-150)}`); }
-      catch (e) { if (e instanceof StopError || /not allowed|budget/.test(e.message)) throw e; WR_MISSES++; issues.push(`FY${fy1} referee call failed (try ${k + 1}): ${e.message}`); }
-    }
-    if (!ref) refFails++;
-    ref = ref || { narrative: 'The referee could not rule this turn, so these two years were played without new effects.', rulings: [] };
+    // The referee works as two judges at once: one rules on Disney's moves (and the scenario), the other on everyone else's.
+    const disneyNs = numbered.map((x, k) => x.m.id === 'disney' ? k + 1 : 0).filter(Boolean);
+    const halves = [
+      { key: 'disney', note: `\n\nYOUR PART: rule ONLY on Disney's moves (numbers ${disneyNs.join(', ') || 'none'})${scen ? ' and, if it takes effect this turn, the scenario event itself (n 0)' : ''}. Other players' moves are being ruled by a second referee at the same time; read them only to judge Disney's moves. Write the narrative for the whole turn.` },
+      { key: 'rivals', note: `\n\nYOUR PART: rule ONLY on the moves of players other than Disney. Disney's moves (numbers ${disneyNs.join(', ') || 'none'}) are being ruled by a second referee at the same time; do not rule on them${scen ? ', and do not rule on the scenario event itself' : ''}. Set "narrative" to "".` },
+    ];
+    const tRef0 = Date.now();
+    const refHalf = async h => {
+      for (let k = 0; k < 3; k++) {
+        let raw = '';
+        try {
+          raw = await askClaude('referee', refSystem, refPrompt + h.note, signal);
+          const out = parseJSON(raw) || salvageRulings(raw);
+          if (out) return out;
+          issues.push(`FY${fy1} ${h.key} referee answer unreadable (try ${k + 1}, ${raw.length} chars): ${raw.slice(0, 200)} … ${raw.slice(-150)}`);
+        } catch (e) { if (e instanceof StopError || /not allowed|budget/.test(e.message)) throw e; WR_MISSES++; issues.push(`FY${fy1} ${h.key} referee call failed (try ${k + 1}): ${e.message}`); }
+      }
+      refFails += 0.5;
+      return null;
+    };
+    const [refD, refR] = await Promise.all(halves.map(refHalf));
+    const refSecs = Math.round((Date.now() - tRef0) / 1000);
+    const keepD = (refD && refD.rulings || []).filter(r => Number(r.n) === 0 || disneyNs.includes(Math.round(Number(r.n))));
+    const keepR = (refR && refR.rulings || []).filter(r => Number(r.n) !== 0 && !disneyNs.includes(Math.round(Number(r.n))));
+    const ref = refD || refR ? { narrative: (refD && refD.narrative) || (refR && refR.narrative) || '', rulings: keepD.concat(keepR) }
+      : { narrative: 'The referee could not rule this turn, so these two years were played without new effects.', rulings: [] };
     const rulings = (ref.rulings || []).map(r => {
       const src = numbered[Math.round(Number(r.n)) - 1];
       const who = src ? src.m : (moves.find(m => m.id === r.id) || {});
@@ -1475,7 +1505,7 @@ Respond with JSON only.`;
       totals.push(tot); segHist.push(segNow);
     }
     lastTurn = rulings.filter(r => r.ok).map(r => `- ${r.player}: ${r.move} (cost $${r.cost.toFixed(1)}B${Math.abs(r.value) >= 0.05 ? `; ${money(r.value)} to Disney through 2041` : ''})`).join('\n') + `\nReferee: ${ref.narrative || ''}`;
-    turns.push({ fy1, fy2, world, narrative: String(ref.narrative || ''), rulings, moves: moves.map(m => ({ player: m.player, moves: m.moves })) });
+    turns.push({ fy1, fy2, world, narrative: String(ref.narrative || ''), rulings, secs: { players: playersSecs, referee: refSecs }, moves: moves.map(m => ({ player: m.player, moves: m.moves })) });
     onUpdate({ g, totals, turns });
   }
   // After FY2036: play no new moves, but let effects already in motion run on for five more years.
@@ -1656,7 +1686,7 @@ function scoreboard(games, hyp) {
 let LAST_FORWARD = null;
 // Everything about the current run, so "Play 2 more" can add games to it.
 const WR = { games: [], hyp: null, pb: null, pairs: 0 };
-const WR_CALLS_PER_GAME = WR_TURNS * (AI_PLAYERS.filter(p => !WR_GROUPED.has(p.id)).length + WR_DESKS.length + 1);
+const WR_CALLS_PER_GAME = WR_TURNS * (AI_PLAYERS.filter(p => !WR_GROUPED.has(p.id)).length + WR_DESKS.length + 2);
 
 async function playWarRoom(ev) { ev.preventDefault(); return runWarRoom(false); }
 
@@ -1683,7 +1713,7 @@ async function runWarRoom(more) {
   $('wr-progress').hidden = false;
   WR_TOTAL_CALLS = plan.length * WR_CALLS_PER_GAME + groups.length + 1;
   WR_TURNS_DONE = 0; WR_GAMES_NOW = plan.length;
-  wrCallsDone = 0; wrStart = Date.now(); WR_MISSES = 0; updateEta();
+  wrCallsDone = 0; wrStart = Date.now(); WR_MISSES = 0; WR_TIMES = {}; updateEta();
   clearInterval(wrTick); wrTick = setInterval(updateEta, 15000);
   $('wr-games').className = 'games' + (start + plan.length >= 4 ? ' four' : '');
   plan.forEach((pl, k) => {
@@ -1698,13 +1728,13 @@ async function runWarRoom(more) {
     const setups = await Promise.all(groups.map(async gr => ({
       pair: gr.pair,
       world: Array.from({ length: WR_TURNS }, (_, t) => rollWorldEvent(1 + t * WR_SPAN)),
-      cast: await run(() => castNewcomers(hyp, signal)),
+      castP: run(() => castNewcomers(hyp, signal)),
     })));
     const settled = await Promise.allSettled(plan.map((pl, k) => {
       const su = setups.find(x => x.pair === pl.pair);
       const i = start + k;
-      onUpdate({ g: i, cast: su.cast, phase: 'Starting…' });
-      return playGame(i, pb, su.cast, signal, run, onUpdate, pl.hyp, su.world).then(gm => Object.assign(gm, { idx: i, pair: pl.pair, baseline: !!hyp && !pl.hyp }));
+      onUpdate({ g: i, phase: 'Starting…' });
+      return playGame(i, pb, su.castP, signal, run, onUpdate, pl.hyp, su.world).then(gm => Object.assign(gm, { idx: i, pair: pl.pair, baseline: !!hyp && !pl.hyp }));
     }));
     if (signal.aborted) throw new StopError('stopped');
     const games = settled.filter(x => x.status === 'fulfilled').map(x => x.value);
@@ -1776,6 +1806,9 @@ function wrReport() {
   L.push(`Scenario: ${WR.hyp || 'none'}`);
   L.push(`Assumptions: ${$('as-summary').textContent}`);
   L.push(`Mode: ${WR_MODE === 'claude' ? "viewer's Claude account" : 'API relay'} · Status: ${$('wr-status').textContent}`);
+  const avg = a => a.length ? (a.reduce((x, y) => x + y, 0) / a.length).toFixed(0) : '-';
+  const turnSecs = WR.games.flatMap(g => g.turns.map(tn => tn.secs).filter(Boolean));
+  L.push(`Timing: ${Object.entries(WR_TIMES).map(([r, a]) => `${r} calls avg ${avg(a)}s, slowest ${Math.max(...a).toFixed(0)}s (${a.length})`).join('; ')}. Per turn: players avg ${avg(turnSecs.map(x => x.players))}s, referee avg ${avg(turnSecs.map(x => x.referee))}s.`);
   L.push('', '## Bottom line', $('wr-bottom').innerText.trim());
   if ($('wr-insights').innerText.trim()) L.push('', '## Details', $('wr-insights').innerText.trim());
   WR.games.forEach((g, i) => {
@@ -1784,7 +1817,7 @@ function wrReport() {
     L.push(`Newcomers: ${(g.cast || []).map(c => `${c.name} (${c.kind}: ${c.what})`).join('; ')}`);
     if (g.issues && g.issues.length) L.push('Problems:', ...g.issues.map(x => '  ! ' + x));
     g.turns.forEach(tn => {
-      L.push('', `### FY${tn.fy1}-${tn.fy2}${tn.world.length ? ` · outside shock: ${tn.world[0].e.label}` : ''}`, tn.narrative);
+      L.push('', `### FY${tn.fy1}-${tn.fy2}${tn.world.length ? ` · outside shock: ${tn.world[0].e.label}` : ''}${tn.secs ? ` · players ${tn.secs.players}s, referee ${tn.secs.referee}s` : ''}`, tn.narrative);
       L.push('Moves:');
       (tn.moves || []).forEach(m => m.moves.forEach(x => L.push(`  - ${m.player}: ${x.move} (claims $${x.cost}B; ${x.why})`)));
       L.push('Referee rulings:');
