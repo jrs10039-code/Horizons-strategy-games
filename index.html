@@ -213,6 +213,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
 .feed li { animation: fadein .4s ease; }
 .feed b { color: var(--ink); }
 @keyframes fadein { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; } }
+.more-row { margin: 12px 0 4px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .todo li { margin: 6px 0; } .todo li b { font-weight: 600; }
 .examples { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .examples button { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--rule); color: var(--ink-2); cursor: pointer; }
@@ -274,7 +275,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
     <p class="lede">Pick a strategy, then let AI rivals play out the decade, or check the numbers behind it. <a href="#" id="howLink">How this works</a></p>
     <div class="howto" id="howto" hidden>
       <ol>
-        <li><span><b>AI War Room</b>Eight AI agents play Disney and its rivals for ten years, and an AI analyst reports what to do. You can type in any scenario to test.</span></li>
+        <li><span><b>AI War Room</b>Twelve AI agents play Disney and its rivals for ten years, and an AI analyst reports what to do. You can type in any scenario to test.</span></li>
         <li><span><b>The other tabs</b>A fast simulator plays 1,000 decades in a second to show the biggest threats, the range of profit outcomes, how the strategies compare, and how the model would have done since 2019.</span></li>
         <li><span><b>Your assumptions</b>Disagree with a number? Change how often shocks hit, how aggressive rivals are, and which startups appear. Every tab updates.</span></li>
       </ol>
@@ -348,12 +349,12 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
   <section role="tabpanel" id="p-warroom" aria-labelledby="tab-warroom">
     <div class="card">
       <h2>Let AI rivals play out the decade</h2>
-      <p class="sub">Eight AI agents play Disney and its biggest rivals for ten years, an AI referee scores every move, and an AI analyst tells you what Disney should do. Each run plays 3 games, and no two go the same way.</p>
+      <p class="sub">Twelve AI agents play Disney, its biggest rivals and three newcomers for ten years. An AI referee scores every move, and an AI analyst tells you what Disney should do. Each run plays 3 games, each with a different cast of newcomers, and no two go the same way.</p>
       <form class="wr-controls" id="wr-form">
         <div class="field wide"><label for="wr-hyp">What do you want to test? (optional)</label>
           <textarea id="wr-hyp" rows="2" maxlength="400" placeholder="Describe any situation in your own words, for example: Netflix makes a big push into theme parks."></textarea>
           <div class="examples" id="wr-examples" aria-label="Example scenarios"></div>
-          <p class="hint">Leave it blank to simply play out the decade. If you fill it in, 3 games play with your scenario and a 4th without it, so you can see the difference.</p></div>
+          <p class="hint">Leave it blank to simply play out the decade. If you fill it in, 4 games play in matched pairs, with and without your scenario, so you can see exactly what it changes.</p></div>
         <div class="field"><label for="wr-pass">Passcode</label><input id="wr-pass" type="password" autocomplete="off" placeholder="From Jake's email"></div>
         <button type="submit" class="primary" id="wr-play">Play the games</button>
         <button type="button" id="wr-stop" hidden>Stop</button>
@@ -365,12 +366,13 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
         <div class="more-body">
           <p class="note" id="wr-mode-note"></p>
           <div class="chips" id="wr-players"></div>
-          <p class="note">The ~100 smaller rivals the simulator tracks are not played by AI; their steady pressure is built in as a background drag of about 10% on profit. Each player is briefed on its company's real finances, assets and goals as of late 2026. Each turn covers two years: Disney moves, rivals react, and the referee judges what each move costs and how it changes Disney's profit. The strategy above and the shock and rival settings in <i>Your assumptions</i> apply. Rival players run on Claude Haiku 5.5, Disney and the referee on Claude Sonnet 5.5, and the analyst on Claude Opus 5.5. A run takes about 4–8 minutes.</p>
+          <p class="note">At the start of each game, a casting AI picks three newcomers to fit the moment and your scenario: one real company and two invented ones built on emerging technology. One player speaks for the ~100 smaller rivals the simulator tracks (regional parks, cruise lines, smaller studios), plus a light background drag of about 6% for everyday pressure. Each player is briefed on its company's real finances, assets and goals as of late 2026. Each turn covers two years: Disney moves, rivals react, and the referee judges what each move costs and how it changes Disney's profit. The strategy above and the shock and rival settings in <i>Your assumptions</i> apply. Rival players run on Claude Haiku 5.5, Disney and the referee on Claude Sonnet 5.5, and the analyst on Claude Opus 5.5. A run takes about 7–14 minutes.</p>
         </div>
       </details>
     </div>
     <div class="card" id="wr-insights-card" hidden>
       <div class="bottomline" id="wr-bottom"></div>
+      <div class="more-row"><button type="button" id="wr-more" hidden>Play 2 more games</button> <span class="note">Adds games to this run; the analyst re-reads all of them. Same strategy and scenario.</span></div>
       <details class="more">
         <summary>See more detail: what worked, what backfired, and the insights behind this</summary>
         <div class="more-body"><div class="insights" id="wr-insights"></div></div>
@@ -1143,7 +1145,9 @@ const AGENT_API = 'https://horizons-strategy-games.vercel.app/api/agent';
 const WR_MODELS = { player: 'claude-haiku-5-5', disney: 'claude-sonnet-5-5', referee: 'claude-sonnet-5-5', analyst: 'claude-opus-5-5' };
 const WR_TIERS = { player: 'quick', disney: 'default', referee: 'default', analyst: 'complex' };
 const WR_TURNS = 5, WR_SPAN = 2; // five two-year turns = one decade
-const WR_COLORS = ['var(--navy)', '#c2410c', '#0f766e', 'var(--ink-3)'];
+const WR_COLORS = ['var(--navy)', '#c2410c', '#0f766e', '#7c3aed', '#a16207', '#be185d', '#475569'];
+const gameColor = g => WR_COLORS[(g.pair ?? 0) % WR_COLORS.length];
+const gameLabel = g => g.hyp !== undefined && WR.hyp ? `Pair ${g.pair + 1}, ${g.baseline ? 'without' : 'with'} scenario` : `Game ${g.idx + 1}`;
 let WR_TOTAL_CALLS = 3 * WR_TURNS * 9 + 1;
 
 // Shared rule for every AI in the game: write for a smart reader outside the industry.
@@ -1167,8 +1171,9 @@ const AI_PLAYERS = [
   { id: 'amazon', name: 'Amazon', chest: 30, agg: () => S.players.amazon, brief: `AMAZON. Prime Video is bundled with Prime shopping. Holds Thursday Night Football, an 11-year NBA package and NBA League Pass distribution, owns MGM (James Bond). Uses sports to sell ads tied to shopping data. Huge cash and AI/cloud capabilities. Goals: make Prime indispensable, grow ads. Weak spots: few hit franchises; content spending is judged by shopping returns.` },
   { id: 'gaming', name: 'Gaming platforms (Epic, Roblox, Sony)', chest: 4, agg: () => Math.round((S.players.epic + S.players.roblox + S.players.sony) / 3), brief: `GAMING PLATFORMS. Roblox: 144M daily users, $6.8B of player spending in 2025, growing fast with teens and adults. Epic: Fortnite, the Unreal engine, Disney owns a stake and is building a Disney world inside Fortnite. Sony: PlayStation, Crunchyroll anime, Sony Pictures. Goals: become where young people spend their free time and money; sign brands and IP. You can act together or compete with each other, whichever helps you more. Weak spots: depend on hits; parents and regulators worry about kids' safety.` },
   { id: 'leagues', name: 'Sports leagues (NFL, NBA, college)', chest: 2, agg: () => Math.round((S.players.nfl + S.players.nba + S.players.college) / 3), brief: `SPORTS LEAGUES. The NFL earns about $14.5B a year in shared revenue and can exit its TV deals after the 2029 season (ESPN's runs a year longer); it owns 10% of ESPN. The NBA's new 11-year deals (2025) split games across ESPN, NBC and Amazon. College football conferences are consolidating. Goals: get the most money and the widest reach; sell more directly to fans; grow internationally. Weak spots: depend on a few big buyers; younger fans watch highlights more than full games.` },
-  { id: 'wildcard', name: 'Wildcard newcomer', chest: 3, agg: () => Math.round(Object.values(S.arch).reduce((a, v) => a + v, 0) / Object.values(S.arch).length * 5) },
+  { id: 'market', name: 'Rest of the market', chest: 5, agg: () => Math.round(Object.values(S.arena).reduce((a, v) => a + v, 0) / Object.values(S.arena).length), brief: `THE REST OF THE MARKET. You speak for the roughly 100 smaller companies that compete with Disney but are not separate players here: regional theme and water parks (Six Flags, SeaWorld's owner United Parks, Merlin's Legoland), cruise lines (Royal Caribbean, Carnival, Norwegian), smaller streamers and studios (Paramount Skydance, Lionsgate, A24, Apple TV+), other sports media (Fox Sports, TNT Sports, DAZN), immersive venues (Meow Wolf, Sphere) and toy and game makers (Mattel, Hasbro, Nintendo). Each turn, report the 1 or 2 most important things this crowd does that affect Disney, naming the companies. Good news for Disney counts too (a rival failing, pulling back or partnering with Disney). Your "money" is the combined spending these companies could plausibly do.` },
 ];
+const archAgg = () => Math.round(Object.values(S.arch).reduce((a, v) => a + v, 0) / Object.values(S.arch).length * 5);
 const WILDCARDS = [
   { type: 'an AI-native animation studio that makes family films and series at a fraction of Hollywood\'s cost', chest: 3 },
   { type: 'a creator-led kids\' franchise that grew out of YouTube (think a MrBeast-style brand) moving into toys, shows and live events', chest: 2 },
@@ -1177,6 +1182,24 @@ const WILDCARDS = [
   { type: 'a personalized AI storytelling app where kids co-create animated stories with their favorite characters', chest: 3 },
   { type: 'a sports-streaming startup backed by private equity that buys niche and international sports rights', chest: 5 },
 ];
+// The casting director: picks 3 newcomers for each game (or matched pair), fitted to the scenario.
+async function castNewcomers(hyp, signal) {
+  const taken = AI_PLAYERS.map(p => p.name).join(', ');
+  const system = `You cast the newcomer players for a business war game about Disney and its rivals, fiscal 2027 to 2036. Pick exactly 3 newcomers that would make this decade interesting and plausible:
+- 1 real company or startup that exists today and is not already a player (players: ${taken}; Epic, Roblox and Sony are in the gaming group; the rest of the market covers Six Flags, cruise lines, Paramount, Apple TV+, Mattel and similar).
+- 2 invented companies built on technology that is emerging now (for example AI-generated video, AI characters kids can talk to, mixed-reality venues, robotics, personalized media, creator-led brands), each with a believable founding story and backer.
+Pick newcomers that could genuinely matter to Disney${hyp ? ' in this scenario' : ''}, and vary your picks: avoid the most obvious choice. For the real company, use only facts you are confident of and keep numbers approximate. Respond with JSON only.`;
+  const prompt = `${MARKET_BRIEF}${hyp ? `\n\nSCENARIO FOR THIS GAME: "${hyp}"` : ''}\n\nHow fast new kinds of rivals appear (the user's setting): ${aggWord(archAgg())}.\nExamples of newcomer types, for inspiration only: ${WILDCARDS.map(w => w.type).join('; ')}.\n\nReturn exactly: {"cast":[{"name":"company name","kind":"real or new","what":"one line: what it is","brief":"3 short sentences as of late 2026: money and backers, key assets, goals, weak spots","chest_billions":0}]}`;
+  try {
+    const out = parseJSON(await askClaude('referee', system, prompt, signal));
+    const list = (out && Array.isArray(out.cast) ? out.cast : []).filter(c => c && c.name && c.brief).slice(0, 3).map(c => ({
+      name: String(c.name).slice(0, 60), kind: /real/i.test(c.kind) ? 'real' : 'new', what: String(c.what || '').slice(0, 160),
+      brief: String(c.brief).slice(0, 700), chest: num(c.chest_billions, 1, 15) || 3 }));
+    if (list.length === 3) return list;
+  } catch (e) { if (e instanceof StopError) throw e; }
+  return WILDCARDS.slice().sort(() => Math.random() - 0.5).slice(0, 3).map((w, j) => ({ name: `Newcomer ${j + 1}`, kind: 'new', what: w.type, brief: `You are ${w.type}. Pick a name for yourself in your first move.`, chest: w.chest }));
+}
+
 const aggWord = v => v == null ? 'normal' : v >= 75 ? 'very aggressive' : v >= 55 ? 'aggressive' : v >= 35 ? 'measured' : 'cautious';
 
 let sampleFn = null, WR_MODE = 'api', wrAbort = null;
@@ -1188,7 +1211,7 @@ samplePromise.then(s => {
 });
 
 function renderWarRoomMode() {
-  $('wr-players').innerHTML = AI_PLAYERS.map(p => `<span class="pill neutral">${esc(p.name)}</span>`).join(' ');
+  $('wr-players').innerHTML = AI_PLAYERS.map(p => `<span class="pill neutral">${esc(p.name)}</span>`).join(' ') + ' <span class="pill warn">+ 3 newcomers, cast fresh each game</span>';
   const claudeMode = WR_MODE === 'claude';
   $('wr-pass').closest('.field').hidden = claudeMode;
   $('wr-mode-note').textContent = claudeMode
@@ -1262,17 +1285,18 @@ function rollWorldEvent(fromYear) {
   return hits.length ? [hits[Math.floor(Math.random() * hits.length)]] : [];
 }
 
-async function playGame(g, pb, wild, signal, run, onUpdate, hyp, worldPlan) {
+async function playGame(g, pb, cast, signal, run, onUpdate, hyp, worldPlan) {
   const scen = hyp ? `\n\nSCENARIO FOR THIS GAME, treat it as certain to happen: "${hyp}". It happens on the date it gives (or early in the decade if no date): before then, everyone can see it coming and prepare; after it, live with the consequences. If it describes something your company does, make it happen in your own way. If it describes the world or another company, plan around it.` : '';
   const base = { ...MODES.forward.start };
   const effects = [];
   const totals = [startTotal()];
   const segHist = [];
-  const chest = Object.fromEntries(AI_PLAYERS.map(p => [p.id, p.id === 'wildcard' ? wild.chest : p.chest]));
+  const players = AI_PLAYERS.concat(cast.map((c, j) => ({ id: 'w' + (j + 1), name: c.name, chest: c.chest, agg: archAgg, wild: true,
+    brief: `${c.name.toUpperCase()} (${c.kind === 'real' ? 'a real company' : 'a new company'}): ${c.what}. ${c.brief}` })));
+  const chest = Object.fromEntries(players.map(p => [p.id, p.chest]));
   const turns = [];
   let lastTurn = 'Nothing yet: this is the first turn.';
-  let wildName = null;
-  const hist = Object.fromEntries(AI_PLAYERS.map(p => [p.id, []]));
+  const hist = Object.fromEntries(players.map(p => [p.id, []]));
   const ruled = [];
   for (let t = 0; t < WR_TURNS; t++) {
     const y1 = 1 + t * WR_SPAN, fy1 = 2026 + y1, fy2 = fy1 + WR_SPAN - 1;
@@ -1287,19 +1311,16 @@ async function playGame(g, pb, wild, signal, run, onUpdate, hyp, worldPlan) {
     const disneyNow = `Disney's segment profit last year: $${totals.at(-1).toFixed(1)}B total (Experiences $${seg.exp.toFixed(1)}B, Entertainment $${seg.ent.toFixed(1)}B, Sports $${seg.spt.toFixed(1)}B), versus $19.7B in FY2026.`;
     onUpdate({ g, phase: `Turn ${t + 1} of ${WR_TURNS} (FY${fy1}–${fy2}): players are deciding` });
 
-    const moves = await Promise.all(AI_PLAYERS.map(p => run(async () => {
-      const isDisney = p.id === 'disney', isWild = p.id === 'wildcard';
-      const brief = isWild
-        ? (wildName ? `YOU ARE ${wildName}. You are ${wild.type}.` : `You are a brand-new company: ${wild.type}. Invent a name and a one-line description on this first turn.`)
-        : p.brief;
+    const moves = await Promise.all(players.map(p => run(async () => {
+      const isDisney = p.id === 'disney';
+      const brief = p.brief;
       const agg = p.agg ? aggWord(p.agg()) : null;
-      const system = `You are the head of strategy for ${isWild && wildName ? wildName.split(':')[0] : p.name} in a business war game about the entertainment, media and experiences industry. It is fiscal ${fy1}–${fy2}. Act in your own company's interest${isDisney ? '' : ', not Disney\'s'}. Pursue your company's own priorities from your briefing. If a big prize is in play (a sports package, a studio for sale, a hot franchise), compete for it even if others are too. Be specific and realistic, and willing to surprise: partnerships, acquisitions, pricing, new products, technology, or moves outside your usual lane. Only make moves you can afford and that regulators would likely allow; never repeat a move you already made. ${isDisney ? 'Most of the game is about your decisions: make bold, concrete strategic moves and say what each costs. Do not propose anything that has already happened (for example, the NFL already owns 10% of ESPN). At least one move each turn must answer a specific rival move' + (scen ? ' or the scenario' : '') + ' by name, naming the partner or target, a dollar amount and a date.' : 'Pick the one Disney move from last turn that matters most to you and answer it by name (copy it, block it or go around it), or say in "why" that none matters. Every move must name a place, a price or number, and a date; "why" must give the real reason (for example "families pay $40 less than at Disney"), never one word.'}${scen} Respond with JSON only.`;
+      const system = `You are the head of strategy for ${p.name} in a business war game about the entertainment, media and experiences industry. It is fiscal ${fy1}–${fy2}. Act in your own company's interest${isDisney ? '' : ', not Disney\'s'}. Pursue your company's own priorities from your briefing. If a big prize is in play (a sports package, a studio for sale, a hot franchise), compete for it even if others are too. Be specific and realistic, and willing to surprise: partnerships, acquisitions, pricing, new products, technology, or moves outside your usual lane. Only make moves you can afford and that regulators would likely allow; never repeat a move you already made. ${isDisney ? 'Most of the game is about your decisions: make bold, concrete strategic moves and say what each costs. Do not propose anything that has already happened (for example, the NFL already owns 10% of ESPN). At least one move each turn must answer a specific rival move' + (scen ? ' or the scenario' : '') + ' by name, naming the partner or target, a dollar amount and a date.' : 'Pick the one Disney move from last turn that matters most to you and answer it by name (copy it, block it or go around it), or say in "why" that none matters. Every move must name a place, a price or number, and a date; "why" must give the real reason (for example "families pay $40 less than at Disney"), never one word.'}${scen} Respond with JSON only.`;
       const mine = hist[p.id].slice(isDisney ? -9 : -5);
       const past = mine.length ? `\n\nYour own moves so far (build on them; do not repeat a move you already made):\n${mine.map(h => `- FY${h.fy}: ${h.move}${isDisney ? ` (cost $${h.cost.toFixed(1)}B; referee projects ${money(h.value)} of profit over the decade, net ${money(h.value - h.cost)})` : ''}`).join('\n')}${isDisney ? '\nKeep investing in what is working; fix or drop what is not.' : ''}` : '';
-      const prompt = `${MARKET_BRIEF}\n\nYOUR COMPANY:\n${brief}${past}${agg ? `\nYour posture: ${agg}.` : ''}\nMoney you can spend on new moves this turn: about $${chest[p.id].toFixed(0)}B. The game ends after FY2036, so ${10 - t * WR_SPAN} years are left; moves that only pay off after that earn nothing.\n\nOutside world this turn: ${worldText}\n\nWhat happened last turn:\n${lastTurn}\n\n${disneyNow}\n\nMake ${p.moves || '1 or 2'} moves for these two years. Return exactly: {"moves":[{"move":"one full sentence with a place, a dollar amount and a year","why":"one short reason","cost_billions":0}]${isWild && !wildName ? ',"company":"Name: one-line description"' : ''}}`;
+      const prompt = `${MARKET_BRIEF}\n\nYOUR COMPANY:\n${brief}${past}${agg ? `\nYour posture: ${agg}.` : ''}\nMoney you can spend on new moves this turn: about $${chest[p.id].toFixed(0)}B. The game ends after FY2036, so ${10 - t * WR_SPAN} years are left; moves that only pay off after that earn nothing.\n\nOutside world this turn: ${worldText}\n\nWhat happened last turn:\n${lastTurn}\n\n${disneyNow}\n\nMake ${p.moves || '1 or 2'} moves for these two years. Return exactly: {"moves":[{"move":"one full sentence with a place, a dollar amount and a year","why":"one short reason","cost_billions":0}]}`;
       const out = parseJSON(await askClaude(isDisney ? 'disney' : 'player', system, prompt, signal)) || { moves: [] };
-      if (isWild && out.company && !wildName) wildName = String(out.company).slice(0, 160);
-      const name = isWild && wildName ? wildName.split(':')[0].trim() : p.name;
+      const name = p.name;
       const list = (out.moves || []).slice(0, isDisney ? 3 : 2).map(m => ({ move: String(m.move || '').slice(0, 320), why: String(m.why || '').slice(0, 200), cost: num(m.cost_billions, 0, 100) }))
         .filter(m => m.move.length >= 25 || isDisney);
       return { id: p.id, player: name, moves: list };
@@ -1342,7 +1363,7 @@ Respond with JSON only.`;
       if (r.ok && Math.abs(r.value) >= 0.05) ruled.push(`FY${fy1} ${r.player}: ${r.move} (${money(r.value)} to Disney)`);
     });
     // money comes back each turn (two years of cash flow), capped so nobody hoards forever
-    AI_PLAYERS.forEach(p => { const base0 = p.id === 'wildcard' ? wild.chest : p.chest; chest[p.id] = Math.min(base0 * 2, chest[p.id] + base0); });
+    players.forEach(p => { chest[p.id] = Math.min(p.chest * 2, chest[p.id] + p.chest); });
 
     for (let y = y1; y < y1 + WR_SPAN; y++) {
       const f = { exp: 1, ent: 1, spt: 1 };
@@ -1350,16 +1371,16 @@ Respond with JSON only.`;
       effects.forEach(e => { if (y >= e.from && y <= e.until) for (const k in e.imp) (e.rival ? riv : f)[k] += e.imp[k]; });
       for (const k in riv) f[k] += Math.max(-0.12, riv[k]); // rivals overlap: total rival pressure on a segment tops out around -12%
       const segNow = {}; let tot = 0;
-      // Background drag: steady pressure from the ~100 smaller rivals the simulator tracks but the War Room does not play, about -10% by year 3.
-      const drag = 1 - Math.min(0.10, 0.035 * y);
+      // Background drag: everyday pressure from smaller rivals that the "rest of the market" player does not spell out, about -6% by year 3.
+      const drag = 1 - Math.min(0.06, 0.02 * y);
       for (const k of SEGS) { base[k] *= 1 + pb.g[k]; segNow[k] = base[k] * Math.max(0.05, f[k]) * drag; tot += segNow[k]; }
       totals.push(tot); segHist.push(segNow);
     }
     lastTurn = rulings.filter(r => r.ok).map(r => `- ${r.player}: ${r.move} (cost $${r.cost.toFixed(1)}B${Math.abs(r.value) >= 0.05 ? `; ${money(r.value)} to Disney over the decade` : ''})`).join('\n') + `\nReferee: ${ref.narrative || ''}`;
     turns.push({ fy1, fy2, world, narrative: String(ref.narrative || ''), rulings });
-    onUpdate({ g, totals, turns, wildName });
+    onUpdate({ g, totals, turns });
   }
-  return { totals, turns, wildName, wildType: wild.type, hyp, decade: totals.slice(1).reduce((a, v) => a + v, 0) };
+  return { totals, turns, cast, hyp, decade: totals.slice(1).reduce((a, v) => a + v, 0) };
 }
 
 const money = v => (v >= 0 ? '+' : '−') + '$' + Math.abs(v).toFixed(Math.abs(v) < 1 ? 2 : 1) + 'B';
@@ -1382,7 +1403,7 @@ function renderGame(i, game, phase) {
   if (!box) return;
   const done = game && game.totals && game.totals.length > WR_TURNS * WR_SPAN;
   box.querySelector('.res').innerHTML = done ? `Ten-year profit <b>${fmtT(game.totals.slice(1).reduce((a, v) => a + v, 0))}</b> · 2036 profit ${fmtB(game.totals.at(-1))}` : esc(phase || 'Waiting…');
-  if (game && game.wildName) box.querySelector('.wild').textContent = 'Newcomer: ' + game.wildName;
+  if (game && game.cast) box.querySelector('.wild').textContent = 'Newcomers: ' + game.cast.map(c => c.name + (c.kind === 'real' ? ' (real)' : ' (invented)')).join(', ');
   if (!game || !game.turns) return;
   box.querySelector('ol').innerHTML = game.turns.map(tn => {
     const dis = tn.rulings.filter(r => r.isDisney);
@@ -1413,19 +1434,26 @@ function drawWarRoomChart(games) {
   let lastY = -99;
   labels.forEach(l => { let yy = Y(l.v) + 4; if (yy - lastY < 16) yy = lastY + 16; lastY = yy; l.yy = yy; });
   games.forEach((g, i) => {
-    el('path', { d: 'M' + g.totals.map((v, j) => `${X(j)},${Y(v)}`).join('L'), fill: 'none', stroke: WR_COLORS[i], 'stroke-width': 2.5, 'stroke-linejoin': 'round', 'stroke-dasharray': g.baseline ? '6 5' : 'none' }, svg);
-    el('circle', { cx: X(Y10), cy: Y(g.totals.at(-1)), r: 4, fill: WR_COLORS[i], stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
-    el('text', { x: X(Y10) + 10, y: labels.find(x => x.i === i).yy, 'font-size': 12, 'font-weight': 600, fill: 'var(--ink)' }, svg, `${g.baseline ? 'Without scenario' : 'Game ' + (i + 1)}: ${fmtB(g.totals.at(-1))}`);
+    el('path', { d: 'M' + g.totals.map((v, j) => `${X(j)},${Y(v)}`).join('L'), fill: 'none', stroke: gameColor(g), 'stroke-width': 2.5, 'stroke-linejoin': 'round', 'stroke-dasharray': g.baseline ? '6 5' : 'none' }, svg);
+    el('circle', { cx: X(Y10), cy: Y(g.totals.at(-1)), r: 4, fill: gameColor(g), stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
+    el('text', { x: X(Y10) + 10, y: labels.find(x => x.i === i).yy, 'font-size': 12, 'font-weight': 600, fill: 'var(--ink)' }, svg, `${WR.hyp ? `P${g.pair + 1} ${g.baseline ? 'without' : 'with'}` : 'Game ' + (i + 1)}: ${fmtB(g.totals.at(-1))}`);
   });
-  $('wr-legend').innerHTML = '<span><i style="background:var(--band)"></i>Simulator: middle 80% of 1,000 futures</span>' + games.map((g, i) => {
-    const rank = Math.round(100 * ranked.filter(v => v <= g.decade).length / ranked.length);
-    return `<span><i style="background:${WR_COLORS[i]};height:3px;vertical-align:3px"></i>${g.baseline ? 'Game 4, without your scenario' : 'Game ' + (i + 1)}${g.title && !g.baseline ? ` (${esc(g.title)})` : ''}: ${fmtT(g.decade)} over ten years (better than ${rank}% of simulated futures)</span>`;
-  }).join('');
+  const band = '<span><i style="background:var(--band)"></i>Simulator: middle 80% of 1,000 futures</span>';
+  const rankOf = g => Math.round(100 * ranked.filter(v => v <= g.decade).length / ranked.length);
+  if (WR.hyp) {
+    const pairs = [...new Set(games.map(g => g.pair))];
+    $('wr-legend').innerHTML = band + '<span><i style="border-top:2px dashed var(--ink-3);height:0;vertical-align:3px"></i>dashed = same game without your scenario</span>' + pairs.map(p => {
+      const on = games.find(g => g.pair === p && !g.baseline), off = games.find(g => g.pair === p && g.baseline);
+      return `<span><i style="background:${gameColor(on || off)};height:3px;vertical-align:3px"></i>Pair ${p + 1}${on && on.title ? ` (${esc(on.title)})` : ''}: ${on ? fmtT(on.decade) : '–'} with, ${off ? fmtT(off.decade) : '–'} without${on && off ? `, so your scenario: <b>${money(on.decade - off.decade)}</b>` : ''}</span>`;
+    }).join('');
+  } else {
+    $('wr-legend').innerHTML = band + games.map((g, i) => `<span><i style="background:${gameColor(g)};height:3px;vertical-align:3px"></i>Game ${i + 1}${g.title ? ` (${esc(g.title)})` : ''}: ${fmtT(g.decade)} over ten years (better than ${rankOf(g)}% of simulated futures)</span>`).join('');
+  }
 }
 
 async function runAnalyst(games, pb, signal, hyp) {
   const sim = decades(LAST_FORWARD.main);
-  const summary = games.map((g, i) => `GAME ${i + 1}${g.baseline ? ' (WITHOUT the scenario, for comparison)' : hyp ? ` (with the scenario; moves tied directly to it: ${money(g.turns.flatMap(tn => tn.rulings).filter(r => r.ok && r.scen).reduce((a, r) => a + r.value, 0))})` : ''}: ten-year profit $${g.decade.toFixed(0)}B. Newcomer: ${g.wildName || g.wildType}\n` + g.turns.map(tn =>
+  const summary = games.map((g, i) => `GAME ${i + 1}${hyp ? ` (pair ${g.pair + 1}, ${g.baseline ? 'WITHOUT the scenario' : `WITH the scenario; moves tied directly to it: ${money(g.turns.flatMap(tn => tn.rulings).filter(r => r.ok && r.scen).reduce((a, r) => a + r.value, 0))}`})` : ''}: ten-year profit $${g.decade.toFixed(0)}B. Newcomers: ${(g.cast || []).map(c => `${c.name} (${c.kind}: ${c.what})`).join('; ')}\n` + g.turns.map(tn =>
     `FY${tn.fy1}-${tn.fy2}: ${tn.narrative}${tn.world.length ? ` [outside shock: ${tn.world[0].e.label}]` : ''}\n` + tn.rulings.filter(r => r.ok).map(r => `  * ${r.isDisney ? 'DISNEY' : r.player}${r.novel ? ' [NEW IDEA]' : ''}${r.responds ? ` [answering Disney's "${r.respTo}"]` : ''}: ${r.move} (cost $${r.cost.toFixed(1)}B) -> ${Math.abs(r.value) >= 0.05 ? money(r.value) + ' to Disney over the decade' : 'no direct effect on Disney'}`).join('\n')).join('\n')).join('\n\n');
   const all = games.flatMap((g, i) => g.turns.flatMap(tn => tn.rulings.filter(r => r.ok).map(r => ({ ...r, game: i + 1 }))));
   const top = (list, n) => list.slice(0, n).map(r => `  Game ${r.game}, FY${r.fy}: ${r.isDisney ? 'Disney' : r.player}: ${r.move} (${money(r.value)}${r.isDisney ? `, cost $${r.cost.toFixed(1)}B` : ''})`).join('\n');
@@ -1436,17 +1464,23 @@ async function runAnalyst(games, pb, signal, hyp) {
 Rules:
 - Focus on Disney's choices and rivals' reactions. Outside shocks are background; mention them only if they shaped Disney's choices in two or more games.
 - Separate patterns from flukes: say which games each point came from, and lead with points seen in two or more games.
+- Newcomers differ by game. Say which newcomers mattered and why; a newcomer that changed Disney's decade is a key finding.
 - Skip the obvious (recessions hurt parks, AI disrupts content, rivals bid for sports) unless you have a specific new angle.
 - Actions must be concrete, low-cost, and startable within a year.
 - Keep every field short: one sentence, as few words as possible.
 - For Disney's moves, compare dollars earned with dollars spent. A move that earned less than it cost did not pay, even if its value is positive; say so.
 - Write like a sharp strategy memo to Disney's CEO: name companies, years and dollar amounts; no hedging filler ("could potentially", "it is important to").
-- Each action must be something a Disney team could approve this year, with a rough cost or a first step (a pilot, a deal to open talks on, an option to buy, a team to set up). Never "monitor", "explore" or "consider".${hyp ? `\n- The user is testing this scenario: "${hyp}". Games 1-3 include it; Game 4 does not. Judge how the scenario changed Disney's decade. All four games faced the same outside shocks, so differences come from the scenario and from how players reacted. Lead with the direct effect of the moves tied to the scenario, then the knock-on effects (how Disney and rivals changed course). Say plainly if the difference is small enough to be luck.` : ''}
+- Each action must be something a Disney team could approve this year, with a rough cost or a first step (a pilot, a deal to open talks on, an option to buy, a team to set up). Never "monitor", "explore" or "consider".${hyp ? `\n- The user is testing this scenario: "${hyp}". Games come in matched pairs: both games in a pair have the same outside shocks and the same newcomers, and only one has the scenario. Judge the scenario by the difference within each pair (${pairDiffs(games).map((d, i) => `pair ${i + 1}: ${money(d)}`).join(', ')}), not by comparing across pairs. Lead with the direct effect of the moves tied to the scenario, then the knock-on effects (how Disney and rivals changed course). Say plainly if the difference is small enough to be luck.` : ''}
 Respond with JSON only.`;
   const prompt = `Disney's strategy going in: ${pb.desc}\nThe rules-based simulator gives this strategy a typical ten-year profit of $${pct(sim, .5).toFixed(0)}B (bad decade $${pct(sim, .1).toFixed(0)}B, good decade $${pct(sim, .9).toFixed(0)}B).\n\n${summary}\n\n${ranked}\n\nUse the dollar values above (they are calculated, so trust them over the narratives) when judging what worked. Name real dollar amounts where they make a point. Return exactly: {"bottom_line":"the single most useful takeaway, max 30 words, with a dollar figure if one makes the point","game_titles":["a 5-9 word headline for each game, in order, naming what decided it"],${hyp ? '"scenario_verdict":"max 40 words: how the scenario changed Disney\'s decade vs Game 4 and the simulator, and whether that difference looks real or could be luck",' : ''}"top_actions":[{"action":"something Disney could approve this year, with a rough cost or first step, max 18 words","evidence":"the games and dollar figures behind it, max 15 words"}] (exactly 3),"biggest_surprise":"max 25 words","worked":["max 2 Disney moves that paid off, with games, max 18 words each"],"backfired":["max 2 Disney moves that did not pay off, with games, max 18 words each"],"insights":[{"title":"max 8 words, with a number if possible","seen_in":"Games 1 and 3, or 'One game only (weak signal)'","what":"max 25 words","action":"max 18 words","watch":"max 15 words: a sign in the news that this is starting"}]}. Give 3 insights, fewer if fewer are real. Each must name a company, a dollar figure or a year.`;
   return parseJSON(await askClaude('analyst', system, prompt, signal));
 }
 
+function pairDiffs(games) {
+  const pairs = {};
+  games.forEach(g => { (pairs[g.pair] = pairs[g.pair] || {})[g.baseline ? 'off' : 'on'] = g; });
+  return Object.values(pairs).filter(p => p.on && p.off).map(p => p.on.decade - p.off.decade);
+}
 function scoreboard(games, hyp) {
   const sim = pct(decades(LAST_FORWARD.main), .5);
   const withS = games.filter(g => !g.baseline);
@@ -1454,64 +1488,90 @@ function scoreboard(games, hyp) {
   const all = games.flatMap((g, i) => g.baseline ? [] : g.turns.flatMap(tn => tn.rulings.filter(r => r.ok).map(r => ({ ...r, game: i + 1 }))));
   const best = all.filter(r => r.isDisney).sort((a, b) => (b.value - b.cost) - (a.value - a.cost))[0];
   const hit = all.filter(r => !r.isDisney).sort((a, b) => a.value - b.value)[0];
-  const base = games.find(g => g.baseline);
+  const diffs = pairDiffs(games);
+  const base = diffs.length ? diffs.reduce((a, v) => a + v, 0) / diffs.length : null;
   const direct = all.filter(r => r.scen).reduce((a, r) => a + r.value, 0) / withS.length;
   const cell = (big, small) => `<div><b>${big}</b><span>${small}</span></div>`;
   return `<div class="scoreboard">
     ${cell(fmtT(avg), `Disney's ten-year profit, average of ${withS.length} game${withS.length > 1 ? 's' : ''}${hyp ? ' with your scenario' : ''}`)}
-    ${base ? cell(money(direct), `direct effect of your scenario per game (the moves the referee tied to it). Versus the game without it: ${money(avg - base.decade)}`) : cell(money(avg - sim), 'versus a typical simulated decade (' + fmtT(sim) + ')')}
+    ${hyp && base != null ? cell(money(base), `what your scenario did to Disney's ten-year profit (average gap within ${diffs.length} matched pair${diffs.length > 1 ? 's' : ''}: ${diffs.map(money).join(', ')}). Direct effect alone: ${money(direct)}`) : cell(money(avg - sim), 'versus a typical simulated decade (' + fmtT(sim) + ')')}
     ${best && best.value > 0 ? cell(money(best.value), `profit for $${best.cost.toFixed(1)}B spent. Disney's best move (Game ${best.game}): ${esc(best.move.length > 70 ? best.move.slice(0, 68) + '…' : best.move)}`) : ''}
     ${hit && hit.value < 0 ? cell(money(hit.value), `Costliest rival move (Game ${hit.game}): ${esc(hit.player)}, ${esc(hit.move.length > 60 ? hit.move.slice(0, 58) + '…' : hit.move)}`) : ''}
   </div>`;
 }
 
 let LAST_FORWARD = null;
-async function playWarRoom(ev) {
-  ev.preventDefault();
+// Everything about the current run, so "Play 2 more" can add games to it.
+const WR = { games: [], hyp: null, pb: null, pairs: 0 };
+const WR_CALLS_PER_GAME = WR_TURNS * (AI_PLAYERS.length + 3 + 1);
+
+async function playWarRoom(ev) { ev.preventDefault(); return runWarRoom(false); }
+
+async function runWarRoom(more) {
   if (WR_MODE === 'api' && !$('wr-pass').value.trim()) { $('wr-status').textContent = 'Enter the passcode first.'; $('wr-pass').focus(); return; }
   try { if (WR_MODE === 'api') localStorage.setItem('horizons-pass', $('wr-pass').value.trim()); } catch {}
-  const pb = PLAYBOOKS.find(p => p.id === S.playbook);
+  if (!more) {
+    WR.pb = PLAYBOOKS.find(p => p.id === S.playbook);
+    WR.hyp = $('wr-hyp').value.trim().replace(/\s+/g, ' ').slice(0, 400) || null;
+    WR.games = []; WR.pairs = 0;
+    $('wr-games').innerHTML = '';
+    $('wr-insights-card').hidden = true; $('wr-results-card').hidden = true;
+  }
+  const { pb, hyp } = WR;
+  // Plain run: 3 independent games (2 more on request). Scenario run: 2 matched pairs (1 more pair on request).
+  // In a pair, both games share outside shocks and newcomers; only the scenario differs.
+  const nGroups = hyp ? (more ? 1 : 2) : (more ? 2 : 3);
+  const groups = Array.from({ length: nGroups }, () => ({ pair: WR.pairs++ }));
+  const plan = groups.flatMap(gr => hyp ? [{ ...gr, hyp }, { ...gr, hyp: null }] : [{ ...gr, hyp: null }]);
+  const start = WR.games.length;
   wrAbort = new AbortController();
   const signal = wrAbort.signal;
-  $('wr-play').disabled = true; $('wr-stop').hidden = false;
-  $('wr-insights-card').hidden = true; $('wr-results-card').hidden = true;
+  $('wr-play').disabled = true; $('wr-more').disabled = true; $('wr-stop').hidden = false;
   $('wr-progress').hidden = false;
+  WR_TOTAL_CALLS = plan.length * WR_CALLS_PER_GAME + groups.length + 1;
   wrCallsDone = 0; wrStart = Date.now(); updateEta();
-  const hyp = $('wr-hyp').value.trim().replace(/\s+/g, ' ').slice(0, 400) || null;
-  const plan = hyp ? [hyp, hyp, hyp, null] : [null, null, null];
-  WR_TOTAL_CALLS = plan.length * WR_TURNS * 9 + 1;
-  wrCallsDone = 0; updateEta();
-  const wilds = WILDCARDS.slice().sort(() => Math.random() - 0.5).slice(0, plan.length);
-  $('wr-games').className = 'games' + (plan.length === 4 ? ' four' : '');
-  $('wr-games').innerHTML = plan.map((h, i) => `<div class="card game${hyp && !h ? ' baseline' : ''}" id="wr-game-${i}"><h3>Game ${i + 1} · ${esc(plain(pb.name))}${hyp ? (h ? ' · with your scenario' : ' · without your scenario') : ''}</h3><div class="res"></div><div class="note wild">Newcomer type: ${esc(wilds[i].type)}</div><ol class="turns"></ol></div>`).join('');
-  $('wr-status').textContent = hyp ? 'Playing 3 games with your scenario and 1 without…' : 'Playing 3 games…';
+  $('wr-games').className = 'games' + (start + plan.length >= 4 ? ' four' : '');
+  plan.forEach((pl, k) => {
+    const i = start + k;
+    $('wr-games').insertAdjacentHTML('beforeend', `<div class="card game${hyp && !pl.hyp ? ' baseline' : ''}" id="wr-game-${i}"><h3>${hyp ? `Pair ${pl.pair + 1} · ${pl.hyp ? 'with' : 'without'} your scenario` : `Game ${i + 1}`} · ${esc(plain(pb.name))}</h3><div class="res"></div><div class="note wild">Casting the newcomers…</div><ol class="turns"></ol></div>`);
+  });
+  $('wr-status').textContent = hyp ? `Playing ${plan.length} games: ${groups.length} matched pair${groups.length > 1 ? 's' : ''}, with and without your scenario…` : `Playing ${plan.length} games…`;
   const run = limiter(WR_MODE === 'claude' ? 6 : 8);
-  const state = plan.map(() => ({}));
-  $('wr-feed').innerHTML = '';
+  const state = {};
+  if (!more) $('wr-feed').innerHTML = '';
   const feed = (g, tn) => {
     const pick = tn.rulings.filter(r => r.ok && Math.abs(r.value) >= 0.05).sort((a, b) => Math.abs(b.value) - Math.abs(a.value))[0];
     if (!pick) return;
     const li = document.createElement('li');
-    li.innerHTML = `<span class="note">Game ${g + 1}, FY${tn.fy1}–${tn.fy2}:</span> <b>${esc(pick.isDisney ? 'Disney' : pick.player)}:</b> ${esc(pick.move)} ${valText(pick)}`;
+    li.innerHTML = `<span class="note">${hyp ? `Pair ${plan[g - start].pair + 1} ${plan[g - start].hyp ? 'with' : 'without'}` : `Game ${g + 1}`}, FY${tn.fy1}–${tn.fy2}:</span> <b>${esc(pick.isDisney ? 'Disney' : pick.player)}:</b> ${esc(pick.move)} ${valText(pick)}`;
     $('wr-feed').prepend(li);
     while ($('wr-feed').children.length > 4) $('wr-feed').lastChild.remove();
   };
-  const onUpdate = u => { if (u.turns && u.turns.length > (state[u.g].fed || 0)) { state[u.g].fed = u.turns.length; feed(u.g, u.turns.at(-1)); } Object.assign(state[u.g], u); renderGame(u.g, state[u.g], u.phase); };
+  const onUpdate = u => { const st = state[u.g] = state[u.g] || {}; if (u.turns && u.turns.length > (st.fed || 0)) { st.fed = u.turns.length; feed(u.g, u.turns.at(-1)); } Object.assign(st, u); renderGame(u.g, st, u.phase); };
   try {
-    // With a scenario, every game faces the same outside shocks, so the comparison isolates the scenario.
-    const worldPlan = hyp ? Array.from({ length: WR_TURNS }, (_, t) => rollWorldEvent(1 + t * WR_SPAN)) : null;
-    const games = await Promise.all(plan.map((h, g) => playGame(g, pb, wilds[g], signal, run, onUpdate, h, worldPlan)));
-    games.forEach((gm, i) => { gm.baseline = !!hyp && !plan[i]; });
+    const setups = await Promise.all(groups.map(async gr => ({
+      pair: gr.pair,
+      world: Array.from({ length: WR_TURNS }, (_, t) => rollWorldEvent(1 + t * WR_SPAN)),
+      cast: await run(() => castNewcomers(hyp, signal)),
+    })));
+    const games = await Promise.all(plan.map((pl, k) => {
+      const su = setups.find(x => x.pair === pl.pair);
+      const i = start + k;
+      onUpdate({ g: i, cast: su.cast, phase: 'Starting…' });
+      return playGame(i, pb, su.cast, signal, run, onUpdate, pl.hyp, su.world).then(gm => Object.assign(gm, { idx: i, pair: pl.pair, baseline: !!hyp && !pl.hyp }));
+    }));
+    WR.games = WR.games.concat(games);
+    const all = WR.games;
     $('wr-results-card').hidden = false;
-    drawWarRoomChart(games);
-    $('wr-status').textContent = 'Games done. The analyst is reading them…';
-    const a = await runAnalyst(games, pb, signal, hyp);
-    const board = scoreboard(games, hyp);
+    drawWarRoomChart(all);
+    $('wr-status').textContent = `${all.length} games done. The analyst is reading them…`;
+    const a = await runAnalyst(all, pb, signal, hyp);
+    const board = scoreboard(all, hyp);
+    const arr = x => Array.isArray(x) ? x.filter(Boolean) : [];
     if (a) {
-      const arr = x => Array.isArray(x) ? x.filter(Boolean) : [];
-      arr(a.game_titles).forEach((t, i) => { const h = document.querySelector(`#wr-game-${i} h3`); if (h) h.innerHTML = `Game ${i + 1}: ${esc(t)}`; games[i] && (games[i].title = String(t)); });
-      drawWarRoomChart(games);
-      $('wr-bottom').innerHTML = `<div class="eyebrow">The bottom line</div>${hyp ? `<p class="surprise" style="margin:0"><b>Your scenario:</b> ${esc(hyp)}</p>` : ''}
+      arr(a.game_titles).forEach((t, i) => { if (!all[i]) return; all[i].title = String(t); const h = document.querySelector(`#wr-game-${i} h3`); if (h) h.innerHTML = `${esc(gameLabel(all[i]))}: ${esc(t)}`; });
+      drawWarRoomChart(all);
+      $('wr-bottom').innerHTML = `<div class="eyebrow">The bottom line · ${all.length} games</div>${hyp ? `<p class="surprise" style="margin:0"><b>Your scenario:</b> ${esc(hyp)}</p>` : ''}
         <p class="big">${esc(a.bottom_line || '')}</p>
         ${board}
         ${hyp && a.scenario_verdict ? `<p class="verdict"><b>Did your scenario matter?</b> ${esc(a.scenario_verdict)}</p>` : ''}
@@ -1520,17 +1580,18 @@ async function playWarRoom(ev) {
       const list = (title, items) => arr(items).length ? `<div class="action"><div class="no">${title}</div><ul class="rulings">${arr(items).map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '';
       $('wr-insights').innerHTML = list('What paid off for Disney', a.worked) + list('What backfired', a.backfired) +
         arr(a.insights).slice(0, 4).map((x, i) => `<div class="action"><div class="no">Insight ${i + 1}${x.seen_in ? ` · ${esc(x.seen_in)}` : ''}</div><h3>${esc(x.title || '')}</h3><p>${esc(x.what || '')}</p><p><b>Do:</b> ${esc(x.action || '')}</p><p><b>Watch for:</b> ${esc(x.watch || '')}</p></div>`).join('');
-      $('wr-insights-card').hidden = false;
     } else {
-      $('wr-bottom').innerHTML = `<div class="eyebrow">The scoreboard</div>${board}<p class="note">The analyst did not answer this time; the full games are below.</p>`;
-      $('wr-insights-card').hidden = false;
+      $('wr-bottom').innerHTML = `<div class="eyebrow">The scoreboard · ${all.length} games</div>${board}<p class="note">The analyst did not answer this time; the full games are below.</p>`;
     }
-    $('wr-status').textContent = `Done in ${Math.max(1, Math.round((Date.now() - wrStart) / 60000))} min. Play again for new decades.`;
+    $('wr-insights-card').hidden = false;
+    $('wr-more').hidden = false;
+    $('wr-more').textContent = hyp ? 'Play 1 more pair (2 games, about 5–8 min)' : 'Play 2 more games (about 5–8 min)';
+    $('wr-status').textContent = `Done in ${Math.max(1, Math.round((Date.now() - wrStart) / 60000))} min. Play again for new decades, or add games below to firm up the findings.`;
   } catch (e) {
     $('wr-status').textContent = e instanceof StopError ? 'Stopped.' : e.message;
     if (!(e instanceof StopError)) wrAbort.abort();
   } finally {
-    $('wr-play').disabled = false; $('wr-stop').hidden = true; $('wr-progress').hidden = true;
+    $('wr-play').disabled = false; $('wr-more').disabled = false; $('wr-stop').hidden = true; $('wr-progress').hidden = true;
   }
 }
 const WR_EXAMPLES = [
@@ -1543,12 +1604,13 @@ const WR_EXAMPLES = [
 ];
 $('wr-examples').innerHTML = '<span class="note" style="align-self:center">Try one:</span>' + WR_EXAMPLES.map(x => `<button type="button">${esc(x)}</button>`).join('');
 $('wr-examples').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { $('wr-hyp').value = b.textContent; $('wr-hyp').focus(); } });
-const playLabel = () => { if (!$('wr-play').disabled) $('wr-play').textContent = $('wr-hyp').value.trim() ? 'Play 4 games (about 6–10 min)' : 'Play 3 games (about 5–8 min)'; };
+const playLabel = () => { if (!$('wr-play').disabled) $('wr-play').textContent = $('wr-hyp').value.trim() ? 'Play 4 games (about 9–14 min)' : 'Play 3 games (about 7–12 min)'; };
 $('wr-hyp').addEventListener('input', playLabel);
 $('wr-examples').addEventListener('click', playLabel);
 playLabel();
 $('wr-form').addEventListener('submit', playWarRoom);
 $('wr-stop').addEventListener('click', () => wrAbort && wrAbort.abort());
+$('wr-more').addEventListener('click', () => runWarRoom(true));
 try { const p = localStorage.getItem('horizons-pass'); if (p) $('wr-pass').value = p; } catch {}
 
 function assumptionSummary() {

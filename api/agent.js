@@ -13,7 +13,7 @@ const MODELS = {
   referee: 'claude-sonnet-5-5', // judges moves and keeps the numbers honest
   analyst: 'claude-opus-5-5',   // one call per click: the cross-game insights
 };
-const MAX_OUTPUT = { player: 700, disney: 1000, referee: 3000, analyst: 3500 };
+const MAX_OUTPUT = { player: 700, disney: 1000, referee: 5000, analyst: 3500 };
 const MAX_INPUT_CHARS = 60000;
 const DEFAULT_ORIGINS = ['https://jrs10039-code.github.io'];
 
