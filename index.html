@@ -1633,6 +1633,7 @@ async function runWarRoom(more) {
     if (!(e instanceof StopError)) wrAbort.abort();
   } finally {
     $('wr-play').disabled = false; $('wr-more').disabled = false; $('wr-stop').hidden = true; $('wr-progress').hidden = true;
+    playLabel();
   }
 }
 const WR_EXAMPLES = [
@@ -1648,7 +1649,7 @@ const WR_EXAMPLES = [
 $('wr-examples').innerHTML = '<span class="note" style="align-self:center">Try one:</span>' + WR_EXAMPLES.map(x => `<button type="button">${esc(x)}</button>`).join('');
 $('wr-examples').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { $('wr-hyp').value = b.textContent; $('wr-hyp').focus(); } });
 const playLabel = () => { if (!$('wr-play').disabled) $('wr-play').textContent = $('wr-hyp').value.trim() ? 'Play 4 games (about 7–11 min)' : 'Play 3 games (about 6–9 min)'; };
-$('wr-hyp').addEventListener('input', playLabel);
+['input', 'change', 'keyup', 'paste', 'blur'].forEach(ev => $('wr-hyp').addEventListener(ev, () => setTimeout(playLabel, 0)));
 $('wr-examples').addEventListener('click', playLabel);
 playLabel();
 $('wr-form').addEventListener('submit', playWarRoom);
