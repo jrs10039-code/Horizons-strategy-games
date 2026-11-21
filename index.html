@@ -1150,6 +1150,8 @@ function renderHistory(bt) {
 // Two ways to reach Claude:
 //  1. On the Claude-hosted copy of this page: the viewer's own Claude account (the "sample" capability). Free for the viewer.
 //  2. On the public site: a private relay that holds Jake's API key (api/agent.js on Vercel), unlocked by a passcode.
+const CLAUDE_COPY = 'https://claude.ai/artifact/YKfZ4PNTEkYSqQitqQpWr8#warroom';
+const WR_BUDGET_MSG = 'The shared AI budget for this demo is used up.';
 const AGENT_API = 'https://horizons-strategy-games.vercel.app/api/agent';
 const WR_MODELS = { player: 'claude-haiku-5-5', disney: 'claude-sonnet-5-5', referee: 'claude-sonnet-5-5', analyst: 'claude-opus-5-5' };
 const WR_TIERS = { player: 'quick', disney: 'default', referee: 'default', analyst: 'complex' };
@@ -1273,7 +1275,7 @@ async function askClaudeRaw(role, system, prompt, signal) {
     try { return await relayOnce(role, system, prompt, signal, passcode); }
     catch (e) {
       if (signal.aborted) throw new StopError('stopped');
-      if (/passcode|not switched on/i.test(e.message) || attempt === 2) throw e;
+      if (/passcode|not switched on|budget/i.test(e.message) || attempt === 2) throw e;
       await new Promise(ok => setTimeout(ok, 4000 * (attempt + 1)));
     }
   }
@@ -1283,6 +1285,7 @@ async function relayOnce(role, system, prompt, signal, passcode) {
     .catch(() => { if (signal.aborted) throw new StopError('stopped'); throw new Error('Live AI games are not switched on yet.'); });
   const data = await r.json().catch(() => ({}));
   if (r.status === 401) throw new Error('Wrong passcode.');
+  if (/credit balance|billing|spend(ing)? limit|usage limit|quota/i.test(String(data.error || ''))) throw new Error(WR_BUDGET_MSG);
   if (!r.ok) throw new Error(data.error || 'The AI server did not answer.');
   return data.text || '';
 }
@@ -1377,7 +1380,7 @@ async function playGame(g, pb, cast, signal, run, onUpdate, hyp, worldPlan) {
       const prompt = `${MARKET_BRIEF}\n\nYOUR COMPANY:\n${p.brief}${pastOf(p, isDisney)}${agg ? `\nYour posture: ${agg}.` : ''}\nMoney you can spend on new moves this turn: about $${chest[p.id].toFixed(0)}B. ${yearsLeft}\n\n${common}\n\nMake ${p.moves || '1 or 2'} moves for these two years. Return exactly: {"moves":[{"move":"one sentence, max 30 words, with a place, a dollar amount and a year","why":"max 15 words","cost_billions":0}]}`;
       let out;
       try { out = parseJSON(await askClaude(isDisney ? 'disney' : 'player', system, prompt, signal)) || { moves: [] }; }
-      catch (e) { if (e instanceof StopError || /not allowed/.test(e.message)) throw e; WR_MISSES++; issues.push(`FY${fy1} ${p.name} did not answer: ${e.message}`); out = { moves: [] }; }
+      catch (e) { if (e instanceof StopError || /not allowed|budget/.test(e.message)) throw e; WR_MISSES++; issues.push(`FY${fy1} ${p.name} did not answer: ${e.message}`); out = { moves: [] }; }
       return [{ id: p.id, player: p.name, moves: clean(out.moves, isDisney) }];
     }));
     const groupMoves = run(async () => {
@@ -1386,7 +1389,7 @@ async function playGame(g, pb, cast, signal, run, onUpdate, hyp, worldPlan) {
       const prompt = `${MARKET_BRIEF}\n\nTHE COMPANIES YOU PLAY:\n${desks}\n\n${yearsLeft}\n\n${common}\n\nFor each company, make its single most important move for these two years. Return exactly: {"companies":[{"id":"the company's id","moves":[{"move":"one sentence, max 30 words, with a place, a dollar amount and a year","why":"max 15 words","cost_billions":0}]}]}`;
       let out;
       try { out = parseJSON(await askClaude('player', system, prompt, signal)) || {}; }
-      catch (e) { if (e instanceof StopError || /not allowed/.test(e.message)) throw e; WR_MISSES++; issues.push(`FY${fy1} the smaller players did not answer: ${e.message}`); out = {}; }
+      catch (e) { if (e instanceof StopError || /not allowed|budget/.test(e.message)) throw e; WR_MISSES++; issues.push(`FY${fy1} the smaller players did not answer: ${e.message}`); out = {}; }
       const byId = Object.fromEntries((Array.isArray(out.companies) ? out.companies : []).map(c => [String(c.id || ''), c]));
       return group.map(p => ({ id: p.id, player: p.name, moves: clean((byId[p.id] || {}).moves, false) }));
     });
@@ -1412,7 +1415,7 @@ Respond with JSON only.`;
     for (let k = 0; k < 3 && !ref; k++) {
       let raw = '';
       try { raw = await askClaude('referee', refSystem, refPrompt, signal); ref = parseJSON(raw) || salvageRulings(raw); if (!ref) issues.push(`FY${fy1} referee answer unreadable (try ${k + 1}, ${raw.length} chars): ${raw.slice(0, 200)} … ${raw.slice(-150)}`); }
-      catch (e) { if (e instanceof StopError || /not allowed/.test(e.message)) throw e; WR_MISSES++; issues.push(`FY${fy1} referee call failed (try ${k + 1}): ${e.message}`); }
+      catch (e) { if (e instanceof StopError || /not allowed|budget/.test(e.message)) throw e; WR_MISSES++; issues.push(`FY${fy1} referee call failed (try ${k + 1}): ${e.message}`); }
     }
     if (!ref) refFails++;
     ref = ref || { narrative: 'The referee could not rule this turn, so these two years were played without new effects.', rulings: [] };
@@ -1642,7 +1645,7 @@ async function runWarRoom(more) {
     $('wr-games').insertAdjacentHTML('beforeend', `<div class="card game${hyp && !pl.hyp ? ' baseline' : ''}" id="wr-game-${i}"><h3>${hyp ? `Pair ${pl.pair + 1} · ${pl.hyp ? 'with' : 'without'} your scenario` : `Game ${i + 1}`} · ${esc(plain(pb.name))}</h3><div class="res"></div><div class="note wild">Casting the newcomers…</div><ol class="turns"></ol></div>`);
   });
   $('wr-status').textContent = hyp ? `Playing ${plan.length} games: ${groups.length} matched pair${groups.length > 1 ? 's' : ''}, with and without your scenario…` : `Playing ${plan.length} games…`;
-  const run = limiter(WR_MODE === 'claude' ? 4 : 10);
+  const run = limiter(WR_MODE === 'claude' ? 6 : 10);
   const state = {};
   const onUpdate = u => { const st = state[u.g] = state[u.g] || {}; if (u.turns && u.turns.length > (st.fed || 0)) { WR_TURNS_DONE += u.turns.length - (st.fed || 0); st.fed = u.turns.length; updateEta(); } Object.assign(st, u); renderGame(u.g, st, u.phase); };
   try {
@@ -1692,6 +1695,7 @@ async function runWarRoom(more) {
     $('wr-status').textContent = `Done in ${Math.max(1, Math.round((Date.now() - wrStart) / 60000))} min.${lost ? ` ${lost} of ${plan.length} games could not finish (see their cards).` : ''}${WR_MISSES ? ` ${WR_MISSES} AI answer${WR_MISSES > 1 ? 's' : ''} failed and ${WR_MISSES > 1 ? 'were' : 'was'} skipped.` : ''} Play again for new decades, or add games below to firm up the findings.`;
   } catch (e) {
     $('wr-status').textContent = e instanceof StopError ? 'Stopped.' : e.message;
+    if (/budget/.test(e.message)) $('wr-status').innerHTML = `${esc(WR_BUDGET_MSG)} You can still play it free on your own Claude account: <a href="${CLAUDE_COPY}" target="_blank" rel="noopener">open the Claude version</a>.`;
     if (!(e instanceof StopError)) wrAbort.abort();
   } finally {
     $('wr-play').disabled = false; $('wr-more').disabled = false; $('wr-stop').hidden = true; $('wr-progress').hidden = true;
