@@ -66,11 +66,13 @@ header.top .wrap { display: flex; justify-content: space-between; align-items: c
 .byline a { text-decoration: none; font-weight: 600; }
 .hero { padding: 28px 0 8px; }
 .hero h1 { font-family: var(--font-display); font-size: 34px; line-height: 1.15; margin: 0 0 8px; text-wrap: balance; color: var(--ink); }
-.hero p.lede { margin: 0; color: var(--ink-2); font-size: 17px; max-width: 70ch; }
+.hero p.lede { margin: 0; color: var(--ink-2); font-size: 17px; max-width: 95ch; }
 .intro { margin: 14px 0 0; max-width: none; background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--accent); border-radius: 10px; padding: 12px 16px; }
 .intro p { margin: 0 0 6px; font-size: 15px; color: var(--ink-2); }
 .intro p:last-child { margin: 0; }
-.intro .intro-fine { font-size: 14px; }
+.intro .intro-fine { font-size: 13px; color: var(--ink-3); margin: 6px 0 0; max-width: 110ch; }
+.hero p.intro-fine { font-size: 13px; color: var(--ink-3); margin: 8px 0 14px; max-width: 120ch; }
+.hero p.intro-fine b { color: var(--ink-2); }
 .howto { margin: 20px 0 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); }
 .wr-expect { margin: 10px 0 0; max-width: 78ch; }
 .howto h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin: 0 0 10px; font-weight: 700; }
@@ -313,7 +315,7 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
   <div class="wrap">
     <div class="brand">
       <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor"/><path d="M6 22 L12 15 L17 19 L26 9" stroke="var(--surface)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span>Horizons <span style="font-weight:500;color:var(--ink-3)">· Strategic early warning for Disney</span></span>
+      <span>Horizons <span style="font-weight:500;color:var(--ink-3)">· Agentic war-gaming for Disney strategy</span></span>
     </div>
     <div class="byline">
       <span>Prototype by <b>Jake Schmidt</b></span>
@@ -323,11 +325,9 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
 
 <div class="wrap">
   <section class="hero">
-    <h1>What could knock Disney off course over the next decade, and what can it do about it today?</h1>
-    <div class="intro">
-      <p>Horizons is an agentic war-gaming platform: AI players compete as Disney and its rivals over ten years, so you can see which threats matter and what Disney could do about them now. <b>Try it:</b> follow steps 1 to 3 below. <a href="#" id="howLink">How this works</a></p>
-      <p class="intro-fine"><b>Built on real data:</b> Disney's FY26 segment results and FY27 guidance, each rival's latest reported financials, and Disney's FY19 to FY26 results for the backtest. Everything after today is simulated, so read results as scenarios to explore, not forecasts. Don't enter confidential or proprietary information.</p>
-    </div>
+    <h1>What could knock Disney off course, and what can it do about it today?</h1>
+    <p class="lede">AI players compete as Disney and its rivals over ten years. A referee scores every move, and an analyst recommends what Disney could do now. Follow steps 1 to 3. <a href="#" id="howLink">How this works</a></p>
+    <p class="intro-fine"><b>Built on real data:</b> Disney's FY26 segment results and FY27 guidance, each rival's latest reported financials, and Disney's FY19 to FY26 results for the backtest. Everything after today is simulated, so read results as scenarios to explore, not forecasts. Don't enter confidential or proprietary information.</p>
     <div class="howto" id="howto" hidden>
       <ol>
         <li><span><b>Set your assumptions</b>Disney's strategy, how often outside shocks hit, and how hard rivals and new entrants push. The AI players follow them.</span></li>
@@ -397,8 +397,7 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
   <!-- AI WAR ROOM -->
   <section id="p-warroom">
     <div class="card">
-      <p class="kicker">Multi-agent competitive simulation</p><h2 class="wr-title">Agentic War Game</h2>
-      <p class="sub">Thirteen AI players (Disney, its biggest rivals and three new entrants) make moves over ten years. An AI referee calculates what each move does to Disney's segment profit, and an AI analyst turns the results into moves Disney can make now.</p>
+
       <form class="wr-controls" id="wr-form">
       <div class="step"><div class="stepn">2</div><div class="stepbody"><h3>Pick or type a scenario <span class="opt">(optional)</span></h3>
         <div class="field wide"><label for="wr-hyp" class="sr-only">What do you want to test?</label>
