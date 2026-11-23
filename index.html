@@ -452,7 +452,7 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
       <p>The war game plays out the next decade a few times in full detail, with AI players making specific moves. The instant check plays it out 1,000 times with simple rules instead: each year, outside shocks and rival pressure hit at the odds you set in step 1, and the math adds up Disney's profit. It uses the same assumptions and shock list as the war game, but with no AI players it can't invent moves or recommend actions.</p>
       <p><b>Use it to:</b> see which threats cost Disney the most across many futures, the range of profit outcomes, how the six strategies compare, and how the same rules would have done from 2019 against what actually happened.</p>
       <div class="field sim-opts"><label class="toggle"><input type="checkbox" id="trig" checked><span><b>Disney learns:</b> a repeat threat does 30% less damage</span></label>
-        <label for="runs" style="margin-left:16px">Simulations</label> <select id="runs"><option value="200">200 (faster)</option><option value="1000" selected>1,000</option><option value="5000">5,000 (most precise)</option></select></div>
+        <input type="hidden" id="runs" value="1000"></div>
     </div>
   <div class="tabs" role="tablist" aria-label="Results">
     <button role="tab" id="tab-threats" aria-controls="p-threats" aria-selected="true">Biggest threats</button>
