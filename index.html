@@ -336,7 +336,7 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
         <li><span><b>Pick or type a scenario</b>Optional. With one, matched games play with and without it, so you see exactly what it changes.</span></li>
         <li><span><b>Play</b>Thirteen AI players move over ten years (about 10 minutes). You get a bottom line, profit by business, the scenario's effect and moves Disney could make now.</span></li>
       </ol>
-      <p class="note howto-note">Want a quick read without AI? The instant check at the bottom of the page plays 1,000 simple decades in a second with the same assumptions.</p>
+      <p class="note howto-note">Want a quick read without AI? The instant check at the bottom of the page plays out the next decade 1,000 times in a second, with the same assumptions.</p>
     </div>
   </section>
 
@@ -447,12 +447,12 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
 
 </div></div>
   <details class="card simbox" id="simbox">
-    <summary><b>Instant check: 1,000 simulated decades in about a second</b> <span class="note">No AI, no wait</span></summary>
+    <summary><b>Instant check: the next decade, simulated 1,000 times in a second</b> <span class="note">No AI, no wait</span></summary>
     <div class="sim-intro">
-      <p>The war game plays a few decades in full detail, with AI players making specific moves. The instant check plays 1,000 decades with simple rules instead: each year, outside shocks and rival pressure hit at the odds you set in step 1, and the math adds up Disney's profit. It uses the same assumptions and shock list as the war game, but with no AI players it can't invent moves or recommend actions.</p>
+      <p>The war game plays out the next decade a few times in full detail, with AI players making specific moves. The instant check plays it out 1,000 times with simple rules instead: each year, outside shocks and rival pressure hit at the odds you set in step 1, and the math adds up Disney's profit. It uses the same assumptions and shock list as the war game, but with no AI players it can't invent moves or recommend actions.</p>
       <p><b>Use it to:</b> see which threats cost Disney the most across many futures, the range of profit outcomes, how the six strategies compare, and how the same rules would have done from 2019 against what actually happened.</p>
       <div class="field sim-opts"><label class="toggle"><input type="checkbox" id="trig" checked><span><b>Disney learns:</b> a repeat threat does 30% less damage</span></label>
-        <label for="runs" style="margin-left:16px">Decades</label> <select id="runs"><option value="200">200 (faster)</option><option value="1000" selected>1,000</option><option value="5000">5,000 (most precise)</option></select></div>
+        <label for="runs" style="margin-left:16px">Simulations</label> <select id="runs"><option value="200">200 (faster)</option><option value="1000" selected>1,000</option><option value="5000">5,000 (most precise)</option></select></div>
     </div>
   <div class="tabs" role="tablist" aria-label="Results">
     <button role="tab" id="tab-threats" aria-controls="p-threats" aria-selected="true">Biggest threats</button>
@@ -1995,7 +1995,7 @@ async function runWarRoom(more) {
     $('wr-more').hidden = false;
     $('wr-more').textContent = hyp ? 'Play 1 more pair to firm this up' : 'Play 2 more games to firm this up';
     const lost = plan.length - games.length;
-    $('wr-status').textContent = `Done in ${Math.max(1, Math.round((Date.now() - wrStart) / 60000))} min.${lost ? ` ${lost} of ${plan.length} games could not finish (see their cards).` : ''}${WR_MISSES ? ` ${WR_MISSES} AI answer${WR_MISSES > 1 ? 's' : ''} failed and ${WR_MISSES > 1 ? 'were' : 'was'} skipped.` : ''} Play again for new decades, or add games below to firm up the findings.`;
+    $('wr-status').textContent = `Done in ${Math.max(1, Math.round((Date.now() - wrStart) / 60000))} min.${lost ? ` ${lost} of ${plan.length} games could not finish (see their cards).` : ''}${WR_MISSES ? ` ${WR_MISSES} AI answer${WR_MISSES > 1 ? 's' : ''} failed and ${WR_MISSES > 1 ? 'were' : 'was'} skipped.` : ''} Play again for fresh games, or add games below to firm up the findings.`;
   } catch (e) {
     $('wr-status').textContent = e instanceof StopError ? 'Stopped.' : e.message;
     if (/budget/.test(e.message)) $('wr-status').innerHTML = `${esc(WR_BUDGET_MSG)} You can still play it free on your own Claude account: <a href="${CLAUDE_COPY}" target="_blank" rel="noopener">open the Claude version</a>.`;
