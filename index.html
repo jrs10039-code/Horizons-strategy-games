@@ -1408,7 +1408,7 @@ async function playGame(g, pb, castP, signal, run, onUpdate, hyp, worldPlan) {
     world.forEach(w => {
       const imp = {};
       for (const k in w.e.imp) imp[k] = w.e.imp[k] * IMPACT * (pb.sens[w.e.tag] ?? 1);
-      effects.push({ from: w.y, until: w.y + w.e.dur - 1, imp });
+      effects.push({ from: w.y, until: w.y + w.e.dur - 1, imp, who: 'world' });
       // What the shock costs Disney through 2041, in dollars, so the write-up can explain dips in the chart.
       const segNow = segHist.at(-1) || START, span = Math.max(0, Math.min(w.e.dur, WR_TURNS * WR_SPAN + WR_TAIL - w.y + 1));
       const inDecade = Math.max(0, Math.min(w.e.dur, WR_TURNS * WR_SPAN - w.y + 1));
@@ -1511,8 +1511,8 @@ Respond with JSON only.`;
       const hi = isDisney ? 4 : 2;
       const imp = ok ? { exp: num(r.exp, -20, hi) / 100, ent: num(r.ent, -20, hi) / 100, spt: num(r.spt, -20, hi) / 100 } : { exp: 0, ent: 0, spt: 0 };
       const now = ok && isDisney ? { exp: num(r.cost_now?.exp, -15, 0) / 100, ent: num(r.cost_now?.ent, -15, 0) / 100, spt: num(r.cost_now?.spt, -15, 0) / 100 } : { exp: 0, ent: 0, spt: 0 };
-      if (imp.exp || imp.ent || imp.spt) effects.push({ from: y1 + delay, until: y1 + delay + years - 1, imp, rival: !isDisney && !r.scenario_effect });
-      if (now.exp || now.ent || now.spt) effects.push({ from: y1, until: y1, imp: now });
+      if (imp.exp || imp.ent || imp.spt) effects.push({ from: y1 + delay, until: y1 + delay + years - 1, imp, rival: !isDisney && !r.scenario_effect, who: isDisney ? 'disney' : r.scenario_effect ? 'scen' : 'rival' });
+      if (now.exp || now.ent || now.spt) effects.push({ from: y1, until: y1, imp: now, who: isDisney ? 'disney' : 'rival' });
       const cost = ok ? num(r.cost_billions, 0, 100) : 0;
       if (who.id) chest[who.id] = Math.max(0, chest[who.id] - cost);
       // What the move is worth to Disney in dollars over the rest of the decade (our arithmetic, not the AI's claim)
@@ -1554,7 +1554,7 @@ Respond with JSON only.`;
     for (const k in riv) f[k] += Math.max(-0.12, riv[k]);
     for (const k of SEGS) { b2[k] *= 1 + gRate(pb, k, y); tail += b2[k] * (Math.max(0.05, f[k]) - 1) * 0.94; }
   }
-  return { totals, turns, cast, hyp, segHist, issues, refFails, tail, shocks, broken: refFails >= 2, decade: totals.slice(1).reduce((a, v) => a + v, 0) };
+  return { effects, pb, totals, turns, cast, hyp, segHist, issues, refFails, tail, shocks, broken: refFails >= 2, decade: totals.slice(1).reduce((a, v) => a + v, 0) };
 }
 
 const pctFmt = v => { const x = Math.round(v * 1000) / 10; return (Number.isInteger(x) ? x.toFixed(0) : x.toFixed(1)) + '%'; };
@@ -1689,16 +1689,40 @@ function pairDiffs(games) { return pairList(games).map(p => p.on.decade - p.off.
 const segSum = (g, k) => (g.segHist || []).reduce((a, y) => a + y[k], 0);
 const okR = g => g.turns.flatMap(tn => tn.rulings.filter(r => r.ok));
 const sumV = (list, f) => list.reduce((a, r) => a + f(r), 0);
+// A game's profit FY27-36 plus effects still running through 2041, recomputed with only the effects that pass keep().
+function replayProfit(g, keep) {
+  const b = { ...MODES.forward.start }; let total = 0;
+  for (let y = 1; y <= WR_TURNS * WR_SPAN + WR_TAIL; y++) {
+    const f = { exp: 1, ent: 1, spt: 1 }, riv = { exp: 0, ent: 0, spt: 0 };
+    g.effects.forEach(e => { if (keep(e) && y >= e.from && y <= e.until) for (const k in e.imp) (e.rival ? riv : f)[k] += e.imp[k]; });
+    for (const k in riv) f[k] += Math.max(-0.12, riv[k]);
+    const tail = y > WR_TURNS * WR_SPAN, drag = tail ? 0.94 : 1 - Math.min(0.06, 0.02 * y);
+    for (const k of SEGS) { b[k] *= 1 + gRate(g.pb, k, y); total += tail ? b[k] * (Math.max(0.05, f[k]) - 1) * drag : b[k] * Math.max(0.05, f[k]) * drag; }
+  }
+  return total;
+}
 // Splits each pair's gap into: the event itself, how Disney's moves differed, how rivals' moves differed, and the rest.
 function scenarioBridge(games) {
   const ps = pairList(games);
   if (!ps.length) return null;
   const rows = ps.map(p => {
-    const on = okR(p.on), off = okR(p.off);
-    const direct = sumV(on.filter(r => r.scen), r => r.value);
-    const disney = sumV(on.filter(r => r.isDisney), r => r.value) - sumV(off.filter(r => r.isDisney), r => r.value);
-    const rivals = sumV(on.filter(r => !r.isDisney && !r.scen), r => r.value) - sumV(off.filter(r => !r.isDisney && !r.scen), r => r.value);
-    const net = (p.on.decade + (p.on.tail || 0)) - (p.off.decade + (p.off.tail || 0));
+    const on = okR(p.on);
+    let direct, disney, rivals, net;
+    if (p.on.effects && p.off.effects) {
+      // Replay each game's profit with groups of effects switched off, so the split respects the cap on rival pressure.
+      const P = (g, keep) => replayProfit(g, keep);
+      const all = () => true, noScen = e => e.who !== 'scen', noScenDis = e => e.who !== 'scen' && e.who !== 'disney', noDis = e => e.who !== 'disney';
+      net = P(p.on, all) - P(p.off, all);
+      direct = P(p.on, all) - P(p.on, noScen);
+      disney = (P(p.on, noScen) - P(p.on, noScenDis)) - (P(p.off, all) - P(p.off, noDis));
+      rivals = P(p.on, noScenDis) - P(p.off, noDis);
+    } else {
+      const off = okR(p.off);
+      direct = sumV(on.filter(r => r.scen), r => r.value);
+      disney = sumV(on.filter(r => r.isDisney), r => r.value) - sumV(off.filter(r => r.isDisney), r => r.value);
+      rivals = sumV(on.filter(r => !r.isDisney && !r.scen), r => r.value) - sumV(off.filter(r => !r.isDisney && !r.scen), r => r.value);
+      net = (p.on.decade + (p.on.tail || 0)) - (p.off.decade + (p.off.tail || 0));
+    }
     const seg = {}; SEGS.forEach(k => { seg[k] = { direct: sumV(on.filter(r => r.scen), r => (r.segV || {})[k] || 0), year: (segSum(p.on, k) - segSum(p.off, k)) / 10 }; });
     return { direct, disney, rivals, net, other: net - direct - disney - rivals, seg };
   });
