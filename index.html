@@ -166,6 +166,25 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   .side .slider { margin: 2px 0; }
   .maincol .tabs { margin-top: 0; }
 }
+.page { max-width: 1120px; margin: 0; }
+.step .toggle { display: flex; gap: 8px; align-items: flex-start; text-align: left; }
+.step .toggle input { flex: none; margin-top: 4px; }
+.step { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; padding: 16px 0; border-top: 1px solid var(--rule); }
+.step:first-of-type { border-top: 0; }
+.stepn { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--surface); font-weight: 700; display: grid; place-items: center; margin-top: 2px; }
+.step h3 { margin: 2px 0 6px; font-size: 18px; }
+.step .opt { font-weight: 400; color: var(--ink-3); font-size: 14px; }
+.step .controls { margin-top: 8px; }
+.step .assumptions { margin-top: 12px; padding: 14px; border: 1px solid var(--rule); border-radius: 10px; }
+.as-title { margin: 0; font-size: 15px; }
+.wr-controls .step { width: 100%; }
+.simbox { margin-top: 18px; }
+.simbox > summary { cursor: pointer; font-size: 17px; padding: 4px 0; }
+.simbox > summary .note { margin-left: 8px; }
+.sim-intro { margin: 10px 0 6px; max-width: 80ch; }
+.sim-intro p { margin: 0 0 8px; color: var(--ink-2); }
+.sim-opts { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 footer { color: var(--ink-3); font-size: 13px; padding: 24px 0 48px; display: grid; gap: 6px; max-width: 90ch; }
 footer p { margin: 0; }
 #status { font-size: 12px; color: var(--ink-3); }
@@ -297,20 +316,28 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
   <section class="hero">
     <h1>What could knock Disney off course over the next decade, and what can it do about it today?</h1>
     <div class="intro">
-      <p>A prototype by Jake Schmidt. AI players act as Disney and its rivals for ten years, so you can see which threats matter and what Disney could do about them now. <b>Try it:</b> pick an example scenario below and press Play. <a href="#" id="howLink">How this works</a></p>
+      <p>A prototype by Jake Schmidt. AI players act as Disney and its rivals for ten years, so you can see which threats matter and what Disney could do about them now. <b>Try it:</b> set your assumptions (step 1), pick a scenario (step 2) and press Play. <a href="#" id="howLink">How this works</a></p>
       <p class="intro-fine">A prototype, not a forecast: only the FY26 starting profits are reported numbers. Don't enter confidential or proprietary information.</p>
     </div>
     <div class="howto" id="howto" hidden>
       <ol>
         <li><span><b>AI War Room</b>AI players act out ten years; an analyst recommends moves. Test any scenario.</span></li>
-        <li><span><b>Other tabs</b>A fast simulator plays 1,000 decades: biggest threats, profit range, strategies compared, and a 2019 backtest.</span></li>
-        <li><span><b>Your assumptions</b>Change shock odds, rival aggression and startups; every tab updates.</span></li>
+        <li><span><b>Your assumptions</b>Step 1 sets Disney's strategy, how often shocks hit and how hard rivals push. The games play by them.</span></li>
+        <li><span><b>Instant check</b>Below the War Room, a no-AI simulator plays 1,000 quick decades in a second with the same assumptions.</span></li>
       </ol>
     </div>
   </section>
 
-<div class="layout">
-<aside class="side">
+<div class="page">
+  <!-- AI WAR ROOM -->
+  <section id="p-warroom">
+    <div class="card">
+      <h2>AI War Room</h2>
+      <p class="sub">Thirteen AI players run ten years of moves; a referee prices each one and an analyst recommends moves for Disney.</p>
+      <form class="wr-controls" id="wr-form">
+      <div class="step"><div class="stepn">1</div><div class="stepbody">
+        <h3>Set Disney's strategy and your assumptions</h3>
+        <p class="hint">These change the games: Disney plays the strategy you pick, outside shocks hit as often as you set, and rivals and newcomers push as hard as you set. The defaults are a reasonable start.</p>
   <div class="controls">
     <div class="field">
       <label for="pb">Disney's strategy</label>
@@ -319,10 +346,10 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
     <div class="pbdesc" id="pbdesc"></div>
   </div>
 
-  <section class="card assumptions" id="assumptions" aria-labelledby="as-title">
+  <section class="assumptions" id="assumptions" aria-labelledby="as-title">
     <div class="as-head">
       <div>
-        <h2 id="as-title">Your assumptions</h2>
+        <h3 id="as-title" class="as-title">Your assumptions</h3>
         <p class="as-summary" id="as-summary"></p>
       </div>
       <div class="as-buttons">
@@ -330,7 +357,7 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
       </div>
     </div>
     <div id="as-body">
-      <p class="sub">Changes update every tab. Shocks, pandemic, rivals and startups also set up the AI War Room; "Disney learns" applies to the other tabs only.</p>
+      
       <p class="hint evlegend"><span style="flex-basis:100%">Labels show what each number rests on:</span> <span class="pill ev good" title="Reported numbers or a signed, public deal">Fact</span> <span class="pill ev neutral" title="Announced or guided by the company">Stated</span> <span class="pill ev plain" title="An estimate from comparable cases">Assumption</span> <span class="pill ev warn" title="A speculative bet with no close precedent">Hypothesis</span> <span class="pill ev crit" title="Conflicts with known facts, so it gets no effect">Contradicted</span></p>
       <div class="as-grid">
         <div class="as-col">
@@ -348,9 +375,6 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
           <h3>New startups <span class="pill ev warn" title="A speculative bet with no close precedent">Hypothesis</span></h3>
           <p class="hint">Yearly chance a new kind of rival appears (it stays).</p>
           <div id="arch"></div>
-          <h3 style="margin-top:14px">How Disney responds <span class="pill ev plain" title="An estimate from comparable cases">Assumption</span></h3>
-          <label class="toggle"><input type="checkbox" id="trig" checked><span><b>Disney learns:</b> a repeat threat does 30% less damage</span></label>
-          <div class="field"><label for="runs">Decades to play out</label><select id="runs"><option value="200">200 (faster)</option><option value="1000" selected>1,000 (recommended)</option><option value="5000">5,000 (most precise)</option></select></div>
           <details class="share">
             <summary>Share your settings</summary>
             <p class="hint">Copy to share, or paste and load.</p>
@@ -363,30 +387,19 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
     </div>
   </section>
 
-</aside>
-<div class="maincol">
-  <div class="tabs" role="tablist" aria-label="Results">
-    <button role="tab" id="tab-warroom" aria-controls="p-warroom" aria-selected="true">AI War Room</button>
-    <button role="tab" id="tab-threats" aria-controls="p-threats" aria-selected="false">Biggest threats</button>
-    <button role="tab" id="tab-outlook" aria-controls="p-outlook" aria-selected="false">Profit outlook</button>
-    <button role="tab" id="tab-strategies" aria-controls="p-strategies" aria-selected="false">Compare strategies</button>
-    <button role="tab" id="tab-history" aria-controls="p-history" aria-selected="false">Would it have worked?</button>
-  </div>
-
-  <!-- AI WAR ROOM -->
-  <section role="tabpanel" id="p-warroom" aria-labelledby="tab-warroom">
-    <div class="card">
-      <h2>Let AI rivals play out the decade</h2>
-      <p class="sub">Thirteen AI players run ten years of moves; a referee prices each one and an analyst recommends moves for Disney.</p>
-      <form class="wr-controls" id="wr-form">
-        <div class="field wide"><label for="wr-hyp">What do you want to test? (optional)</label>
+      </div></div>
+      <div class="step"><div class="stepn">2</div><div class="stepbody"><h3>Pick or type a scenario <span class="opt">(optional)</span></h3>
+        <div class="field wide"><label for="wr-hyp" class="sr-only">What do you want to test?</label>
           <textarea id="wr-hyp" rows="2" maxlength="400" placeholder="Describe any situation in your own words, for example: Netflix makes a big push into theme parks."></textarea>
           <div class="examples" id="wr-examples" aria-label="Example scenarios"></div>
           <p class="hint">Optional. With a scenario, matched games play with and without it so you see its effect. Don't enter confidential information; it's sent to an AI model.</p></div>
+      </div></div>
+      <div class="step"><div class="stepn">3</div><div class="stepbody"><h3>Play</h3>
         <div class="field"><label for="wr-pass">Passcode</label><input id="wr-pass" type="password" autocomplete="off" placeholder="From Jake's email"></div>
         <button type="submit" class="primary" id="wr-play">Play the games</button>
         <button type="button" id="wr-stop" hidden>Stop</button>
         <span class="note" id="wr-status" aria-live="polite"></span>
+      </div></div>
       </form>
       <p class="note wr-expect" id="wr-expect">You'll get a bottom line, profit by business, what your scenario did, and four moves Disney could make now. <b>About <span id="wr-mins">10–12</span> minutes</b>; keep this tab open.</p>
       <div class="wr-progress" id="wr-progress" hidden><div class="bar"><span id="wr-bar" style="width:0%"></span></div><div class="eta" id="wr-eta"></div></div>
@@ -408,7 +421,7 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
     </div>
     <div class="card" id="wr-results-card" hidden>
       <h2>How the games played out</h2>
-      <p class="sub">Each line is one game's yearly profit; the band is where the simulator's futures usually land.</p>
+      <p class="sub">Each line is one game's yearly profit; the dotted line is Disney's plan.</p>
       <div class="chartwrap" id="wrwrap"><svg id="wrchart" viewBox="0 0 720 300" width="100%" role="img" aria-label="AI games compared with the simulator"></svg></div>
       <div class="legend" id="wr-legend"></div>
       <details class="more">
@@ -418,8 +431,22 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
     </div>
   </section>
 
+  <details class="card simbox" id="simbox">
+    <summary><b>Instant check: 1,000 simulated decades in about a second</b> <span class="note">No AI, no wait</span></summary>
+    <div class="sim-intro">
+      <p>The AI War Room plays a few rich decades slowly. This instant check plays 1,000 quick ones with simple rules instead: each year, outside shocks and rival moves hit at the odds you set in step 1, and the math adds up Disney's profit. It uses the same assumptions and the same list of shocks as the War Room, but no AI players, so it can't invent new moves or recommend specific actions.</p>
+      <p><b>Use it to:</b> see which threats cost Disney the most across many futures, the range of profit outcomes, how the six strategies compare, and how the same rules would have done from 2019 against what actually happened.</p>
+      <div class="field sim-opts"><label class="toggle"><input type="checkbox" id="trig" checked><span><b>Disney learns:</b> a repeat threat does 30% less damage</span></label>
+        <label for="runs" style="margin-left:16px">Decades</label> <select id="runs"><option value="200">200 (faster)</option><option value="1000" selected>1,000</option><option value="5000">5,000 (most precise)</option></select></div>
+    </div>
+  <div class="tabs" role="tablist" aria-label="Results">
+    <button role="tab" id="tab-threats" aria-controls="p-threats" aria-selected="true">Biggest threats</button>
+    <button role="tab" id="tab-outlook" aria-controls="p-outlook" aria-selected="false">Profit outlook</button>
+    <button role="tab" id="tab-strategies" aria-controls="p-strategies" aria-selected="false">Compare strategies</button>
+    <button role="tab" id="tab-history" aria-controls="p-history" aria-selected="false">Would it have worked?</button>
+  </div>
   <!-- BIGGEST THREATS -->
-  <section role="tabpanel" id="p-threats" aria-labelledby="tab-threats" hidden>
+  <section role="tabpanel" id="p-threats" aria-labelledby="tab-threats">
     <section class="answer" aria-live="polite">
       <div class="eyebrow">The short answer</div>
       <p id="answer">Running 1,000 futures…</p>
@@ -509,6 +536,7 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
 
 </div>
 </div>
+  </details>
   <footer>
     <details class="more"><summary>Sources and assumptions</summary><div class="more-body">
     <p><span class="pill ev good" title="Reported numbers or a signed, public deal">Fact</span> <b>Starting point:</b> fiscal 2026 segment operating income from Disney's FY26 Q4 8-K: Experiences $11.19B, Entertainment $5.44B, Sports $3.09B (total $19.7B). "Profit" on this page means total segment operating income.</p>
@@ -934,9 +962,10 @@ $('loadcfg').addEventListener('click', () => {
 $('reset').addEventListener('click', () => { S = defaults(); buildControls(); runAll(); $('cfgmsg').textContent = 'Reset to the baseline assumptions.'; });
 
 // tabs (hash routed: #threats, #outlook, #strategies, #history)
-const TABS = ['warroom', 'threats', 'outlook', 'strategies', 'history'];
+const TABS = ['threats', 'outlook', 'strategies', 'history'];
 function showTab(name, focus) {
-  if (!TABS.includes(name)) name = 'warroom';
+  if (!TABS.includes(name)) return;
+  $('simbox').open = true;
   TABS.forEach(t => { const on = t === name; $('tab-' + t).setAttribute('aria-selected', on); $('tab-' + t).tabIndex = on ? 0 : -1; $('p-' + t).hidden = !on; });
   if (focus) $('tab-' + name).focus();
 }
@@ -1638,21 +1667,17 @@ function renderGame(i, game, phase) {
 
 function drawWarRoomChart(games) {
   const svg = $('wrchart'); svg.innerHTML = '';
-  const main = LAST_FORWARD.main;
   const W = 720, H = 300, L = 54, R = 120, T = 16, B = 34, Y10 = 10;
-  const stats = [];
-  for (let y = 0; y <= Y10; y++) { const v = main.map(x => x.totals[y]).sort((a, b) => a - b); stats.push({ y, p10: pct(v, .1), p90: pct(v, .9) }); }
   const plan = planPath();
   const all = games.flatMap(g => g.totals).concat(plan);
-  const lo = Math.min(...stats.map(s => s.p10), ...all) * 0.92, hi = Math.max(...stats.map(s => s.p90), ...all) * 1.04;
+  const lo = Math.min(...all) * 0.92, hi = Math.max(...all) * 1.04;
   const ticks = niceTicks(lo, hi, 5), y0 = ticks[0], y1 = Math.max(hi, ticks.at(-1));
   const X = i => L + (i / Y10) * (W - L - R), Y = v => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
   ticks.forEach(t => { el('line', { x1: L, x2: W - R, y1: Y(t), y2: Y(t), stroke: 'var(--rule)' }, svg); el('text', { x: L - 8, y: Y(t) + 4, 'text-anchor': 'end', 'font-size': 12, fill: 'var(--ink-3)' }, svg, '$' + t + 'B'); });
   for (let i = 0; i <= Y10; i += 2) el('text', { x: X(i), y: H - 10, 'text-anchor': 'middle', 'font-size': 12, fill: 'var(--ink-3)' }, svg, 'FY' + (26 + i));
-  el('path', { d: 'M' + stats.map(s => `${X(s.y)},${Y(s.p90)}`).join('L') + 'L' + stats.slice().reverse().map(s => `${X(s.y)},${Y(s.p10)}`).join('L') + 'Z', fill: 'var(--band)' }, svg);
   el('path', { d: 'M' + plan.map((v, j) => `${X(j)},${Y(v)}`).join('L'), fill: 'none', stroke: 'var(--ink-3)', 'stroke-width': 1.5, 'stroke-dasharray': '1 4', 'stroke-linecap': 'round' }, svg);
   el('text', { x: X(Y10) + 10, y: Y(plan.at(-1)) + 4, 'font-size': 12, fill: 'var(--ink-2)' }, svg, `Disney's plan: ${fmtB(plan.at(-1))}`);
-  const ranked = decades(main);
+  const ranked = decades(LAST_FORWARD.main);
   const labels = games.map((g, i) => ({ i, v: g.totals.at(-1) })).sort((a, b) => b.v - a.v);
   let lastY = -99;
   labels.forEach(l => { let yy = Y(l.v) + 4; if (yy - lastY < 16) yy = lastY + 16; lastY = yy; l.yy = yy; });
@@ -1671,7 +1696,7 @@ function drawWarRoomChart(games) {
     el('line', { x1: X(m.j), x2: X(m.j), y1: m.y - 6, y2: m.y - 26, stroke: 'var(--ink-3)', 'stroke-dasharray': '2 2' }, svg);
     el('text', { x: X(m.j), y: m.y - 30, 'text-anchor': m.j > 8 ? 'end' : 'middle', 'font-size': 11, fill: 'var(--ink-2)' }, svg, `${m.x.short} (${[...m.who].join(', ')})`);
   });
-  const band = '<span><i style="background:var(--band)"></i>Simulator: middle 80% of 1,000 futures</span><span><i style="border-top:2px dotted var(--ink-3);height:0;vertical-align:3px"></i>Disney\'s plan: FY27 guidance, easing to long-run growth</span>';
+  const band = '<span><i style="border-top:2px dotted var(--ink-3);height:0;vertical-align:3px"></i>Disney\'s plan: FY27 guidance, easing to long-run growth</span>';
   const rankOf = g => Math.round(100 * ranked.filter(v => v <= g.decade).length / ranked.length);
   if (WR.hyp) {
     const pairs = [...new Set(games.map(g => g.pair))];
@@ -1680,7 +1705,7 @@ function drawWarRoomChart(games) {
       return `<span><i style="background:${gameColor(on || off)};height:3px;vertical-align:3px"></i>Pair ${p + 1}${on && on.title ? ` (${esc(on.title)})` : ''}: ${on ? fmtB(on.decade / 10) : '–'} a year with, ${off ? fmtB(off.decade / 10) : '–'} without${on && off ? `, so your scenario: <b>${money((on.decade - off.decade) / 10)} a year</b>` : ''}</span>`;
     }).join('');
   } else {
-    $('wr-legend').innerHTML = band + games.map((g, i) => `<span><i style="background:${gameColor(g)};height:3px;vertical-align:3px"></i>Game ${i + 1}${g.title ? ` (${esc(g.title)})` : ''}: ${fmtB(g.decade / 10)} a year on average (better than ${rankOf(g)}% of simulated futures)</span>`).join('');
+    $('wr-legend').innerHTML = band + games.map((g, i) => `<span><i style="background:${gameColor(g)};height:3px;vertical-align:3px"></i>Game ${i + 1}${g.title ? ` (${esc(g.title)})` : ''}: ${fmtB(g.decade / 10)} a year on average</span>`).join('');
   }
 }
 
