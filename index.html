@@ -67,7 +67,7 @@ header.top .wrap { display: flex; justify-content: space-between; align-items: c
 .hero { padding: 28px 0 8px; }
 .hero h1 { font-family: var(--font-display); font-size: 34px; line-height: 1.15; margin: 0 0 8px; text-wrap: balance; color: var(--ink); }
 .hero p.lede { margin: 0; color: var(--ink-2); font-size: 17px; max-width: 70ch; }
-.intro { margin: 14px 0 0; background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--accent); border-radius: 10px; padding: 12px 16px; max-width: 980px; }
+.intro { margin: 14px 0 0; max-width: none; background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--accent); border-radius: 10px; padding: 12px 16px; }
 .intro p { margin: 0 0 6px; font-size: 15px; color: var(--ink-2); }
 .intro p:last-child { margin: 0; }
 .intro .intro-fine { font-size: 14px; }
@@ -152,7 +152,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 .lessons { margin: 10px 0 0; padding-left: 20px; display: grid; gap: 8px; }
 .note { font-size: 13px; color: var(--ink-3); }
 .layout { display: block; }
-@media (max-width: 700px) { .layout { display: flex; flex-direction: column; } .maincol { order: -1; } .bottomline { padding-left: 12px; padding-right: 12px; } table.seg { font-size: 13px; } }
+@media (max-width: 700px) { .bottomline { padding-left: 12px; padding-right: 12px; } table.seg { font-size: 13px; } }
 @media (min-width: 1180px) {
   .wrap { max-width: 1440px; }
   .layout { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 24px; align-items: start; }
@@ -166,7 +166,14 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   .side .slider { margin: 2px 0; }
   .maincol .tabs { margin-top: 0; }
 }
-.page { max-width: 1120px; margin: 0; }
+.page { margin: 0 auto; }
+.side-head { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; margin-bottom: 8px; }
+.side-head h3 { margin: 2px 0 4px; font-size: 18px; }
+.side .assumptions { margin-top: 12px; padding: 14px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+.as-sum { cursor: pointer; font-weight: 600; font-size: 15px; }
+.using { margin: 0 0 8px; }
+.step .field input[type=password] { max-width: 260px; }
+.using b { font-weight: 600; color: var(--ink-2); }
 .step .toggle { display: flex; gap: 8px; align-items: flex-start; text-align: left; }
 .step .toggle input { flex: none; margin-top: 4px; }
 .step { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; padding: 16px 0; border-top: 1px solid var(--rule); }
@@ -179,10 +186,10 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 .as-title { margin: 0; font-size: 15px; }
 .wr-controls .step { width: 100%; }
 .simbox { margin-top: 18px; }
-.simbox > summary { cursor: pointer; font-size: 17px; padding: 4px 0; }
+.simbox > summary { cursor: pointer; font-size: 20px; padding: 6px 0; }
 .simbox > summary .note { margin-left: 8px; }
 .sim-intro { margin: 10px 0 6px; max-width: 80ch; }
-.sim-intro p { margin: 0 0 8px; color: var(--ink-2); }
+.sim-intro p { margin: 0 0 8px; color: var(--ink-2); font-size: 16px; }
 .sim-opts { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 footer { color: var(--ink-3); font-size: 13px; padding: 24px 0 48px; display: grid; gap: 6px; max-width: 90ch; }
@@ -329,15 +336,10 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
   </section>
 
 <div class="page">
-  <!-- AI WAR ROOM -->
-  <section id="p-warroom">
-    <div class="card">
-      <h2>AI War Room</h2>
-      <p class="sub">Thirteen AI players run ten years of moves; a referee prices each one and an analyst recommends moves for Disney.</p>
-      <form class="wr-controls" id="wr-form">
-      <div class="step"><div class="stepn">1</div><div class="stepbody">
-        <h3>Set Disney's strategy and your assumptions</h3>
-        <p class="hint">These change the games: Disney plays the strategy you pick, outside shocks hit as often as you set, and rivals and newcomers push as hard as you set. The defaults are a reasonable start.</p>
+<div class="layout">
+<aside class="side" aria-label="Step 1: your assumptions">
+  <div class="side-head"><div class="stepn">1</div><div><h3>Set your assumptions</h3>
+    <p class="hint">Adjust these before you press Play: Disney plays the strategy you pick, and outside shocks, rivals and newcomers follow these settings. The defaults are a reasonable start.</p></div></div>
   <div class="controls">
     <div class="field">
       <label for="pb">Disney's strategy</label>
@@ -346,10 +348,10 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
     <div class="pbdesc" id="pbdesc"></div>
   </div>
 
-  <section class="assumptions" id="assumptions" aria-labelledby="as-title">
+  <details class="assumptions" id="assumptions" open><summary class="as-sum">Shocks, rivals and startups</summary>
     <div class="as-head">
       <div>
-        <h3 id="as-title" class="as-title">Your assumptions</h3>
+        
         <p class="as-summary" id="as-summary"></p>
       </div>
       <div class="as-buttons">
@@ -385,16 +387,23 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
         </div>
       </div>
     </div>
-  </section>
+  </details>
 
-      </div></div>
+</aside>
+<div class="maincol">
+  <!-- AI WAR ROOM -->
+  <section id="p-warroom">
+    <div class="card">
+      <h2>AI War Room</h2>
+      <p class="sub">Thirteen AI players run ten years of moves; a referee prices each one and an analyst recommends moves for Disney.</p>
+      <form class="wr-controls" id="wr-form">
       <div class="step"><div class="stepn">2</div><div class="stepbody"><h3>Pick or type a scenario <span class="opt">(optional)</span></h3>
         <div class="field wide"><label for="wr-hyp" class="sr-only">What do you want to test?</label>
           <textarea id="wr-hyp" rows="2" maxlength="400" placeholder="Describe any situation in your own words, for example: Netflix makes a big push into theme parks."></textarea>
           <div class="examples" id="wr-examples" aria-label="Example scenarios"></div>
           <p class="hint">Optional. With a scenario, matched games play with and without it so you see its effect. Don't enter confidential information; it's sent to an AI model.</p></div>
       </div></div>
-      <div class="step"><div class="stepn">3</div><div class="stepbody"><h3>Play</h3>
+      <div class="step"><div class="stepn">3</div><div class="stepbody"><h3>Play</h3><p class="hint using">Playing with <b id="wr-using"></b>. <a href="#assumptions" id="wr-change">Change in step 1</a></p>
         <div class="field"><label for="wr-pass">Passcode</label><input id="wr-pass" type="password" autocomplete="off" placeholder="From Jake's email"></div>
         <button type="submit" class="primary" id="wr-play">Play the games</button>
         <button type="button" id="wr-stop" hidden>Stop</button>
@@ -431,6 +440,7 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
     </div>
   </section>
 
+</div></div>
   <details class="card simbox" id="simbox">
     <summary><b>Instant check: 1,000 simulated decades in about a second</b> <span class="note">No AI, no wait</span></summary>
     <div class="sim-intro">
@@ -2072,8 +2082,12 @@ function assumptionSummary() {
     `Pandemic risk: ${S.tail ? 'on' : 'off'}`,
   ];
   $('as-summary').textContent = parts.join(' · ');
+  if ($('wr-using')) $('wr-using').textContent = [plain((PLAYBOOKS.find(x => x.id === S.playbook) || {}).name || ''), ...parts].join(' · ').toLowerCase().replace(/^./, c => c.toUpperCase());
   $('reset').hidden = JSON.stringify(S) === JSON.stringify({ ...d, playbook: S.playbook });
 }
+// On narrower screens the sidebar sits above the War Room, so keep the sliders folded until asked for.
+if (window.innerWidth < 1180 && $('assumptions')) $('assumptions').open = false;
+if ($('wr-change')) $('wr-change').addEventListener('click', e => { e.preventDefault(); $('assumptions').open = true; $('assumptions').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
 $('howLink').addEventListener('click', e => { e.preventDefault(); $('howto').hidden = !$('howto').hidden; $('howLink').textContent = $('howto').hidden ? 'How this works' : 'Hide'; });
 buildControls();
 showTab(location.hash.slice(1));
