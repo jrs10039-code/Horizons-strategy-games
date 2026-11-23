@@ -422,7 +422,7 @@ body .hero p.intro-fine { max-width: 110ch; }
         <span class="note" id="wr-status" aria-live="polite"></span>
       </div></div>
       </form>
-      <p class="note wr-expect" id="wr-expect">You'll get a bottom line, profit by business, what your scenario did, and four moves Disney could make now. <b>About <span id="wr-mins">10–12</span> minutes</b>; keep this tab open.</p>
+      <p class="note wr-expect" id="wr-expect">You'll get a bottom line, profit by business, what your scenario did, and four moves Disney could make now. <b>About <span id="wr-mins">12–15</span> minutes</b>; keep this tab open.</p>
       <div class="wr-progress" id="wr-progress" hidden><div class="bar"><span id="wr-bar" style="width:0%"></span></div><div class="eta" id="wr-eta"></div></div>
       <details class="more">
         <summary>How the game works</summary>
@@ -1336,6 +1336,9 @@ function fallbackCast(n) {
 }
 
 const aggWord = v => v == null ? 'normal' : v >= 75 ? 'very aggressive' : v >= 55 ? 'aggressive' : v >= 35 ? 'measured' : 'cautious';
+// Aggression changes both the instructions and the money a rival will put into new moves, so the slider visibly bites.
+const aggBrief = v => v == null ? 'normal' : aggWord(v) + (v >= 75 ? ": go after Disney's customers, talent and deals head-on, and bid hard for any prize in play" : v >= 55 ? ': compete hard wherever you see an opening against Disney' : v >= 35 ? ': pick your battles and mostly grow your own business' : ': mostly defend your own business, avoid head-on fights with Disney, and make at most one move');
+const aggMult = p => p && p.agg ? Math.max(0.4, Math.min(1.5, 0.5 + p.agg() / 100)) : 1;
 
 let sampleFn = null, WR_MODE = 'api', wrAbort = null;
 const samplePromise = (window.claude && typeof window.claude.use === 'function')
@@ -1515,7 +1518,7 @@ async function playGame(g, pb, castP, signal, run, onUpdate, hyp, worldPlan, sce
       const isDisney = p.id === 'disney';
       const agg = p.agg ? aggWord(p.agg()) : null;
       const system = `You are the head of strategy for ${p.name} in a business war game about the entertainment, media and experiences industry. It is fiscal ${fy1}–${fy2}: every date you give must fall in ${fy1} or later, never earlier. Act in your own company's interest${isDisney ? '' : ', not Disney\'s'}. Pursue your company's own priorities from your briefing. If a big prize is in play (a sports package, a studio for sale, a hot franchise), compete for it even if others are too. Be specific and realistic, and willing to surprise: partnerships, acquisitions, pricing, new products, technology, or moves outside your usual lane. Only make moves you can afford and that regulators would likely allow; never repeat a move you already made. ${isDisney ? 'Most of the game is about your decisions: make bold, concrete strategic moves and say what each costs. Do not propose anything that has already happened (for example, the NFL already owns 10% of ESPN). At least one move each turn must answer a specific rival move' + (scen ? ' or the scenario' : '') + ' by name, naming the partner or target, a dollar amount and a date.' : rivalRule}${scen} Respond with JSON only.`;
-      const prompt = `${MARKET_BRIEF}\n\nYOUR COMPANY:\n${p.brief}${isDisney ? `\nYOUR STRATEGY GOING IN (stick to it unless events force a change): ${plain(pb.name)}: ${pb.desc}` : ''}${pastOf(p, isDisney)}${agg ? `\nYour posture: ${agg}.` : ''}\nMoney you can spend on new moves this turn: about $${chest[p.id].toFixed(0)} billion. ${yearsLeft}\n\n${common}\n\nMake ${p.moves || '1 or 2'} moves for these two years. Return exactly: {"moves":[{"move":"one sentence, max 30 words, with a place, a dollar amount and a year","why":"max 15 words","cost_billions":0}]}`;
+      const prompt = `${MARKET_BRIEF}\n\nYOUR COMPANY:\n${p.brief}${isDisney ? `\nYOUR STRATEGY GOING IN (stick to it unless events force a change): ${plain(pb.name)}: ${pb.desc}` : ''}${pastOf(p, isDisney)}${agg ? `\nYour posture: ${aggBrief(p.agg())}.` : ''}\nMoney you can spend on new moves this turn: about $${(chest[p.id] * aggMult(p)).toFixed(0)} billion. ${yearsLeft}\n\n${common}\n\nMake ${p.moves || '1 or 2'} moves for these two years. Return exactly: {"moves":[{"move":"one sentence, max 30 words, with a place, a dollar amount and a year","why":"max 15 words","cost_billions":0}]}`;
       let out;
       try { out = parseJSON(await askClaude(isDisney ? 'disney' : 'player', system, prompt, signal)) || { moves: [] }; }
       catch (e) { if (e instanceof StopError || /not allowed|budget/.test(e.message)) throw e; WR_MISSES++; issues.push(`FY${fy1} ${p.name} did not answer: ${e.message}`); out = { moves: [] }; }
@@ -1523,7 +1526,7 @@ async function playGame(g, pb, castP, signal, run, onUpdate, hyp, worldPlan, sce
     }));
     const deskCall = (group, desk) => run(async () => {
       const system = `You run the strategy desks of ${group.length} separate companies in a business war game about the entertainment, media and experiences industry. It is fiscal ${fy1}–${fy2}: every date you give must fall in ${fy1} or later, never earlier. Each company acts only in its own interest and does not coordinate with the others, unless a deal between them truly helps both. Be specific and realistic, and willing to surprise. Only make moves a company can afford and that regulators would likely allow; never repeat a move it already made. ${rivalRule}${scen} Respond with JSON only.`;
-      const desks = group.map(p => `### ${p.name} [id: ${p.id}]\n${p.brief}${pastOf(p, false)}\nPosture: ${p.agg ? aggWord(p.agg()) : 'normal'}. Money for new moves this turn: about $${chest[p.id].toFixed(0)} billion.`).join('\n\n');
+      const desks = group.map(p => `### ${p.name} [id: ${p.id}]\n${p.brief}${pastOf(p, false)}\nPosture: ${p.agg ? aggBrief(p.agg()) : 'normal'}. Money for new moves this turn: about $${(chest[p.id] * aggMult(p)).toFixed(0)} billion.`).join('\n\n');
       const prompt = `${MARKET_BRIEF}\n\nTHE COMPANIES YOU PLAY:\n${desks}\n\n${yearsLeft}\n\n${common}\n\nFor each company, make ${desk.moves} for these two years. Return exactly: {"companies":[{"id":"the company's id","moves":[{"move":"one sentence, max 30 words, with a place, a dollar amount and a year","why":"max 15 words","cost_billions":0}]}]}`;
       let out;
       try { out = parseJSON(await askClaude('player', system, prompt, signal)) || {}; }
@@ -1538,7 +1541,7 @@ async function playGame(g, pb, castP, signal, run, onUpdate, hyp, worldPlan, sce
     onUpdate({ g, phase: `Turn ${t + 1} of ${WR_TURNS} (FY${fy1}–${fy2}): the referee is ruling` });
     const numbered = moves.flatMap(m => m.moves.map(x => ({ m, x })));
     let n = 0;
-    const moveText = moves.map(m => `${m.player} (can spend about $${chest[m.id].toFixed(0)} billion):\n` + (m.moves.map(x => `  [${++n}] ${x.move} [claims cost $${x.cost} billion] (${x.why})`).join('\n') || '  (no move)')).join('\n');
+    const moveText = moves.map(m => `${m.player} (can spend about $${(chest[m.id] * aggMult(players.find(q => q.id === m.id))).toFixed(0)} billion):\n` + (m.moves.map(x => `  [${++n}] ${x.move} [claims cost $${x.cost} billion] (${x.why})`).join('\n') || '  (no move)')).join('\n');
     const refSystem = `You referee a business war game centered on Disney. For each move, judge whether it is realistic and affordable for that company. Then decide its effect on Disney's yearly operating profit in three segments: Experiences (parks, cruises, resorts), Entertainment (studios, streaming, TV), Sports (ESPN). Effects are percent changes to that segment's yearly profit, for the years they last.
 Calibration:
 - Most rival moves barely touch Disney: 0 to -2. A strong rival move: -3 to -5. Only a truly major move reaches -8. Losing a major asset (a top sports package, a big franchise, a key distribution deal) can reach -10 to -20 on that segment: size it from the real dollars and show the arithmetic in "why".
@@ -2029,7 +2032,7 @@ const WR_EXAMPLES = [
 ];
 $('wr-examples').innerHTML = '<span class="note">Or try one:</span>' + WR_EXAMPLES.map(x => `<button type="button">${esc(x)}</button>`).join('');
 $('wr-examples').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { $('wr-hyp').value = b.textContent; $('wr-hyp').focus(); } });
-const wrMins = n => WR_MODE === 'claude' ? (n >= 4 ? '10–12' : '8–10') : (n >= 4 ? '6–8' : '5–7');
+const wrMins = n => WR_MODE === 'claude' ? (n >= 4 ? '12–15' : '10–12') : (n >= 4 ? '6–8' : '5–7');
 const playLabel = () => { const hasS = !!$('wr-hyp').value.trim(); if ($('wr-mins')) $('wr-mins').textContent = wrMins(hasS ? 4 : 3); if (!$('wr-play').disabled) $('wr-play').textContent = $('wr-hyp').value.trim() ? `Play 4 games: 2 pairs, with and without your scenario (about ${wrMins(4)} min)` : `Play 3 games (about ${wrMins(3)} min)`; };
 ['input', 'change', 'keyup', 'paste', 'blur'].forEach(ev => $('wr-hyp').addEventListener(ev, () => setTimeout(playLabel, 0)));
 $('wr-examples').addEventListener('click', playLabel);
@@ -2094,7 +2097,7 @@ function assumptionSummary() {
   const d = defaults();
   const word = (v, base) => v > base * 1.15 ? 'higher than normal' : v < base * 0.85 ? 'lower than normal' : 'normal';
   const avg = o => Object.values(o).reduce((a, v) => a + v, 0) / Object.values(o).length;
-  const singles = Object.keys(S.players).some(k => S.players[k] !== d.players[k]);
+  const pv = Object.values(S.players), singles = Object.keys(S.players).some(k => S.players[k] !== d.players[k]) && !pv.every(v => v === pv[0]);
   const parts = [
     `Outside shocks: ${word(avg(S.pestel), 3)}${(() => { const c = PESTEL.filter(x => S.pestel[x.id] !== 3).map(x => `${x.name} ${S.pestel[x.id] > 3 ? 'more often' : 'less often'}`); return c.length && c.length <= 2 ? ` (${c.join(', ')})` : ''; })()}`,
     `Rival aggression: ${word(avg(S.arena), 50)}${singles ? ' (some companies tuned)' : ''}`,
