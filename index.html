@@ -336,7 +336,7 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
         <li><span><b>Pick or type a scenario</b>Optional. With one, matched games play with and without it, so you see exactly what it changes.</span></li>
         <li><span><b>Play</b>Thirteen AI players move over ten years (about 10 minutes). You get a bottom line, profit by business, the scenario's effect and moves Disney could make now.</span></li>
       </ol>
-      <p class="note howto-note">Want a quick read without AI? The instant check at the bottom of the page plays out the next decade 1,000 times in a second, with the same assumptions.</p>
+
     </div>
   </section>
 
@@ -446,7 +446,7 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
   </section>
 
 </div></div>
-  <details class="card simbox" id="simbox">
+  <details class="card simbox" id="simbox" hidden>
     <summary><b>Instant check: the next decade, simulated 1,000 times in a second</b> <span class="note">No AI, no wait</span></summary>
     <div class="sim-intro">
       <p>The war game plays out the next decade a few times in full detail, with AI players making specific moves. The instant check plays it out 1,000 times with simple rules instead: each year, outside shocks and rival pressure hit at the odds you set in step 1, and the math adds up Disney's profit. It uses the same assumptions and shock list as the war game, but with no AI players it can't invent moves or recommend actions.</p>
@@ -557,7 +557,8 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
     <p><span class="pill ev good" title="Reported numbers or a signed, public deal">Fact</span> <b>Starting point:</b> fiscal 2026 segment operating income from Disney's FY26 Q4 8-K: Experiences $11.19B, Entertainment $5.44B, Sports $3.09B (total $19.7B). "Profit" on this page means total segment operating income.</p>
     <p><span class="pill ev neutral" title="Announced or guided by the company">Stated</span> <b>Disney's plans</b> (the ~$60B parks plan, buybacks, ~$26B content spend) come from Disney's own guidance. <span class="pill ev good" title="Reported numbers or a signed, public deal">Fact</span> <b>Backtest actuals</b> come from Disney's annual results.</p>
     <p><span class="pill ev plain" title="An estimate from comparable cases">Assumption</span> <b>Assumptions:</b> growth starts at Disney's FY27 guidance (about 8%) and eases to each strategy's long-run rate by FY31. Shock odds, rival sizes and action effects are draft assumptions by Jake Schmidt from public information, meant to be replaced with a strategy team's own. The tool shows ranges and recurring threats, not a forecast.</p>
-    <p><b>Where AI runs:</b> only in the war game (Claude Haiku, Sonnet and Opus 5.5). The other tabs are plain math in your browser. <span id="status"></span></p>
+    <p><b>Checked against history:</b> run from 2019 with only what was knowable then, the same shock rules flagged 10 of the 11 threats that actually hit Disney by FY26, including a pandemic-type shutdown as a rare event. They underestimated the recovery: FY26 profit beat 98% of the simulated outcomes.</p>
+    <p><b>Where AI runs:</b> the war game uses Claude Haiku 5.5 for rival players, Sonnet 5.5 for Disney and the referee, and Opus 5.5 for the analyst. <span id="status"></span></p>
     </div></details>
   </footer>
 </div>
