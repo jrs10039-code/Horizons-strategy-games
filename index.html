@@ -62,6 +62,14 @@ header.top { background: var(--surface); border-bottom: 1px solid var(--rule); }
 header.top .wrap { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-top: 14px; padding-bottom: 14px; flex-wrap: wrap; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--navy); }
 .brand svg { flex: none; }
+.brand-name { font-family: var(--font-display); font-size: 26px; letter-spacing: -.01em; }
+.brand-tag { font-weight: 500; color: var(--ink-3); font-size: 15px; padding-left: 10px; border-left: 1px solid var(--rule); }
+@media (max-width: 600px) { .brand-tag { display: none; } }
+.hero { text-align: center; }
+
+.hero .howto { text-align: left; }
+.wr-controls { margin-top: 0; }
+.wr-controls > .step:first-child { padding-top: 0; }
 .byline { font-size: 13px; color: var(--ink-2); display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
 .byline a { text-decoration: none; font-weight: 600; }
 .hero { padding: 28px 0 8px; }
@@ -308,14 +316,16 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
 .disney-moves .lbl { font-size: 12px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: .05em; }
 [hidden] { display: none !important; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.hero h1, body .hero p.lede, body .hero p.intro-fine { margin-left: auto; margin-right: auto; }
+body .hero p.intro-fine { max-width: 110ch; }
 </style>
 </head>
 <body>
 <header class="top">
   <div class="wrap">
     <div class="brand">
-      <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor"/><path d="M6 22 L12 15 L17 19 L26 9" stroke="var(--surface)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span>Horizons <span style="font-weight:500;color:var(--ink-3)">· Agentic war-gaming for Disney strategy</span></span>
+      <svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor"/><path d="M6 22 L12 15 L17 19 L26 9" stroke="var(--surface)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="brand-name">Horizons</span><span class="brand-tag">Agentic war-gaming for Disney strategy</span>
     </div>
     <div class="byline">
       <span>Prototype by <b>Jake Schmidt</b></span>
