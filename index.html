@@ -298,7 +298,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
 .bottomline .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--navy); font-weight: 700; }
 .bottomline .big { font-family: var(--font-display); font-size: 24px; line-height: 1.35; margin: 0; }
 .bottomline .verdict { font-size: 16px; margin: 0; }
-.split { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 14px; margin: 12px 0 4px; }
+.split { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 12px 0 4px; }
 .split > div { min-width: 0; overflow-x: auto; }
 table.seg { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 4px; }
 table.seg th { text-align: right; font-weight: 600; font-size: 12px; color: var(--ink-3); padding: 3px 6px; }
@@ -1294,9 +1294,10 @@ Rules:
 - Net out costs Disney no longer pays (for example, a rights fee it stops paying) against lost revenue.
 - Losing a major asset can reach -10 to -20 on a segment; most events are smaller. Use half steps (0.5) for small effects. 0 for a segment it does not touch.
 - start_fy: the fiscal year the effect starts (2027 to 2036). years: how long it lasts, up to 10.
+- "later": use it when the event has a second phase with a different effect, for example design costs now and royalties once a park opens. Give its own start_fy (up to 2041), years and segment effects. Leave it out otherwise.
 - cost_now: a one-time hit in the start year as a percent of that segment's yearly profit, only if there is one.
 - "basis": "fact" (reported numbers or a signed public deal), "stated" (announced or guided), "assumption" (your estimate from comparable cases, the default), or "hypothesis" (no close precedent).
-Respond with JSON only: {"start_fy":2030,"years":7,"exp":0,"ent":0,"spt":-10,"cost_now":{"exp":0,"ent":0,"spt":0},"basis":"assumption","why":"max 40 words"}`;
+Respond with JSON only: {"start_fy":2030,"years":7,"exp":0,"ent":0,"spt":-10,"cost_now":{"exp":0,"ent":0,"spt":0},"later":{"start_fy":2037,"years":5,"exp":0,"ent":0,"spt":0},"basis":"assumption","why":"max 40 words"}`;
   for (let k = 0; k < 3; k++) {
     try {
       const o = parseJSON(await askClaude('referee', system, `The event: "${hyp}"`, signal));
@@ -1305,7 +1306,9 @@ Respond with JSON only: {"start_fy":2030,"years":7,"exp":0,"ent":0,"spt":-10,"co
       const imp = { exp: num(o.exp, -30, 10) / 100, ent: num(o.ent, -30, 10) / 100, spt: num(o.spt, -30, 10) / 100 };
       const now = { exp: num(o.cost_now?.exp, -20, 0) / 100, ent: num(o.cost_now?.ent, -20, 0) / 100, spt: num(o.cost_now?.spt, -20, 0) / 100 };
       const basis = EVIDENCE[String(o.basis || '').toLowerCase()] ? String(o.basis).toLowerCase() : 'assumption';
-      return { from, until: from + years - 1, imp, now, basis, why: String(o.why || '').slice(0, 300) };
+      const L2 = o.later && typeof o.later === 'object' ? o.later : null;
+      const later = L2 ? { from: Math.round(num(L2.start_fy, 2027, 2041)) - 2026, years: Math.round(num(L2.years, 1, 10)), imp: { exp: num(L2.exp, -30, 15) / 100, ent: num(L2.ent, -30, 15) / 100, spt: num(L2.spt, -30, 15) / 100 } } : null;
+      return { from, until: from + years - 1, imp, now, later: later && (later.imp.exp || later.imp.ent || later.imp.spt) ? later : null, basis, why: String(o.why || '').slice(0, 300) };
     } catch (e) { if (e instanceof StopError || /not allowed|budget/.test(e.message)) throw e; WR_MISSES++; }
   }
   return null;
@@ -1381,7 +1384,7 @@ async function askClaudeRaw(role, system, prompt, signal) {
         if (e && e.code === 'not_granted') throw new Error('Claude access was not allowed. Click Play again and choose Allow.');
         last = e;
         // The page's own cap on calls in flight: wait a moment and try again, without using up a retry.
-        if (/too many .*at once|let some finish/i.test(String(e && e.message)) && pageWaits++ < 40) { attempt--; await new Promise(ok => setTimeout(ok, 1500)); continue; }
+        if (/too many .*at once|let some finish/i.test(String(e && e.message)) && pageWaits++ < 90) { attempt--; await new Promise(ok => setTimeout(ok, 1500 + Math.random() * 1000)); continue; }
         await new Promise(ok => setTimeout(ok, [3000, 6000, 12000, 20000, 0][attempt])); // busy or a hiccup
       }
     }
@@ -1615,8 +1618,9 @@ Respond with JSON only.`;
       if (sz) {
         effects.push({ from: sz.from, until: sz.until, imp: sz.imp, who: 'scen' });
         if (sz.now.exp || sz.now.ent || sz.now.spt) effects.push({ from: sz.from, until: sz.from, imp: sz.now, who: 'scen' });
-        const span = Math.max(0, Math.min(sz.until, WR_TURNS * WR_SPAN + WR_TAIL) - sz.from + 1);
-        const segV = {}; SEGS.forEach(k => { segV[k] = sz.imp[k] * seg[k] * span + sz.now[k] * seg[k]; });
+        if (sz.later) effects.push({ from: sz.later.from, until: sz.later.from + sz.later.years - 1, imp: sz.later.imp, who: 'scen' });
+        const end = WR_TURNS * WR_SPAN + WR_TAIL, span = Math.max(0, Math.min(sz.until, end) - sz.from + 1), span2 = sz.later ? Math.max(0, Math.min(sz.later.from + sz.later.years - 1, end) - sz.later.from + 1) : 0;
+        const segV = {}; SEGS.forEach(k => { segV[k] = sz.imp[k] * seg[k] * span + sz.now[k] * seg[k] + (sz.later ? sz.later.imp[k] * seg[k] * span2 : 0); });
         rulings.unshift({ id: '', isDisney: false, segV, gain: 0, player: 'The scenario', move: hyp, ok: true, imp: sz.imp, now: sz.now, delay: sz.from - y1, years: sz.until - sz.from + 1, cost: 0, value: SEGS.reduce((a, k) => a + segV[k], 0), fy: fy1, scen: true, forScen: false, novel: false, basis: sz.basis, responds: false, respTo: '', why: sz.why, realistic: true });
       } else issues.push('The scenario could not be sized, so it has no direct effect in this game.');
     }
@@ -1817,7 +1821,8 @@ function scenarioBridge(games) {
   });
   const mean = f => rows.reduce((a, r) => a + f(r), 0) / rows.length;
   const same = f => rows.length > 1 && (rows.every(r => f(r) < 0) || rows.every(r => f(r) > 0));
-  const directClear = Math.abs(mean(r => r.direct)) >= 1 && (rows.length === 1 || same(r => r.direct));
+  // The scenario is sized once per run, so its direct hit is the same in every game; it counts as clear unless it is tiny.
+  const directClear = Math.abs(mean(r => r.direct)) >= 0.1;
   const netClear = same(r => r.net) && rows.every(r => Math.abs(r.net) >= 2);
   return { rows, mean, same, n: rows.length, directClear, netClear };
 }
