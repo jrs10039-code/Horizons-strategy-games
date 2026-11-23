@@ -1292,7 +1292,7 @@ async function sizeScenario(hyp, signal) {
 Rules:
 - Work in dollars first, then convert: show the arithmetic in "why".
 - Net out costs Disney no longer pays (for example, a rights fee it stops paying) against lost revenue.
-- Losing a major asset can reach -10 to -20 on a segment; most events are smaller. Use half steps (0.5) for small effects. 0 for a segment it does not touch.
+- Losing a major asset can reach -10 to -20 on a segment; an event that reshapes a segment's whole cost base (for example its main costs doubling) can go past -30, down to -100 (the segment's profit gone); most events are much smaller. Use half steps (0.5) for small effects. 0 for a segment it does not touch.
 - start_fy: the fiscal year the effect starts (2027 to 2036). years: how long it lasts, up to 10.
 - "later": use it when the event has a second phase with a different effect, for example design costs now and royalties once a park opens. Give its own start_fy (up to 2041), years and segment effects. Leave it out otherwise.
 - cost_now: a one-time hit in the start year as a percent of that segment's yearly profit, only if there is one.
@@ -1303,11 +1303,11 @@ Respond with JSON only: {"start_fy":2030,"years":7,"exp":0,"ent":0,"spt":-10,"co
       const o = parseJSON(await askClaude('referee', system, `The event: "${hyp}"`, signal));
       if (!o) continue;
       const fy = Math.round(num(o.start_fy, 2027, 2036)), from = fy - 2026, years = Math.round(num(o.years, 1, 10));
-      const imp = { exp: num(o.exp, -30, 10) / 100, ent: num(o.ent, -30, 10) / 100, spt: num(o.spt, -30, 10) / 100 };
+      const imp = { exp: num(o.exp, -100, 10) / 100, ent: num(o.ent, -100, 10) / 100, spt: num(o.spt, -100, 10) / 100 };
       const now = { exp: num(o.cost_now?.exp, -20, 0) / 100, ent: num(o.cost_now?.ent, -20, 0) / 100, spt: num(o.cost_now?.spt, -20, 0) / 100 };
       const basis = EVIDENCE[String(o.basis || '').toLowerCase()] ? String(o.basis).toLowerCase() : 'assumption';
       const L2 = o.later && typeof o.later === 'object' ? o.later : null;
-      const later = L2 ? { from: Math.round(num(L2.start_fy, 2027, 2041)) - 2026, years: Math.round(num(L2.years, 1, 10)), imp: { exp: num(L2.exp, -30, 15) / 100, ent: num(L2.ent, -30, 15) / 100, spt: num(L2.spt, -30, 15) / 100 } } : null;
+      const later = L2 ? { from: Math.round(num(L2.start_fy, 2027, 2041)) - 2026, years: Math.round(num(L2.years, 1, 10)), imp: { exp: num(L2.exp, -100, 15) / 100, ent: num(L2.ent, -100, 15) / 100, spt: num(L2.spt, -100, 15) / 100 } } : null;
       return { from, until: from + years - 1, imp, now, later: later && (later.imp.exp || later.imp.ent || later.imp.spt) ? later : null, basis, why: String(o.why || '').slice(0, 300) };
     } catch (e) { if (e instanceof StopError || /not allowed|budget/.test(e.message)) throw e; WR_MISSES++; }
   }
