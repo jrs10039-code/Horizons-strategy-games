@@ -172,6 +172,8 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 .side .assumptions { margin-top: 12px; padding: 14px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
 .as-sum { cursor: pointer; font-weight: 600; font-size: 15px; }
 .using { margin: 0 0 8px; }
+.kicker { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--accent); }
+.wr-title { margin-top: 2px; }
 .step .field input[type=password] { max-width: 260px; }
 .using b { font-weight: 600; color: var(--ink-2); }
 .step .toggle { display: flex; gap: 8px; align-items: flex-start; text-align: left; }
@@ -257,8 +259,9 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 
 .find p { margin: 2px 0; } .find .hap { font-size: 17px; font-weight: 700; margin-bottom: 4px; } .find .lbl { color: var(--ink-3); font-weight: 600; } .find .do { margin-top: 6px; }
 .imp { display: block; margin-top: 2px; font-weight: 600; font-size: 14px; } .imp.neg { color: #b42318; } .imp.pos { color: #0f766e; }
 .todo li { margin: 6px 0; } .todo li b { font-weight: 600; }
-.examples { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.examples button { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--rule); color: var(--ink-2); cursor: pointer; }
+.examples { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px; margin-top: 10px; }
+.examples .note { grid-column: 1 / -1; margin: 0; }
+.examples button { font-size: 14px; line-height: 1.35; text-align: left; padding: 9px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--rule); color: var(--ink-2); cursor: pointer; }
 .examples button:hover { border-color: var(--navy); color: var(--navy); }
 .val { font-weight: 600; white-space: nowrap; }
 .val.pos { color: #0f766e; } .val.neg { color: #b42318; }
@@ -312,7 +315,7 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
       <span>Horizons <span style="font-weight:500;color:var(--ink-3)">· Strategic early warning for Disney</span></span>
     </div>
     <div class="byline">
-      <span>Prototype by <b>Jake Schmidt</b> · November 2026</span>
+      <span>Prototype by <b>Jake Schmidt</b></span>
       <a href="https://github.com/jrs10039-code/Horizons-strategy-games/blob/main/docs/methodology.md">How it works</a>
       <a href="https://github.com/jrs10039-code/Horizons-strategy-games">Source</a>
     </div>
@@ -323,14 +326,14 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
   <section class="hero">
     <h1>What could knock Disney off course over the next decade, and what can it do about it today?</h1>
     <div class="intro">
-      <p>A prototype by Jake Schmidt. AI players act as Disney and its rivals for ten years, so you can see which threats matter and what Disney could do about them now. <b>Try it:</b> set your assumptions (step 1), pick a scenario (step 2) and press Play. <a href="#" id="howLink">How this works</a></p>
+      <p>Horizons is an agentic war-gaming platform: AI players compete as Disney and its rivals over ten years, so you can see which threats matter and what Disney could do about them now. <b>Try it:</b> set your assumptions (step 1), pick a scenario (step 2) and press Play. <a href="#" id="howLink">How this works</a></p>
       <p class="intro-fine">A prototype, not a forecast: only the FY26 starting profits are reported numbers. Don't enter confidential or proprietary information.</p>
     </div>
     <div class="howto" id="howto" hidden>
       <ol>
-        <li><span><b>AI War Room</b>AI players act out ten years; an analyst recommends moves. Test any scenario.</span></li>
+        <li><span><b>Agentic war game</b>AI players compete over ten years; an analyst recommends moves. Test any scenario.</span></li>
         <li><span><b>Your assumptions</b>Step 1 sets Disney's strategy, how often shocks hit and how hard rivals push. The games play by them.</span></li>
-        <li><span><b>Instant check</b>Below the War Room, a no-AI simulator plays 1,000 quick decades in a second with the same assumptions.</span></li>
+        <li><span><b>Instant check</b>Below the war game, a no-AI simulator plays 1,000 quick decades in a second with the same assumptions.</span></li>
       </ol>
     </div>
   </section>
@@ -394,8 +397,8 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
   <!-- AI WAR ROOM -->
   <section id="p-warroom">
     <div class="card">
-      <h2>AI War Room</h2>
-      <p class="sub">Thirteen AI players run ten years of moves; a referee prices each one and an analyst recommends moves for Disney.</p>
+      <p class="kicker">Multi-agent competitive simulation</p><h2 class="wr-title">Agentic War Game</h2>
+      <p class="sub">Thirteen AI players (Disney, its biggest rivals and three new entrants) make moves over ten years. An AI referee calculates what each move does to Disney's segment profit, and an AI analyst turns the results into moves Disney can make now.</p>
       <form class="wr-controls" id="wr-form">
       <div class="step"><div class="stepn">2</div><div class="stepbody"><h3>Pick or type a scenario <span class="opt">(optional)</span></h3>
         <div class="field wide"><label for="wr-hyp" class="sr-only">What do you want to test?</label>
@@ -444,7 +447,7 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
   <details class="card simbox" id="simbox">
     <summary><b>Instant check: 1,000 simulated decades in about a second</b> <span class="note">No AI, no wait</span></summary>
     <div class="sim-intro">
-      <p>The AI War Room plays a few rich decades slowly. This instant check plays 1,000 quick ones with simple rules instead: each year, outside shocks and rival moves hit at the odds you set in step 1, and the math adds up Disney's profit. It uses the same assumptions and the same list of shocks as the War Room, but no AI players, so it can't invent new moves or recommend specific actions.</p>
+      <p>The war game plays a few rich decades slowly. This instant check plays 1,000 quick ones with simple rules instead: each year, outside shocks and rival moves hit at the odds you set in step 1, and the math adds up Disney's profit. It uses the same assumptions and the same list of shocks as the War Room, but no AI players, so it can't invent new moves or recommend specific actions.</p>
       <p><b>Use it to:</b> see which threats cost Disney the most across many futures, the range of profit outcomes, how the six strategies compare, and how the same rules would have done from 2019 against what actually happened.</p>
       <div class="field sim-opts"><label class="toggle"><input type="checkbox" id="trig" checked><span><b>Disney learns:</b> a repeat threat does 30% less damage</span></label>
         <label for="runs" style="margin-left:16px">Decades</label> <select id="runs"><option value="200">200 (faster)</option><option value="1000" selected>1,000</option><option value="5000">5,000 (most precise)</option></select></div>
@@ -552,7 +555,7 @@ table.seg tr.tot td { border-top: 2px solid var(--rule); }
     <p><span class="pill ev good" title="Reported numbers or a signed, public deal">Fact</span> <b>Starting point:</b> fiscal 2026 segment operating income from Disney's FY26 Q4 8-K: Experiences $11.19B, Entertainment $5.44B, Sports $3.09B (total $19.7B). "Profit" on this page means total segment operating income.</p>
     <p><span class="pill ev neutral" title="Announced or guided by the company">Stated</span> <b>Disney's plans</b> (the ~$60B parks plan, buybacks, ~$26B content spend) come from Disney's own guidance. <span class="pill ev good" title="Reported numbers or a signed, public deal">Fact</span> <b>Backtest actuals</b> come from Disney's annual results.</p>
     <p><span class="pill ev plain" title="An estimate from comparable cases">Assumption</span> <b>Assumptions:</b> growth starts at Disney's FY27 guidance (about 8%) and eases to each strategy's long-run rate by FY31. Shock odds, rival sizes and action effects are draft assumptions by Jake Schmidt from public information, meant to be replaced with a strategy team's own. The tool shows ranges and recurring threats, not a forecast.</p>
-    <p><b>Where AI runs:</b> only in the AI War Room (Claude Haiku, Sonnet and Opus 5.5). The other tabs are plain math in your browser. <span id="status"></span></p>
+    <p><b>Where AI runs:</b> only in the war game (Claude Haiku, Sonnet and Opus 5.5). The other tabs are plain math in your browser. <span id="status"></span></p>
     </div></details>
   </footer>
 </div>
@@ -2001,13 +2004,13 @@ async function runWarRoom(more) {
   }
 }
 const WR_EXAMPLES = [
+  'Disney signs a licensed theme park in Mexico City in 2029, opening in 2037.',
   'The NFL moves its biggest TV package from ESPN to YouTube in 2030.',
   'Netflix opens its first full theme park in the US in 2030.',
-  'Disney signs a licensed theme park in Mexico City in 2029, opening in 2037.',
   'YouTube TV drops Disney\'s channels during the 2027 college football playoff.',
   'A recession in 2028 cuts US park attendance by 15% for two years.',
 ];
-$('wr-examples').innerHTML = '<span class="note" style="align-self:center">Try one:</span>' + WR_EXAMPLES.map(x => `<button type="button">${esc(x)}</button>`).join('');
+$('wr-examples').innerHTML = '<span class="note">Or try one:</span>' + WR_EXAMPLES.map(x => `<button type="button">${esc(x)}</button>`).join('');
 $('wr-examples').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { $('wr-hyp').value = b.textContent; $('wr-hyp').focus(); } });
 const wrMins = n => WR_MODE === 'claude' ? (n >= 4 ? '10–12' : '8–10') : (n >= 4 ? '6–8' : '5–7');
 const playLabel = () => { const hasS = !!$('wr-hyp').value.trim(); if ($('wr-mins')) $('wr-mins').textContent = wrMins(hasS ? 4 : 3); if (!$('wr-play').disabled) $('wr-play').textContent = $('wr-hyp').value.trim() ? `Play 4 games: 2 pairs, with and without your scenario (about ${wrMins(4)} min)` : `Play 3 games (about ${wrMins(3)} min)`; };
@@ -2021,7 +2024,7 @@ function wrReport() {
   const pct = v => `${v > 0 ? '+' : ''}${pctFmt(v)}`;
   const fx = r => ['exp', 'ent', 'spt'].filter(k => r.imp[k]).map(k => `${SEGN[k]} ${pct(r.imp[k])}`).join(', ');
   const L = [];
-  L.push(`# Horizons AI War Room results (${new Date().toLocaleString()})`);
+  L.push(`# Horizons war game results (${new Date().toLocaleString()})`);
   L.push(`Strategy: ${plain(WR.pb.name)} (${WR.pb.desc})`);
   L.push(`Scenario: ${WR.hyp || 'none'}`);
   L.push(`Assumptions: ${$('as-summary').textContent}`);
