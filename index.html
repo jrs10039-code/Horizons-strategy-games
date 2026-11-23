@@ -2099,13 +2099,13 @@ function assumptionSummary() {
   const avg = o => Object.values(o).reduce((a, v) => a + v, 0) / Object.values(o).length;
   const pv = Object.values(S.players), singles = Object.keys(S.players).some(k => S.players[k] !== d.players[k]) && !pv.every(v => v === pv[0]);
   const parts = [
-    `Outside shocks: ${word(avg(S.pestel), 3)}${(() => { const c = PESTEL.filter(x => S.pestel[x.id] !== 3).map(x => `${x.name} ${S.pestel[x.id] > 3 ? 'more often' : 'less often'}`); return c.length && c.length <= 2 ? ` (${c.join(', ')})` : ''; })()}`,
+    `Outside shocks: ${word(avg(S.pestel), 3)}${(() => { const c = PESTEL.filter(x => S.pestel[x.id] !== 3).map(x => `${x.name.toLowerCase()} ${S.pestel[x.id] > 3 ? 'more often' : 'less often'}`); return c.length && c.length <= 2 ? ` (${c.join(', ')})` : ''; })()}`,
     `Rival aggression: ${word(avg(S.arena), 50)}${singles ? ' (some companies tuned)' : ''}`,
     `New startups: ${word(avg(S.arch), avg(d.arch))}`,
     `Pandemic risk: ${S.tail ? 'on' : 'off'}`,
   ];
   $('as-summary').textContent = parts.join(' · ');
-  if ($('wr-using')) $('wr-using').textContent = [plain((PLAYBOOKS.find(x => x.id === S.playbook) || {}).name || ''), ...parts].join(' · ').toLowerCase().replace(/^./, c => c.toUpperCase());
+  if ($('wr-using')) $('wr-using').textContent = [plain((PLAYBOOKS.find(x => x.id === S.playbook) || {}).name || ''), ...parts].map((t, i) => i ? t.replace(/^[A-Z][a-z]/, c => c.toLowerCase()) : t).join(' · ');
   $('reset').hidden = JSON.stringify(S) === JSON.stringify({ ...d, playbook: S.playbook });
 }
 // On narrower screens the sidebar sits above the War Room, so keep the sliders folded until asked for.
