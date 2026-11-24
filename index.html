@@ -1512,7 +1512,7 @@ async function playGame(g, pb, castP, signal, run, onUpdate, hyp, worldPlan, sce
       const mine = hist[p.id].slice(isDisney ? -9 : -4);
       return mine.length ? `\nIts moves so far (build on them; never repeat one):\n${mine.map(h => `- FY${h.fy}: ${h.move}${isDisney ? ` (cost $${h.cost.toFixed(1)} billion; referee projects ${money(h.value)} of operating profit by FY36)` : ''}`).join('\n')}${isDisney ? '\nKeep investing in what is working; fix or drop what is not.' : ''}` : '';
     };
-    const clean = (list, isDisney) => (list || []).slice(0, 2).map(m => ({ move: String(m.move || '').replace(/^[^.]*\?\s*No[:,.]\s*(instead\s*)?/i, '').replace(/^./, c => c.toUpperCase()).slice(0, 320), why: String(m.why || '').slice(0, 200), cost: num(m.cost_billions, 0, 100) })).filter(m => m.move.length >= 25 || isDisney);
+    const clean = (list, isDisney) => (list || []).slice(0, 2).map(m => ({ move: String(m.move || '').replace(/^[^.]*?(\?\s*no\b[:,.;]?|\bno;)\s*(instead,?\s*)?/i, '').replace(/^./, c => c.toUpperCase()).slice(0, 320), why: String(m.why || '').slice(0, 200), cost: num(m.cost_billions, 0, 100) })).filter(m => m.move.length >= 25 || isDisney);
     // The biggest rivals each think on their own; the long tail (gaming, leagues, the rest of the market, newcomers) shares one call, each still acting for itself.
     const solo = players.filter(p => !WR_GROUPED.has(p.id));
     const soloMoves = solo.map(p => run(async () => {
@@ -1916,12 +1916,21 @@ function breakdown(games, hyp) {
   return `<div class="split">${segs}</div>`;
 }
 // The bottom line, written from the numbers so it always says exactly what the boxes show.
+// Where the event lands: names the businesses it helps and hurts, so a small net never hides big moves underneath.
+function scenWhere(h) {
+  const yr = k => h.seg[k] / 10, list = ks => ks.map(k => SEGN[k]).join(' and ');
+  const up = SEGS.filter(k => yr(k) >= 0.05), dn = SEGS.filter(k => yr(k) <= -0.05);
+  const sum = ks => Math.abs(ks.reduce((a, k) => a + yr(k), 0));
+  if (up.length && dn.length) return { mixed: true, text: `adds about ${amt(sum(up))} a year in ${list(up)} but costs about ${amt(sum(dn))} a year in ${list(dn)}` };
+  const ks = up.length ? up : dn, top = SEGS.slice().sort((x, y) => Math.abs(h.seg[y]) - Math.abs(h.seg[x]))[0];
+  return { mixed: false, text: `${h.total < 0 ? 'costs' : 'adds'} about ${amt(Math.abs(h.total / 10))} a year, ${ks.length > 1 ? `mostly in ${SEGN[top]}` : `in ${SEGN[top]}`}` };
+}
 function headline(games, hyp) {
   const w = scenGames(games), avg = w.reduce((a, g) => a + g.decade, 0) / w.length / 10, p = planGap(games, WR.pb), h = hyp ? scenHit(games) : null;
   let t = `${hyp ? 'With your scenario, ' : ''}Disney's operating profit averages ${fmtB(avg)} a year over FY27–36: ${avg >= startTotal() ? 'up from' : 'down from'} ${fmtB(startTotal())} in FY26 and ${Math.abs(p.gap) < 0.05 ? 'in line with' : `${amt(Math.abs(p.gap))} a year ${p.gap < 0 ? 'below' : 'above'}`} its current plan.`;
-  if (h && Math.abs(h.total) >= 0.05) {
-    const top = SEGS.slice().sort((x, y) => Math.abs(h.seg[y]) - Math.abs(h.seg[x]))[0];
-    t += ` The event itself ${h.total < 0 ? 'costs' : 'adds'} about ${amt(Math.abs(h.total / 10))} a year, mostly in ${SEGN[top]}.`;
+  if (h && SEGS.some(k => Math.abs(h.seg[k] / 10) >= 0.05)) {
+    const w = scenWhere(h);
+    t += ` The event itself ${w.text}${w.mixed ? `, about ${amt(Math.abs(h.total / 10))} a year ${h.total < 0 ? 'lost' : 'gained'} overall` : ''}.`;
   } else if (h && Math.abs(h.later) >= 1) t += ` Most of the event's effect lands after FY36.`;
   return t;
 }
@@ -1949,7 +1958,7 @@ function scoreboard(games, hyp) {
   const agree = diffs.length > 1 && (diffs.every(v => v < 0) || diffs.every(v => v > 0));
   return `<div class="scoreboard">
     ${cell(fmtB(avg / 10), `Disney's average operating profit a year, FY27–36${hyp ? ', with your scenario' : ''} (FY26: ${fmtB(startTotal())})`)}
-    ${(() => { const h = hyp ? scenHit(games) : null; if (!h) return ''; const top = SEGS.slice().sort((x, y) => Math.abs(h.seg[y]) - Math.abs(h.seg[x]))[0]; return cell(`${amt(Math.abs(h.total / 10))} a year`, `${h.total < 0 ? 'lost to' : 'gained from'} your scenario's event itself, before anyone reacts${Math.abs(h.total) >= 0.05 ? `, mostly in ${SEGN[top]}` : ''}`); })()}
+    ${(() => { const h = hyp ? scenHit(games) : null; if (!h) return ''; const top = SEGS.slice().sort((x, y) => Math.abs(h.seg[y]) - Math.abs(h.seg[x]))[0]; const w = scenWhere(h); return cell(`${amt(Math.abs(h.total / 10))} a year`, `${h.total < 0 ? 'lost to' : 'gained from'} your scenario's event itself overall, before anyone reacts${w.mixed ? ` (it ${w.text})` : ''}`); })()}
     ${(() => { const p = planGap(games, WR.pb); return cell(`${amt(Math.abs(p.gap))} a year`, `${p.gap < 0 ? 'below' : 'above'} Disney's own plan (FY27 guidance of about 8% profit growth, carried forward, averages ${fmtB(p.plan)} a year)`); })()}
   </div>${shocksHtml}${(() => { const h = hyp ? scenHit(games) : null, l = h ? h.later : 0; return Math.abs(l) >= 1 && Math.abs(l) > Math.abs(h.total) ? `<p class="note" style="margin:6px 0 0">Most of your scenario lands after this ten-year window: from FY37 to FY41 it would ${l < 0 ? 'cost' : 'add'} about ${amt(Math.abs(l))} more of operating profit.</p>` : ''; })()}`;
 }
