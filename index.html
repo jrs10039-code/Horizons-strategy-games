@@ -1881,23 +1881,23 @@ function breakdown(games, hyp) {
   const b = hyp ? scenarioBridge(games) : null;
   const w = scenGames(games);
   const pr = f => b && b.n > 1 ? b.rows.map(r => money(f(r))).join(', ') : '';
-  const row = (label, f, tag, cls) => `<tr${cls ? ` class="${cls}"` : ''}><td>${label}</td><td class="num">${money(b.mean(f))}</td><td class="sm"${pr(f) ? ` title="By pair: ${pr(f)}"` : ''}>${tag}</td></tr>`;
-  const bridge = b ? `<div><div class="eyebrow">Where your scenario's effect came from · operating profit, FY27–36 total</div><table class="seg">
-    ${row('Direct hit', r => r.direct, b.directClear ? 'clear' : 'not clear', '')}
-    ${row("Disney's moves (vs. the game without it)", r => r.disney, b.same(r => r.disney) ? 'same direction' : (b.n > 1 && b.rows.some(r => Math.abs(r.disney) >= 0.1) ? 'mixed' : ''), '')}
-    ${row("Rivals' moves (vs. the game without it)", r => r.rivals, '', '')}
-    ${Math.abs(b.mean(r => r.other)) >= 0.05 ? row('Overlap between the rows above', r => r.other, '', '') : ''}
-    ${row('<b>Total effect</b>', r => r.net, b.netClear ? 'consistent across games' : 'size varies between games', 'tot')}
+  const row = (label, f, tag, cls) => `<tr${cls ? ` class="${cls}"` : ''}><td>${label}</td><td class="num">${money(b.mean(f) / 10)}</td><td class="sm"${pr(f) ? ` title="By pair: ${pr(f)}"` : ''}>${tag}</td></tr>`;
+  const bridge = b ? `<div><div class="eyebrow" style="margin-top:14px">Why your scenario changed operating profit · a year, FY27–36</div><p class="note" style="margin:2px 0 6px">Every game was also played without your scenario. These rows compare the two.</p><table class="seg">
+    ${row('The event itself', r => r.direct, '', '')}
+    ${row("Disney's different moves", r => r.disney, '', '')}
+    ${row("Rivals' different moves", r => r.rivals, '', '')}
+    ${Math.abs(b.mean(r => r.other)) >= 0.5 ? row('Where these overlap', r => r.other, '', '') : ''}
+    ${row('<b>Total change</b>', r => r.net, b.netClear ? 'similar in every game' : 'varies a lot between games', 'tot')}
   </table></div>` : '';
   const segRow = k => {
     const avg = w.reduce((a, g) => a + segSum(g, k), 0) / w.length / 10;
-    return `<tr><td>${SEGN[k]}</td><td class="num">${fmtB(START[k])}</td><td class="num">${fmtB(avg)}</td>${b ? `<td class="num">${money(b.mean(r => r.seg[k].year))}</td><td class="num">${money(b.mean(r => r.seg[k].direct))}</td>` : ''}</tr>`;
+    return `<tr><td>${SEGN[k]}</td><td class="num">${fmtB(START[k])}</td><td class="num">${fmtB(avg)}</td>${b ? `<td class="num">${money(b.mean(r => r.seg[k].direct) / 10)}</td><td class="num">${money(b.mean(r => r.seg[k].year))}</td>` : ''}</tr>`;
   };
   const tot = w.reduce((a, g) => a + g.decade, 0) / w.length / 10;
-  const segs = `<div><div class="eyebrow">Operating profit by business</div><table class="seg">
-    <tr><th></th><th>FY26</th><th>FY27–36, a year</th>${b ? '<th>Your scenario\'s effect, a year</th><th>Direct hit, FY27–36 total</th>' : ''}</tr>
+  const segs = `<div><div class="eyebrow" style="margin-top:14px">Operating profit by business · a year</div>${b ? '<p class="note" style="margin:2px 0 6px">The last two columns compare your scenario games with the same games played without it.</p>' : ''}<table class="seg">
+    <tr><th></th><th>FY26</th><th>FY27–36, a year</th>${b ? '<th>Hit from the event itself</th><th>Total change from your scenario</th>' : ''}</tr>
     ${SEGS.map(segRow).join('')}
-    <tr class="tot"><td><b>Total</b></td><td class="num">${fmtB(startTotal())}</td><td class="num">${fmtB(tot)}</td>${b ? `<td class="num">${money(b.mean(r => SEGS.reduce((a, k) => a + r.seg[k].year, 0)))}</td><td class="num">${money(b.mean(r => r.direct))}</td>` : ''}</tr>
+    <tr class="tot"><td><b>Total</b></td><td class="num">${fmtB(startTotal())}</td><td class="num">${fmtB(tot)}</td>${b ? `<td class="num">${money(b.mean(r => r.direct) / 10)}</td><td class="num">${money(b.mean(r => SEGS.reduce((a, k) => a + r.seg[k].year, 0)))}</td>` : ''}</tr>
   </table></div>`;
   const win = rivalWinners(games, hyp);
   const winHtml = win.length ? `<p class="note" style="margin:6px 0 0"><b>Rivals who gained most${hyp ? ' from it' : ''}:</b> ${win.map(([k, v]) => `${esc(k)} ${money(v)}`).join(' · ')} <span class="sm">(own profit to 2041, referee estimate)</span></p>` : '';
@@ -2007,9 +2007,9 @@ async function runWarRoom(more) {
         <p class="big">${esc(a.bottom_line || '')}</p>
         ${board}
 
-        ${breakdown(all, hyp)}
-        ${hyp && arr(a.scenario_moves).length ? `<div class="eyebrow" style="margin-top:14px">Moves for your scenario</div><div class="finds">${arr(a.scenario_moves).slice(0, 2).map((f, k) => `<div class="find scen"><div class="n">${String.fromCharCode(65 + k)}</div><div><p class="hap">${esc(f.headline || '')}</p><p class="do"><b>The move:</b> ${esc(f.do || '')}</p><p><span class="lbl">Why:</span> ${esc(f.why || '')}</p></div></div>`).join('')}</div>` : ''}
-        ${finds.length ? `<div class="eyebrow" style="margin-top:14px">${hyp ? 'Four moves for the decade' : 'Four moves to consider now'}</div><div class="finds">${finds.map((f, k) => `<div class="find"><div class="n">${k + 1}</div><div><p class="hap">${esc(f.headline || '')}</p><p class="do"><b>The move:</b> ${esc(f.do || '')}</p><p><span class="lbl">Why:</span> ${esc(f.matters || '')}</p><p><span class="lbl">What happened in the games:</span> ${esc(f.happened || '')}</p>${f.true_if ? `<p><span class="lbl">Works if:</span> ${esc(f.true_if)}${EVIDENCE[String(f.basis || '').toLowerCase()] ? ' ' + evPill(String(f.basis).toLowerCase()) : ''}</p>` : ''}</div></div>`).join('')}</div>` : ''}`;
+        ${finds.length ? `<div class="eyebrow" style="margin-top:14px">Four moves Disney could make now</div><div class="finds">${finds.map((f, k) => `<div class="find"><div class="n">${k + 1}</div><div><p class="hap">${esc(f.headline || '')}</p><p class="do"><b>The move:</b> ${esc(f.do || '')}</p><p><span class="lbl">Why:</span> ${esc(f.matters || '')}</p><p><span class="lbl">What happened in the games:</span> ${esc(f.happened || '')}</p>${f.true_if ? `<p><span class="lbl">Works if:</span> ${esc(f.true_if)}${EVIDENCE[String(f.basis || '').toLowerCase()] ? ' ' + evPill(String(f.basis).toLowerCase()) : ''}</p>` : ''}</div></div>`).join('')}</div>` : ''}
+        ${hyp && arr(a.scenario_moves).length ? `<div class="eyebrow" style="margin-top:14px">Two more aimed at your scenario</div><div class="finds">${arr(a.scenario_moves).slice(0, 2).map((f, k) => `<div class="find scen"><div class="n">${String.fromCharCode(65 + k)}</div><div><p class="hap">${esc(f.headline || '')}</p><p class="do"><b>The move:</b> ${esc(f.do || '')}</p><p><span class="lbl">Why:</span> ${esc(f.why || '')}</p></div></div>`).join('')}</div>` : ''}
+        ${breakdown(all, hyp)}`;
       $('wr-insights').innerHTML = '';
     } else {
       $('wr-bottom').innerHTML = `<div class="eyebrow">The scoreboard · ${all.length} game${all.length > 1 ? 's' : ''}</div>${board}${breakdown(all, hyp)}<p class="note">The analyst did not answer this time; the full games are below.</p>`;
