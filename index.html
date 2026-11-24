@@ -405,6 +405,7 @@ body .hero p.intro-fine { max-width: 110ch; }
         <div class="field wide"><label for="wr-hyp" class="sr-only">What do you want to test?</label>
           <textarea id="wr-hyp" rows="2" maxlength="400" placeholder="Describe any situation in your own words, for example: An activist investor pushes Disney to sell ABC in 2028."></textarea>
           <div class="examples" id="wr-examples" aria-label="Example scenarios"></div>
+          <p class="hint" style="margin:8px 0 0">Horizons tracks operating profit by business. For buybacks or other cash decisions, say where the cash comes from or goes.</p>
           </div>
       </div></div>
       <div class="step"><div class="stepn">3</div><div class="stepbody"><h3>Play</h3>
@@ -1296,6 +1297,7 @@ Rules:
 - Net out costs Disney no longer pays (for example, a rights fee it stops paying) against lost revenue.
 - Losing a major asset can reach -10 to -20 on a segment; an event that reshapes a segment's whole cost base (for example its main costs doubling) can go past -30, down to -100 (the segment's profit gone); most events are much smaller. Use half steps (0.5) for small effects. 0 for a segment it does not touch.
 - Check every segment, not just the obvious one: a direct knock-on to another Disney business counts (for example, losing ESPN also cuts shared ad sales at ABC in Entertainment; a licensing deal adds to Experiences). Leave a segment at 0 only if the event truly does not touch it.
+- Money decisions (buybacks, dividends, debt, the share price) do not change operating profit by themselves, so size what the cash does instead. Cash moved from buybacks into parks, cruises, content or sports rights adds capacity or audience (often a build cost now and gains in "later"). Extra cash returned to shareholders or used to pay down debt is cash not spent on parks, content or rights: size that slower growth. If the event does not say where the cash comes from or goes, assume Disney\'s current split (about half parks building, half buybacks). Say in "why" which trade-off you sized.
 - start_fy: the fiscal year the effect starts (2027 to 2036). years: how long it lasts, up to 10. If the event has parts that last different lengths (a few hit films versus a multi-year rights deal), give each business its own length in "years_by_business".
 - "later": use it when the event has a second phase with a different effect, for example design costs now and royalties once a park opens. Give its own start_fy (up to 2041), years and segment effects. Leave it out otherwise.
 - cost_now: a one-time hit in the start year as a percent of that segment's yearly profit, only if there is one.
