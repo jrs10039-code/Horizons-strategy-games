@@ -979,6 +979,7 @@ $('copycfg').addEventListener('click', async () => {
     if (S[k] && typeof S[k] === 'object') { const sub = {}; for (const j in S[k]) if (S[k][j] !== (d[k] || {})[j]) sub[j] = S[k][j]; if (Object.keys(sub).length) out[k] = sub; }
     else if (S[k] !== d[k]) out[k] = S[k];
   }
+  const hyp = $('wr-hyp') ? $('wr-hyp').value.trim() : ''; if (hyp) out.scenario = hyp;
   const txt = JSON.stringify(out); $('cfg').value = txt;
   try { await navigator.clipboard.writeText(txt); $('cfgmsg').textContent = 'Copied. Paste it into an email to a colleague.'; }
   catch { $('cfgmsg').textContent = 'Copying is blocked here. Select the text above and copy it.'; }
@@ -986,8 +987,11 @@ $('copycfg').addEventListener('click', async () => {
 $('loadcfg').addEventListener('click', () => {
   try {
     const d = defaults(), j = JSON.parse($('cfg').value);
+    const scen = typeof j.scenario === 'string' ? j.scenario.slice(0, 400) : null; delete j.scenario;
     S = { ...d, ...j, arena: { ...d.arena, ...(j.arena || {}) }, pestel: { ...d.pestel, ...(j.pestel || {}) }, players: { ...d.players, ...(j.players || {}) }, arch: { ...d.arch, ...(j.arch || {}) } };
-    buildControls(); runAll(); $('cfgmsg').textContent = 'Loaded.';
+    buildControls(); runAll();
+    if (scen !== null && $('wr-hyp')) { $('wr-hyp').value = scen; if (typeof playLabel === 'function') playLabel(); }
+    $('cfgmsg').textContent = scen ? 'Loaded, including the scenario.' : 'Loaded.';
   } catch { $('cfgmsg').textContent = 'That text is not valid settings. Copy it again with "Copy settings".'; }
 });
 $('reset').addEventListener('click', () => { S = defaults(); buildControls(); runAll(); $('cfgmsg').textContent = 'Reset to the baseline assumptions.'; });
