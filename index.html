@@ -1970,7 +1970,7 @@ function scoreboard(games, hyp) {
     ${cell(fmtB(avg / 10), `Disney's average operating profit a year, FY27–36${hyp ? ', with your scenario' : ''} (FY26: ${fmtB(startTotal())})`)}
     ${(() => { const h = hyp ? scenHit(games) : null; if (!h) return ''; const top = SEGS.slice().sort((x, y) => Math.abs(h.seg[y]) - Math.abs(h.seg[x]))[0]; const w = scenWhere(h); return cell(`${amt(Math.abs(h.total / 10))} a year`, `${h.total < 0 ? 'lost to' : 'gained from'} your scenario's event itself overall, before anyone reacts${w.mixed ? ` (it ${w.text})` : ''}`); })()}
     ${(() => { const v = withS.map(g => g.decade / 10); return v.length > 1 ? cell(`${fmtB(Math.min(...v))} to ${fmtB(Math.max(...v))}`, `range across the ${v.length} games, average operating profit a year (each game has different shocks and rival moves)`) : ''; })()}
-  </div>${shocksHtml}${(() => { const h = hyp ? scenHit(games) : null, l = h ? h.later : 0; return Math.abs(l) >= 1 && Math.abs(l) > Math.abs(h.total) ? `<p class="note" style="margin:6px 0 0">Most of your scenario lands after this ten-year window: from FY37 to FY41 it would ${l < 0 ? 'cost' : 'add'} about ${amt(Math.abs(l))} more of operating profit.</p>` : ''; })()}`;
+  </div>${shocksHtml}${(() => { const h = hyp ? scenHit(games) : null, l = h ? h.later : 0; return Math.abs(l) >= 1 && Math.abs(l) >= 0.5 * Math.abs(h.total) ? `<p class="note" style="margin:6px 0 0">Your scenario keeps ${l < 0 ? 'costing' : 'paying off'} after this ten-year window: about ${amt(Math.abs(l))} more of operating profit ${l < 0 ? 'lost' : 'gained'} over FY37–41, not counted above.</p>` : ''; })()}`;
 }
 
 let LAST_FORWARD = null;
