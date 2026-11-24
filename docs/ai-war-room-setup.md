@@ -6,15 +6,14 @@ On the Claude-hosted copy of Horizons, the AI War Room runs on the viewer's own 
 
 The page on GitHub never sees your API key. It sends each request to a small private server (`api/agent.js`, hosted free on Vercel). The server checks the passcode, picks the model for each role, calls Claude with your key, and sends the answer back.
 
-| Role | Model | Calls per click |
+| Role | Model | Calls per run (3 games) |
 | --- | --- | --- |
-| 11 rival players (Netflix, Skydance, Comcast, YouTube, Amazon, gaming, leagues, rest of the market, 3 newcomers) | Claude Haiku 5.5 | 165 |
+| Rival players (several companies per call, plus 2 newcomers per game) | Claude Sonnet 5.5 | about 45 |
 | Disney's player | Claude Sonnet 5.5 | 15 |
-| Casting (picks the newcomers) | Claude Sonnet 5.5 | 3 |
-| Referee | Claude Sonnet 5.5 | 15 |
+| Referee (scores moves, sizes the scenario) | Claude Sonnet 5.5 | about 35 |
 | Analyst | Claude Opus 5.5 | 1 |
 
-Estimated cost: roughly $0.85–1.50 per click for 3 games with 13 players, and about a third more when a scenario is entered (4 games in 2 matched pairs). "Play 2 more games" costs about two-thirds of a click. Treat this as an estimate and watch your usage page.
+Cost per run: check your Anthropic Console usage page after the first test run, and set a spend limit before you share the link. "Play 2 more games" costs about two-thirds of a run.
 
 ## Step 1: Anthropic API account (about 5 minutes)
 

@@ -8,13 +8,13 @@
 //   ALLOWED_ORIGINS    optional, comma-separated; defaults to the GitHub Pages site
 
 const MODELS = {
-  player: 'claude-haiku-5-5',   // 7 rival players: many quick decisions
+  player: 'claude-sonnet-5-5',  // rival players (desks of several companies per call)
   disney: 'claude-sonnet-5-5',  // Disney's player: the game centers on its choices
   referee: 'claude-sonnet-5-5', // judges moves and keeps the numbers honest
   analyst: 'claude-opus-5-5',   // one call per click: the cross-game insights
 };
-const MAX_OUTPUT = { player: 2500, disney: 1000, referee: 5000, analyst: 3500 };
-const MAX_INPUT_CHARS = 60000;
+const MAX_OUTPUT = { player: 6000, disney: 2500, referee: 10000, analyst: 8000 };
+const MAX_INPUT_CHARS = 250000;
 const DEFAULT_ORIGINS = ['https://jrs10039-code.github.io'];
 
 module.exports = async (req, res) => {
