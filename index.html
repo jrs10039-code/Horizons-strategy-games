@@ -336,16 +336,8 @@ body .hero p.intro-fine { max-width: 110ch; }
 <div class="wrap">
   <section class="hero">
     <h1>What could knock Disney off course, and what can it do about it today?</h1>
-    <p class="lede">AI agents play Disney and its rivals over ten years. An AI referee agent scores every move, and an AI analyst agent recommends what Disney could do now. Follow steps 1 to 3. <a href="#" id="howLink">How this works</a></p>
+    <p class="lede">AI agents play Disney and its rivals over ten years. An AI referee agent scores every move, and an AI analyst agent recommends what Disney could do now. Follow steps 1 to 3.</p>
     <p class="intro-fine"><b>Built on real data:</b> Disney's FY26 results and FY27 guidance, plus each rival's latest reported financials. Everything after today is simulated, so treat results as scenarios, not forecasts. Don't enter confidential information.</p>
-    <div class="howto" id="howto" hidden>
-      <ol>
-        <li><span><b>Set your assumptions</b>Disney's strategy, how often outside shocks hit, and how hard rivals and new entrants push. The AI players follow them.</span></li>
-        <li><span><b>Pick or type a scenario</b>Optional. Describe an event to test, like a rival's move or a market shock. Every game includes it, so you see what it costs Disney and how Disney could respond.</span></li>
-        <li><span><b>Play</b>AI players move over ten years (about 8–10 minutes). You get a bottom line, moves Disney could make now, and profit by business.</span></li>
-      </ol>
-
-    </div>
   </section>
 
 <div class="page">
@@ -2150,7 +2142,6 @@ function assumptionSummary() {
 // On narrower screens the sidebar sits above the War Room, so keep the sliders folded until asked for.
 if (window.innerWidth < 1180 && $('assumptions')) $('assumptions').open = false;
 if ($('wr-change')) $('wr-change').addEventListener('click', e => { e.preventDefault(); $('assumptions').open = true; $('assumptions').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
-$('howLink').addEventListener('click', e => { e.preventDefault(); $('howto').hidden = !$('howto').hidden; $('howLink').textContent = $('howto').hidden ? 'How this works' : 'Hide'; });
 buildControls();
 showTab(location.hash.slice(1));
 runAll();
