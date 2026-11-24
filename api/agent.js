@@ -8,7 +8,7 @@
 //   ALLOWED_ORIGINS    optional, comma-separated; defaults to the GitHub Pages site
 
 const MODELS = {
-  player: 'claude-sonnet-5-5',  // rival players (desks of several companies per call)
+  player: 'claude-haiku-5-5',   // rival players: matches the Claude-hosted version that was tested
   disney: 'claude-sonnet-5-5',  // Disney's player: the game centers on its choices
   referee: 'claude-sonnet-5-5', // judges moves and keeps the numbers honest
   analyst: 'claude-opus-5-5',   // one call per click: the cross-game insights
