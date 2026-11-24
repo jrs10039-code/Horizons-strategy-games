@@ -1901,10 +1901,10 @@ function breakdown(games, hyp) {
   </table></div>` : '';
   const segRow = k => {
     const avg = w.reduce((a, g) => a + segSum(g, k), 0) / w.length / 10;
-    return `<tr><td>${SEGN[k]}</td><td class="num">${fmtB(START[k])}</td><td class="num">${fmtB(avg)}</td>${h ? `<td class="num">${Math.abs(h.seg[k]) < 0.05 ? '<span class="sm">Not affected</span>' : money(h.seg[k] / 10)}</td>` : ''}</tr>`;
+    return `<tr><td>${SEGN[k]}</td><td class="num">${fmtB(START[k])}</td><td class="num">${fmtB(avg)}</td>${h ? `<td class="num">${Math.abs(h.seg[k]) < 0.05 ? '<span class="sm">No direct hit</span>' : money(h.seg[k] / 10)}</td>` : ''}</tr>`;
   };
   const tot = w.reduce((a, g) => a + g.decade, 0) / w.length / 10;
-  const segs = `<div><div class="eyebrow" style="margin-top:14px">Operating profit by business · a year</div>${h ? '<p class="note" style="margin:2px 0 6px">The last column is what the scenario event alone does to each business a year, before anyone reacts to it.</p>' : ''}<table class="seg">
+  const segs = `<div><div class="eyebrow" style="margin-top:14px">Operating profit by business · a year</div>${h ? '<p class="note" style="margin:2px 0 6px">The last column is the referee\'s estimate of what the scenario event alone does to each business a year, made once and used in every game. Knock-on effects come through the players\' moves instead.</p>' : ''}<table class="seg">
     <tr><th></th><th>FY26</th><th>FY27–36, a year</th>${h ? '<th>Hit from your scenario</th>' : ''}</tr>
     ${SEGS.map(segRow).join('')}
     <tr class="tot"><td><b>Total</b></td><td class="num">${fmtB(startTotal())}</td><td class="num">${fmtB(tot)}</td>${h ? `<td class="num">${money(h.total / 10)}</td>` : ''}</tr>
