@@ -413,16 +413,16 @@ body .hero p.intro-fine { max-width: 110ch; }
         <div class="field wide"><label for="wr-hyp" class="sr-only">What do you want to test?</label>
           <textarea id="wr-hyp" rows="2" maxlength="400" placeholder="Describe any situation in your own words, for example: Netflix makes a big push into theme parks."></textarea>
           <div class="examples" id="wr-examples" aria-label="Example scenarios"></div>
-          <p class="hint">Every game includes your scenario. Don't enter confidential information; it's sent to an AI model.</p></div>
+          </div>
       </div></div>
-      <div class="step"><div class="stepn">3</div><div class="stepbody"><h3>Play</h3><p class="hint using">Playing with <b id="wr-using"></b>. <a href="#assumptions" id="wr-change">Change in step 1</a></p>
+      <div class="step"><div class="stepn">3</div><div class="stepbody"><h3>Play</h3>
         <div class="field"><label for="wr-pass">Passcode</label><input id="wr-pass" type="password" autocomplete="off" placeholder="From Jake's email"></div>
         <button type="submit" class="primary" id="wr-play">Play the games</button>
         <button type="button" id="wr-stop" hidden>Stop</button>
         <span class="note" id="wr-status" aria-live="polite"></span>
       </div></div>
       </form>
-      <p class="note wr-expect" id="wr-expect">You'll get a bottom line, moves Disney could make now, and profit by business. <b>About <span id="wr-mins">8–10</span> minutes</b>; keep this tab open.</p>
+      <p class="note wr-expect" id="wr-expect">Keep this tab open while it plays.<span id="wr-mins" hidden>8–10</span></p>
       <div class="wr-progress" id="wr-progress" hidden><div class="bar"><span id="wr-bar" style="width:0%"></span></div><div class="eta" id="wr-eta"></div></div>
       <details class="more">
         <summary>How the game works</summary>
