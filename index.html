@@ -429,7 +429,7 @@ body .hero p.intro-fine { max-width: 110ch; }
     </div>
     <div class="card" id="wr-insights-card" hidden>
       <div class="bottomline" id="wr-bottom"></div>
-      <div class="more-row" id="wr-share" hidden><button type="button" class="primary" id="wr-copy">Copy results</button><button type="button" id="wr-download">Download</button><button type="button" id="wr-print">Save as PDF</button><span class="note" id="wr-copymsg">The full run, every move included, as text.</span></div>
+      <div class="more-row" id="wr-share" hidden><button type="button" class="primary" id="wr-print">Save as PDF</button><button type="button" id="wr-download">Download full log</button><button type="button" id="wr-copy" hidden>Copy</button><span class="note" id="wr-copymsg">The PDF is a two-page summary to share. The full log has every move and ruling, as text.</span></div>
       <textarea id="wr-export" hidden aria-label="Results as text" style="min-height:160px"></textarea>
       <div class="more-row"><button type="button" id="wr-more" hidden>Play 2 more games</button> <span class="note">Same settings; the analyst re-reads every game.</span></div>
       <div class="insights" id="wr-insights" hidden></div>
@@ -2131,7 +2131,7 @@ $('wr-download').addEventListener('click', async () => {
   const filename = `horizons-war-room-${new Date().toISOString().slice(0, 10)}.md`;
   const dl = window.claude && typeof window.claude.use === 'function' ? await window.claude.use('downloads').catch(() => null) : null;
   if (dl) {
-    try { await dl.save({ filename, data: text }); $('wr-copymsg').textContent = 'Saved.'; } catch { $('wr-copymsg').textContent = 'The download was declined or blocked. Use Copy results instead.'; }
+    try { await dl.save({ filename, data: text }); $('wr-copymsg').textContent = 'Saved.'; } catch { $('wr-copy').click(); }
     return;
   }
   try {
@@ -2139,7 +2139,7 @@ $('wr-download').addEventListener('click', async () => {
     a.href = URL.createObjectURL(new Blob([text], { type: 'text/markdown' }));
     a.download = filename;
     document.body.appendChild(a); a.click(); a.remove();
-    $('wr-copymsg').textContent = 'Downloaded. If nothing appeared, use Copy results instead.';
+    $('wr-copymsg').textContent = 'Downloaded.';
   } catch { $('wr-copy').click(); }
 });
 function printableHtml() {
