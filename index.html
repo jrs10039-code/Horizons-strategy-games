@@ -973,7 +973,13 @@ $('runs').addEventListener('change', e => { S.runs = +e.target.value; schedule()
 $('trig').addEventListener('change', e => { S.triggers = e.target.checked; schedule(); });
 $('tail').addEventListener('change', e => { S.tail = e.target.checked; schedule(); });
 $('copycfg').addEventListener('click', async () => {
-  const txt = JSON.stringify(S); $('cfg').value = txt;
+  // Only what differs from the defaults, so the text stays short; loading fills in the rest from the defaults.
+  const d = defaults(), out = {};
+  for (const k in S) {
+    if (S[k] && typeof S[k] === 'object') { const sub = {}; for (const j in S[k]) if (S[k][j] !== (d[k] || {})[j]) sub[j] = S[k][j]; if (Object.keys(sub).length) out[k] = sub; }
+    else if (S[k] !== d[k]) out[k] = S[k];
+  }
+  const txt = JSON.stringify(out); $('cfg').value = txt;
   try { await navigator.clipboard.writeText(txt); $('cfgmsg').textContent = 'Copied. Paste it into an email to a colleague.'; }
   catch { $('cfgmsg').textContent = 'Copying is blocked here. Select the text above and copy it.'; }
 });
