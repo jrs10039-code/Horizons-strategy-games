@@ -1293,6 +1293,7 @@ Rules:
 - Work in dollars first, then convert: show the arithmetic in "why".
 - Net out costs Disney no longer pays (for example, a rights fee it stops paying) against lost revenue.
 - Losing a major asset can reach -10 to -20 on a segment; an event that reshapes a segment's whole cost base (for example its main costs doubling) can go past -30, down to -100 (the segment's profit gone); most events are much smaller. Use half steps (0.5) for small effects. 0 for a segment it does not touch.
+- Check every segment, not just the obvious one: a direct knock-on to another Disney business counts (for example, losing ESPN also cuts shared ad sales at ABC in Entertainment; a licensing deal adds to Experiences). Leave a segment at 0 only if the event truly does not touch it.
 - start_fy: the fiscal year the effect starts (2027 to 2036). years: how long it lasts, up to 10.
 - "later": use it when the event has a second phase with a different effect, for example design costs now and royalties once a park opens. Give its own start_fy (up to 2041), years and segment effects. Leave it out otherwise.
 - cost_now: a one-time hit in the start year as a percent of that segment's yearly profit, only if there is one.
@@ -1545,7 +1546,8 @@ async function playGame(g, pb, castP, signal, run, onUpdate, hyp, worldPlan, sce
     const refSystem = `You referee a business war game centered on Disney. For each move, judge whether it is realistic and affordable for that company. Then decide its effect on Disney's yearly operating profit in three segments: Experiences (parks, cruises, resorts), Entertainment (studios, streaming, TV), Sports (ESPN). Effects are percent changes to that segment's yearly profit, for the years they last.
 Calibration:
 - Most rival moves barely touch Disney: 0 to -2. A strong rival move: -3 to -5. Only a truly major move reaches -8. Losing a major asset (a top sports package, a big franchise, a key distribution deal) can reach -10 to -20 on that segment: size it from the real dollars and show the arithmetic in "why".
-- Use half steps for small effects: 0.5 (or -0.5) when a move is worth less than about half of 1% of a segment; 0 when it is smaller still. Never round a small effect up to 1.
+- Size small effects finely: use 0.25 (or -0.25) when a move is worth about a quarter of 1% of a segment, 0.1 for a sliver, and 0 when it barely touches Disney (a venue far from Disney's guests, a market Disney is not in). If your why says a move is small, barely matters or draws few Disney guests, its effect must be 0.25 or less. Never round a small effect up.
+- years: how long the effect really lasts. A one-off promotion, price cut or small venue: 1 to 2 years, because customers and rivals adjust. A big lasting asset (a new land, a major rights package, a new ship): up to 8. Never give a small move a long duration.
 - If a player gives a date before this turn, treat the move as happening now; do not rule it unrealistic for the date alone.
 - Count each event once, in the turn it takes effect, on the move that causes it. Do not stack the same event across several players' rulings or across turns.
 - When Disney loses or gives up something, net out the costs it no longer pays (for example, a rights fee it stops paying) against the lost revenue.
