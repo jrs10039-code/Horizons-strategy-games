@@ -442,7 +442,7 @@ body .hero p.intro-fine { max-width: 110ch; }
     </div>
     <div class="card" id="wr-results-card" hidden>
       <h2>How the games played out</h2>
-      <p class="sub">Each line is one game's yearly profit; the dotted line is Disney's current plan (its FY27 guidance of about 8% growth, carried forward).</p>
+      <p class="sub">Each line is one game's yearly operating profit.</p>
       <div class="chartwrap" id="wrwrap"><svg id="wrchart" viewBox="0 0 760 300" width="100%" role="img" aria-label="AI games compared with the simulator"></svg></div>
       <div class="legend" id="wr-legend"></div>
       <details class="more">
@@ -1294,22 +1294,23 @@ Rules:
 - Net out costs Disney no longer pays (for example, a rights fee it stops paying) against lost revenue.
 - Losing a major asset can reach -10 to -20 on a segment; an event that reshapes a segment's whole cost base (for example its main costs doubling) can go past -30, down to -100 (the segment's profit gone); most events are much smaller. Use half steps (0.5) for small effects. 0 for a segment it does not touch.
 - Check every segment, not just the obvious one: a direct knock-on to another Disney business counts (for example, losing ESPN also cuts shared ad sales at ABC in Entertainment; a licensing deal adds to Experiences). Leave a segment at 0 only if the event truly does not touch it.
-- start_fy: the fiscal year the effect starts (2027 to 2036). years: how long it lasts, up to 10.
+- start_fy: the fiscal year the effect starts (2027 to 2036). years: how long it lasts, up to 10. If the event has parts that last different lengths (a few hit films versus a multi-year rights deal), give each business its own length in "years_by_business".
 - "later": use it when the event has a second phase with a different effect, for example design costs now and royalties once a park opens. Give its own start_fy (up to 2041), years and segment effects. Leave it out otherwise.
 - cost_now: a one-time hit in the start year as a percent of that segment's yearly profit, only if there is one.
 - "basis": "fact" (reported numbers or a signed public deal), "stated" (announced or guided), "assumption" (your estimate from comparable cases, the default), or "hypothesis" (no close precedent).
-Respond with JSON only: {"start_fy":2030,"years":7,"exp":0,"ent":0,"spt":-10,"cost_now":{"exp":0,"ent":0,"spt":0},"later":{"start_fy":2037,"years":5,"exp":0,"ent":0,"spt":0},"basis":"assumption","why":"max 40 words"}`;
+Respond with JSON only: {"start_fy":2030,"years":7,"years_by_business":{"exp":7,"ent":7,"spt":7},"exp":0,"ent":0,"spt":-10,"cost_now":{"exp":0,"ent":0,"spt":0},"later":{"start_fy":2037,"years":5,"exp":0,"ent":0,"spt":0},"basis":"assumption","why":"max 40 words"}`;
   for (let k = 0; k < 3; k++) {
     try {
       const o = parseJSON(await askClaude('referee', system, `The event: "${hyp}"`, signal));
       if (!o) continue;
       const fy = Math.round(num(o.start_fy, 2027, 2036)), from = fy - 2026, years = Math.round(num(o.years, 1, 10));
+      const yb = o.years_by_business && typeof o.years_by_business === 'object' ? o.years_by_business : {}, yrs = {}; SEGS.forEach(k => { yrs[k] = yb[k] != null ? Math.round(num(yb[k], 1, 10)) : years; });
       const imp = { exp: num(o.exp, -100, 10) / 100, ent: num(o.ent, -100, 10) / 100, spt: num(o.spt, -100, 10) / 100 };
       const now = { exp: num(o.cost_now?.exp, -20, 0) / 100, ent: num(o.cost_now?.ent, -20, 0) / 100, spt: num(o.cost_now?.spt, -20, 0) / 100 };
       const basis = EVIDENCE[String(o.basis || '').toLowerCase()] ? String(o.basis).toLowerCase() : 'assumption';
       const L2 = o.later && typeof o.later === 'object' ? o.later : null;
       const later = L2 ? { from: Math.round(num(L2.start_fy, 2027, 2041)) - 2026, years: Math.round(num(L2.years, 1, 10)), imp: { exp: num(L2.exp, -100, 15) / 100, ent: num(L2.ent, -100, 15) / 100, spt: num(L2.spt, -100, 15) / 100 } } : null;
-      return { from, until: from + years - 1, imp, now, later: later && (later.imp.exp || later.imp.ent || later.imp.spt) ? later : null, basis, why: String(o.why || '').slice(0, 300) };
+      return { from, until: from + Math.max(...SEGS.map(k => yrs[k])) - 1, yrs, imp, now, later: later && (later.imp.exp || later.imp.ent || later.imp.spt) ? later : null, basis, why: String(o.why || '').slice(0, 300) };
     } catch (e) { if (e instanceof StopError || /not allowed|budget/.test(e.message)) throw e; WR_MISSES++; }
   }
   return null;
@@ -1623,11 +1624,12 @@ Respond with JSON only.`;
     if (hyp && scenP && t === 0) {
       const sz = await scenP.catch(() => null);
       if (sz) {
-        effects.push({ from: sz.from, until: sz.until, imp: sz.imp, who: 'scen' });
+        const yrsOf = k => (sz.yrs && sz.yrs[k]) || (sz.until - sz.from + 1);
+        SEGS.forEach(k => { if (sz.imp[k]) effects.push({ from: sz.from, until: sz.from + yrsOf(k) - 1, imp: { [k]: sz.imp[k] }, who: 'scen' }); });
         if (sz.now.exp || sz.now.ent || sz.now.spt) effects.push({ from: sz.from, until: sz.from, imp: sz.now, who: 'scen' });
         if (sz.later) effects.push({ from: sz.later.from, until: sz.later.from + sz.later.years - 1, imp: sz.later.imp, who: 'scen' });
-        const end = WR_TURNS * WR_SPAN, span = Math.max(0, Math.min(sz.until, end) - sz.from + 1), span2 = sz.later ? Math.max(0, Math.min(sz.later.from + sz.later.years - 1, end) - sz.later.from + 1) : 0;
-        const segV = {}; SEGS.forEach(k => { segV[k] = sz.imp[k] * seg[k] * span + sz.now[k] * seg[k] + (sz.later ? sz.later.imp[k] * seg[k] * span2 : 0); });
+        const end = WR_TURNS * WR_SPAN, spanK = k => Math.max(0, Math.min(sz.from + yrsOf(k) - 1, end) - sz.from + 1), span2 = sz.later ? Math.max(0, Math.min(sz.later.from + sz.later.years - 1, end) - sz.later.from + 1) : 0;
+        const segV = {}; SEGS.forEach(k => { segV[k] = sz.imp[k] * seg[k] * spanK(k) + sz.now[k] * seg[k] + (sz.later ? sz.later.imp[k] * seg[k] * span2 : 0); });
         rulings.unshift({ id: '', isDisney: false, segV, gain: 0, player: 'The scenario', move: hyp, ok: true, imp: sz.imp, now: sz.now, delay: sz.from - y1, years: sz.until - sz.from + 1, cost: 0, value: SEGS.reduce((a, k) => a + segV[k], 0), fy: fy1, scen: true, forScen: false, novel: false, basis: sz.basis, responds: false, respTo: '', why: sz.why, realistic: true });
       } else issues.push('The scenario could not be sized, so it has no direct effect in this game.');
     }
@@ -1705,14 +1707,12 @@ function drawWarRoomChart(games) {
   const svg = $('wrchart'); svg.innerHTML = '';
   const W = 760, H = 300, L = 84, R = 190, T = 16, B = 34, Y10 = 10;
   const plan = planPath();
-  const all = games.flatMap(g => g.totals).concat(plan);
+  const all = games.flatMap(g => g.totals);
   const lo = Math.min(...all) * 0.92, hi = Math.max(...all) * 1.04;
   const ticks = niceTicks(lo, hi, 5), y0 = ticks[0], y1 = Math.max(hi, ticks.at(-1));
   const X = i => L + (i / Y10) * (W - L - R), Y = v => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
   ticks.forEach(t => { el('line', { x1: L, x2: W - R, y1: Y(t), y2: Y(t), stroke: 'var(--rule)' }, svg); el('text', { x: L - 8, y: Y(t) + 4, 'text-anchor': 'end', 'font-size': 12, fill: 'var(--ink-3)' }, svg, '$' + t + ' billion'); });
   for (let i = 0; i <= Y10; i += 2) el('text', { x: X(i), y: H - 10, 'text-anchor': 'middle', 'font-size': 12, fill: 'var(--ink-3)' }, svg, 'FY' + (26 + i));
-  el('path', { d: 'M' + plan.map((v, j) => `${X(j)},${Y(v)}`).join('L'), fill: 'none', stroke: 'var(--ink-3)', 'stroke-width': 1.5, 'stroke-dasharray': '1 4', 'stroke-linecap': 'round' }, svg);
-  el('text', { x: X(Y10) + 10, y: Y(plan.at(-1)) + 4, 'font-size': 12, fill: 'var(--ink-2)' }, svg, `Disney's current plan: ${fmtB(plan.at(-1))}`);
   const ranked = decades(LAST_FORWARD.main);
   const labels = games.map((g, i) => ({ i, v: g.totals.at(-1) })).sort((a, b) => b.v - a.v);
   let lastY = -99;
@@ -1732,7 +1732,7 @@ function drawWarRoomChart(games) {
     el('line', { x1: X(m.j), x2: X(m.j), y1: m.y - 6, y2: m.y - 26, stroke: 'var(--ink-3)', 'stroke-dasharray': '2 2' }, svg);
     el('text', { x: X(m.j), y: m.y - 30, 'text-anchor': m.j > 8 ? 'end' : 'middle', 'font-size': 11, fill: 'var(--ink-2)' }, svg, `${m.x.short} (${[...m.who].join(', ')})`);
   });
-  const band = '<span><i style="border-top:2px dotted var(--ink-3);height:0;vertical-align:3px"></i>Disney\'s current plan: FY27 guidance, easing to long-run growth</span>';
+  const band = '';
   const rankOf = g => Math.round(100 * ranked.filter(v => v <= g.decade).length / ranked.length);
   if (games.some(g => g.baseline)) {
     const pairs = [...new Set(games.map(g => g.pair))];
@@ -1774,7 +1774,7 @@ Rules:
 - Write like a sharp strategy memo to Disney's CEO: name companies, years and dollar amounts; no hedging filler ("could potentially", "it is important to").
 - Each action must be something a Disney team could approve this year, with a rough cost or a first step (a pilot, a deal to open talks on, an option to buy, a team to set up). Never "monitor", "explore" or "consider".${hyp ? `\n- The user is testing this scenario: "${hyp}". Every game includes it. ${(() => { const h = scenHit(games); return h ? `The event's own effect on Disney's operating profit, FY27-36, before anyone reacts: ${SEGS.filter(k => Math.abs(h.seg[k]) >= 0.05).map(k => `${SEGN[k]} ${money(h.seg[k])}`).join(', ') || 'close to zero'}.` : ''; })()} Put the two best moves that answer the scenario in "scenario_moves", built on what Disney and rivals actually did about it in the games; the four findings cover the decade as a whole and should not repeat them.` : ''}
 Respond with JSON only.`;
-  const prompt = `Disney's strategy going in: ${pb.desc}\n\n${summary}\n\n${ranked}\n\n${segmentText(games, hyp)} ${(() => { const p = planGap(games, pb); return `Disney's plan (FY27 guidance of about 8% growth, easing to long-run growth by FY31) would average ${fmtB(p.plan)} a year; this strategy's base case with no rivals or shocks averages ${fmtB(p.base)}; the games averaged ${fmtB(p.got)}. Mention the gap to Disney's plan only if a finding explains part of it.`; })()}${!hyp && rivalWinners(games, false).length ? ` Rivals who gained most (their own profit by FY2036, average per game): ${rivalWinners(games, false).map(([k, v]) => `${k} ${money(v)}`).join(', ')}.` : ''}\n\nUse the dollar values above (they are calculated, so trust them over the narratives) when judging what worked. Profit figures leave out cash paid or received: weigh a move's cost against the profit it added, and weigh a sale's or spin-off's cash against the profit it gave up, the same way; never call a sale a loss just because profit fell. Name real dollar amounts where they make a point. Return exactly: {"game_titles":["a 5-9 word headline for each game, in order, naming what decided it"],${hyp ? '"scenario_moves":[{"headline":"max 10 words: a move Disney should consider now to get ahead of the scenario, starting with a verb","do":"which team does what, by when, for roughly how much (max 20 words)","why":"max 18 words: what the games showed, with a number"}],' : ''}"findings":[{"headline":"max 10 words: the move Disney should consider now, starting with a verb (for example: Start designing a family land at Hollywood Studios)","happened":"the specific move(s) from the games behind this: who did what, where, when and for how much, and in which games, named by what set them apart (for example: all four games, both games with the scenario, the recession games), never by number (max 24 words)","matters":"why it helped or hurt Disney, in plain cause-and-effect words tied to this move's own result; give money once, as 'cost $X, added (or lost) $Y of operating profit by FY36' (max 20 words)","do":"one business decision Disney could approve this year: which team does what, by when, for roughly how much; never a review process, an approval rule or a model to build (max 22 words)","true_if":"the one or two things that would have to be true in the real world for this action to pay off, specific enough to check (max 16 words)","basis":"fact, stated, assumption or hypothesis: the weakest kind of evidence this finding depends on"}]}. Give exactly 4 findings, most important first. Every finding must be built on specific moves listed above that a reader could find in the game log; if you cannot name the moves, drop the finding and pick another. No general trends, no jargon, no finding that needs other context to understand.`;
+  const prompt = `Disney's strategy going in: ${pb.desc}\n\n${summary}\n\n${ranked}\n\n${segmentText(games, hyp)}${!hyp && rivalWinners(games, false).length ? ` Rivals who gained most (their own profit by FY2036, average per game): ${rivalWinners(games, false).map(([k, v]) => `${k} ${money(v)}`).join(', ')}.` : ''}\n\nUse the dollar values above (they are calculated, so trust them over the narratives) when judging what worked. Profit figures leave out cash paid or received: weigh a move's cost against the profit it added, and weigh a sale's or spin-off's cash against the profit it gave up, the same way; never call a sale a loss just because profit fell. Name real dollar amounts where they make a point. Return exactly: {"game_titles":["a 5-9 word headline for each game, in order, naming what decided it"],${hyp ? '"scenario_moves":[{"headline":"max 10 words: a move Disney should consider now to get ahead of the scenario, starting with a verb","do":"which team does what, by when, for roughly how much (max 20 words)","why":"max 18 words: what the games showed, with a number"}],' : ''}"findings":[{"headline":"max 10 words: the move Disney should consider now, starting with a verb (for example: Start designing a family land at Hollywood Studios)","happened":"the specific move(s) from the games behind this: who did what, where, when and for how much, and in which games, named by what set them apart (for example: all four games, both games with the scenario, the recession games), never by number (max 24 words)","matters":"why it helped or hurt Disney, in plain cause-and-effect words tied to this move's own result; give money once, as 'cost $X, added (or lost) $Y of operating profit by FY36' (max 20 words)","do":"one business decision Disney could approve this year: which team does what, by when, for roughly how much; never a review process, an approval rule or a model to build (max 22 words)","true_if":"the one or two things that would have to be true in the real world for this action to pay off, specific enough to check (max 16 words)","basis":"fact, stated, assumption or hypothesis: the weakest kind of evidence this finding depends on"}]}. Give exactly 4 findings, most important first. Every finding must be built on specific moves listed above that a reader could find in the game log; if you cannot name the moves, drop the finding and pick another. No general trends, no jargon, no finding that needs other context to understand.`;
   return parseJSON(await askClaude('analyst', system, prompt, signal));
 }
 
@@ -1927,7 +1927,7 @@ function scenWhere(h) {
 }
 function headline(games, hyp) {
   const w = scenGames(games), avg = w.reduce((a, g) => a + g.decade, 0) / w.length / 10, p = planGap(games, WR.pb), h = hyp ? scenHit(games) : null;
-  let t = `${hyp ? 'With your scenario, ' : ''}Disney's operating profit averages ${fmtB(avg)} a year over FY27–36: ${avg >= startTotal() ? 'up from' : 'down from'} ${fmtB(startTotal())} in FY26 and ${Math.abs(p.gap) < 0.05 ? 'in line with' : `${amt(Math.abs(p.gap))} a year ${p.gap < 0 ? 'below' : 'above'}`} its current plan.`;
+  let t = `${hyp ? 'With your scenario, ' : ''}Disney's operating profit averages ${fmtB(avg)} a year over FY27–36, ${avg >= startTotal() ? 'up from' : 'down from'} ${fmtB(startTotal())} in FY26.`;
   if (h && SEGS.some(k => Math.abs(h.seg[k] / 10) >= 0.05)) {
     const w = scenWhere(h);
     t += ` The event itself ${w.text}${w.mixed ? `, about ${amt(Math.abs(h.total / 10))} a year ${h.total < 0 ? 'lost' : 'gained'} overall` : ''}.`;
@@ -1959,7 +1959,7 @@ function scoreboard(games, hyp) {
   return `<div class="scoreboard">
     ${cell(fmtB(avg / 10), `Disney's average operating profit a year, FY27–36${hyp ? ', with your scenario' : ''} (FY26: ${fmtB(startTotal())})`)}
     ${(() => { const h = hyp ? scenHit(games) : null; if (!h) return ''; const top = SEGS.slice().sort((x, y) => Math.abs(h.seg[y]) - Math.abs(h.seg[x]))[0]; const w = scenWhere(h); return cell(`${amt(Math.abs(h.total / 10))} a year`, `${h.total < 0 ? 'lost to' : 'gained from'} your scenario's event itself overall, before anyone reacts${w.mixed ? ` (it ${w.text})` : ''}`); })()}
-    ${(() => { const p = planGap(games, WR.pb); return cell(`${amt(Math.abs(p.gap))} a year`, `${p.gap < 0 ? 'below' : 'above'} Disney's own plan (FY27 guidance of about 8% profit growth, carried forward, averages ${fmtB(p.plan)} a year)`); })()}
+    ${(() => { const v = withS.map(g => g.decade / 10); return v.length > 1 ? cell(`${fmtB(Math.min(...v))} to ${fmtB(Math.max(...v))}`, `range across the ${v.length} games, average operating profit a year (each game has different shocks and rival moves)`) : ''; })()}
   </div>${shocksHtml}${(() => { const h = hyp ? scenHit(games) : null, l = h ? h.later : 0; return Math.abs(l) >= 1 && Math.abs(l) > Math.abs(h.total) ? `<p class="note" style="margin:6px 0 0">Most of your scenario lands after this ten-year window: from FY37 to FY41 it would ${l < 0 ? 'cost' : 'add'} about ${amt(Math.abs(l))} more of operating profit.</p>` : ''; })()}`;
 }
 
