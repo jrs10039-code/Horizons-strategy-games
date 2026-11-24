@@ -1929,7 +1929,7 @@ function scoreboard(games, hyp) {
     ${cell(fmtB(avg / 10), `Disney's average operating profit a year, FY27–36${hyp ? ', with your scenario' : ''} (FY26: ${fmtB(startTotal())})`)}
     ${hyp && base != null ? cell(`${amt(Math.abs(base / 10))} a year`, `${base < 0 ? 'less' : 'more'} operating profit than the same games played without your scenario`) : ''}
     ${(() => { const p = planGap(games, WR.pb); return cell(`${amt(Math.abs(p.gap))} a year`, `${p.gap < 0 ? 'below' : 'above'} Disney's own plan (FY27 guidance of about 8% profit growth, carried forward, averages ${fmtB(p.plan)} a year)`); })()}
-  </div>${shocksHtml}${(() => { const b = hyp ? scenarioBridge(games) : null, l = b ? b.mean(r => r.later) : 0; return Math.abs(l) >= 0.5 ? `<p class="note" style="margin:6px 0 0">Not in these numbers: effects that only land after FY36 (for example, something that opens late) ${l < 0 ? 'cost' : 'add'} another ${amt(Math.abs(l))} of operating profit over FY37–41.</p>` : ''; })()}`;
+  </div>${shocksHtml}${(() => { const b = hyp ? scenarioBridge(games) : null, l = b ? b.mean(r => r.later) : 0; return Math.abs(l) >= 1 && Math.abs(l) > Math.abs(b.mean(r => r.net)) ? `<p class="note" style="margin:6px 0 0">Most of your scenario lands after this ten-year window: from FY37 to FY41 it would ${l < 0 ? 'cost' : 'add'} about ${amt(Math.abs(l))} more of operating profit.</p>` : ''; })()}`;
 }
 
 let LAST_FORWARD = null;
