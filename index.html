@@ -1255,7 +1255,7 @@ const gameLabel = g => `Game ${g.idx + 1}`;
 let WR_TOTAL_CALLS = 3 * WR_TURNS * 9 + 1;
 
 // Shared rule for every AI in the game: write for a smart reader outside the industry.
-const PLAIN = 'Write amounts of money with the unit in words, like $2.5 billion or $400 million, never $2.5 billion or $400 million. Write in plain, everyday English for a smart reader who does not work in media. No jargon, buzzwords, acronyms or finance-speak (for example: no "ecosystem", "flywheel", "synergy", "unlock", "leverage" as a verb, "FEC", "make-good", "tranche", "cat bond", "seller note", "hyperscaler", "capex", "TAM"). If an industry term is truly needed, explain it in the same sentence. Short sentences.';
+const PLAIN = 'Write amounts of money with the unit in words, like $2.5 billion or $400 million, never $2.5B or $400M. Every dollar figure must say what it measures and over what time, so nobody has to guess: "$559 million of operating profit by FY36", "$150 million of operating profit a year", "cost $2.5 billion up front", and "in one game" or "in every game" when it comes from the games. Never a bare "added $559 million". Write in plain, everyday English for a smart reader who does not work in media. No jargon, buzzwords, acronyms or finance-speak (for example: no "ecosystem", "flywheel", "synergy", "unlock", "leverage" as a verb, "FEC", "make-good", "tranche", "cat bond", "seller note", "hyperscaler", "capex", "TAM"). If an industry term is truly needed, explain it in the same sentence. Short sentences.';
 
 // Market context as of late 2026, from public reporting. Every player sees this.
 const MARKET_BRIEF = `THE INDUSTRY, LATE 2026 (public information):
