@@ -342,7 +342,7 @@ body .hero p.intro-fine { max-width: 110ch; }
       <ol>
         <li><span><b>Set your assumptions</b>Disney's strategy, how often outside shocks hit, and how hard rivals and new entrants push. The AI players follow them.</span></li>
         <li><span><b>Pick or type a scenario</b>Optional. Describe an event to test, like a rival's move or a market shock. Every game includes it, so you see what it costs Disney and how Disney could respond.</span></li>
-        <li><span><b>Play</b>AI players move over ten years (about 7–9 minutes). You get a bottom line, moves Disney could make now, and profit by business.</span></li>
+        <li><span><b>Play</b>AI players move over ten years (about 8–10 minutes). You get a bottom line, moves Disney could make now, and profit by business.</span></li>
       </ol>
 
     </div>
@@ -422,7 +422,7 @@ body .hero p.intro-fine { max-width: 110ch; }
         <span class="note" id="wr-status" aria-live="polite"></span>
       </div></div>
       </form>
-      <p class="note wr-expect" id="wr-expect">You'll get a bottom line, moves Disney could make now, and profit by business. <b>About <span id="wr-mins">7–9</span> minutes</b>; keep this tab open.</p>
+      <p class="note wr-expect" id="wr-expect">You'll get a bottom line, moves Disney could make now, and profit by business. <b>About <span id="wr-mins">8–10</span> minutes</b>; keep this tab open.</p>
       <div class="wr-progress" id="wr-progress" hidden><div class="bar"><span id="wr-bar" style="width:0%"></span></div><div class="eta" id="wr-eta"></div></div>
       <details class="more">
         <summary>How the game works</summary>
@@ -1624,7 +1624,7 @@ Respond with JSON only.`;
         effects.push({ from: sz.from, until: sz.until, imp: sz.imp, who: 'scen' });
         if (sz.now.exp || sz.now.ent || sz.now.spt) effects.push({ from: sz.from, until: sz.from, imp: sz.now, who: 'scen' });
         if (sz.later) effects.push({ from: sz.later.from, until: sz.later.from + sz.later.years - 1, imp: sz.later.imp, who: 'scen' });
-        const end = WR_TURNS * WR_SPAN + WR_TAIL, span = Math.max(0, Math.min(sz.until, end) - sz.from + 1), span2 = sz.later ? Math.max(0, Math.min(sz.later.from + sz.later.years - 1, end) - sz.later.from + 1) : 0;
+        const end = WR_TURNS * WR_SPAN, span = Math.max(0, Math.min(sz.until, end) - sz.from + 1), span2 = sz.later ? Math.max(0, Math.min(sz.later.from + sz.later.years - 1, end) - sz.later.from + 1) : 0;
         const segV = {}; SEGS.forEach(k => { segV[k] = sz.imp[k] * seg[k] * span + sz.now[k] * seg[k] + (sz.later ? sz.later.imp[k] * seg[k] * span2 : 0); });
         rulings.unshift({ id: '', isDisney: false, segV, gain: 0, player: 'The scenario', move: hyp, ok: true, imp: sz.imp, now: sz.now, delay: sz.from - y1, years: sz.until - sz.from + 1, cost: 0, value: SEGS.reduce((a, k) => a + segV[k], 0), fy: fy1, scen: true, forScen: false, novel: false, basis: sz.basis, responds: false, respTo: '', why: sz.why, realistic: true });
       } else issues.push('The scenario could not be sized, so it has no direct effect in this game.');
@@ -2057,7 +2057,7 @@ const WR_EXAMPLES = [
 ];
 $('wr-examples').innerHTML = '<span class="note">Or try one:</span>' + WR_EXAMPLES.map(x => `<button type="button">${esc(x)}</button>`).join('');
 $('wr-examples').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { $('wr-hyp').value = b.textContent; $('wr-hyp').focus(); } });
-const wrMins = n => WR_MODE === 'claude' ? '7–9' : '5–7';
+const wrMins = n => WR_MODE === 'claude' ? '8–10' : '5–7';
 const playLabel = () => { if ($('wr-mins')) $('wr-mins').textContent = wrMins(3); if (!$('wr-play').disabled) $('wr-play').textContent = `Play 3 games (about ${wrMins(3)} min)`; };
 ['input', 'change', 'keyup', 'paste', 'blur'].forEach(ev => $('wr-hyp').addEventListener(ev, () => setTimeout(playLabel, 0)));
 $('wr-examples').addEventListener('click', playLabel);
