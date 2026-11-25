@@ -1322,6 +1322,14 @@ Respond with JSON only: {"start_fy":2030,"years":7,"years_by_business":{"exp":7,
   }
   return null;
 }
+// Size the scenario three times and keep the middle answer, so one unusually high or low read doesn't swing the whole run.
+async function sizeScenarioMedian(hyp, signal) {
+  const st = MODES.forward.start;
+  const rs = (await Promise.all([0, 1, 2].map(() => sizeScenario(hyp, signal)))).filter(Boolean);
+  if (rs.length < 3) return rs[0] || null;
+  const size = r => SEGS.reduce((a, k) => a + r.imp[k] * st[k] * r.yrs[k], 0);
+  return rs.sort((x, y) => size(x) - size(y))[1];
+}
 async function castNewcomers(hyp, signal) {
   const taken = AI_PLAYERS.map(p => p.name).join(', ');
   const system = `You cast the newcomer players for a business war game about Disney and its rivals, fiscal 2027 to 2036. Pick exactly 2 newcomers that would make this decade interesting and plausible:
@@ -2021,7 +2029,7 @@ async function runWarRoom(more) {
   const state = {};
   const onUpdate = u => { const st = state[u.g] = state[u.g] || {}; if (u.turns && u.turns.length > (st.fed || 0)) { WR_TURNS_DONE += u.turns.length - (st.fed || 0); st.fed = u.turns.length; updateEta(); } Object.assign(st, u); renderGame(u.g, st, u.phase); };
   try {
-    if (hyp && !WR.scenP) { WR.scenP = run(() => sizeScenario(hyp, signal)); WR.scenP.catch(() => {}); }
+    if (hyp && !WR.scenP) { WR.scenP = sizeScenarioMedian(hyp, signal); WR.scenP.catch(() => {}); }
     const setups = await Promise.all(groups.map(async gr => ({
       pair: gr.pair,
       world: rollWorldPlan(),
