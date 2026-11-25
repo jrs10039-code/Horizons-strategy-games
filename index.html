@@ -1349,7 +1349,7 @@ const aggWord = v => v == null ? 'normal' : v >= 75 ? 'very aggressive' : v >= 5
 const aggBrief = v => v == null ? 'normal' : aggWord(v) + (v >= 75 ? ": go after Disney's customers, talent and deals head-on, and bid hard for any prize in play" : v >= 55 ? ': compete hard wherever you see an opening against Disney' : v >= 35 ? ': pick your battles and mostly grow your own business' : ': mostly defend your own business, avoid head-on fights with Disney, and make at most one move');
 const aggMult = p => p && p.agg ? Math.max(0.4, Math.min(1.5, 0.5 + p.agg() / 100)) : 1;
 
-let sampleFn = null, WR_MODE = 'api', wrAbort = null;
+let sampleFn = null, WR_MODE = 'api', wrAbort = null, WR_NEED_PASS = false;
 const samplePromise = (window.claude && typeof window.claude.use === 'function')
   ? window.claude.use('sample').then(s => s, () => null) : Promise.resolve(null);
 samplePromise.then(s => {
@@ -1361,7 +1361,7 @@ samplePromise.then(s => {
 function renderWarRoomMode() {
   $('wr-players').innerHTML = AI_PLAYERS.map(p => `<span class="pill neutral">${esc(p.name)}</span>`).join(' ') + ' <span class="pill warn">+ 2 newcomers, cast fresh each game</span>';
   const claudeMode = WR_MODE === 'claude';
-  $('wr-pass').closest('.field').hidden = claudeMode || !!$('wr-pass').value.trim();
+  $('wr-pass').closest('.field').hidden = claudeMode || !WR_NEED_PASS;
   $('wr-mode-note').textContent = claudeMode
     ? 'Running on your own Claude account. The first game asks you to allow it; there are no API charges, but the games count toward your plan\'s usage limits.'
     : 'Live games run on Jake\'s Claude API account. Enter the passcode from his email.';
@@ -1416,7 +1416,7 @@ async function relayOnce(role, system, prompt, signal, passcode) {
   const r = await fetch(AGENT_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passcode, role, system, prompt }), signal })
     .catch(() => { if (signal.aborted) throw new StopError('stopped'); throw new Error('Live AI games are not switched on yet.'); });
   const data = await r.json().catch(() => ({}));
-  if (r.status === 401) throw new Error('Wrong passcode.');
+  if (r.status === 401) { WR_NEED_PASS = true; $('wr-pass').closest('.field').hidden = false; throw new Error('This demo needs a passcode. Enter it above, then press Play again.'); }
   if (r.status === 402 || data.code === 'budget' || /credit balance|billing|spend(ing)? limit|usage limit|quota/i.test(String(data.error || ''))) {
     WR.budgetHit = true; if (wrAbort) wrAbort.abort(); // stop every game at once instead of skipping answers
     throw new Error(WR_BUDGET_MSG);
@@ -1988,7 +1988,6 @@ const WR_CALLS_PER_GAME = WR_TURNS * (AI_PLAYERS.filter(p => !WR_GROUPED.has(p.i
 async function playWarRoom(ev) { ev.preventDefault(); return runWarRoom(false); }
 
 async function runWarRoom(more) {
-  if (WR_MODE === 'api' && !$('wr-pass').value.trim()) { $('wr-status').textContent = 'Enter the passcode first.'; $('wr-pass').focus(); return; }
   try { if (WR_MODE === 'api') localStorage.setItem('horizons-pass', $('wr-pass').value.trim()); } catch {}
   if (!more) {
     WR.pb = PLAYBOOKS.find(p => p.id === S.playbook);
@@ -2174,7 +2173,7 @@ try { // a passcode in the emailed link (?code=...) fills itself in, so the read
   const u = new URL(location.href), c = (u.searchParams.get('code') || '').trim();
   if (c) { localStorage.setItem('horizons-pass', c); u.searchParams.delete('code'); history.replaceState(null, '', u.pathname + u.search + u.hash); }
 } catch {}
-try { const p = localStorage.getItem('horizons-pass'); if (p) { $('wr-pass').value = p; if (WR_MODE === 'api') $('wr-pass').closest('.field').hidden = true; } } catch {}
+try { const p = localStorage.getItem('horizons-pass'); if (p) $('wr-pass').value = p; } catch {}
 
 function assumptionSummary() {
   const d = defaults();

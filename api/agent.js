@@ -4,7 +4,7 @@
 //
 // Environment variables (set in Vercel → Project → Settings → Environment Variables):
 //   ANTHROPIC_API_KEY  your key from console.anthropic.com
-//   PASSCODE           a word you share with the people you invite
+//   PASSCODE           optional; if set, the page must send it (add ?code=WORD to the link you share)
 //   ALLOWED_ORIGINS    optional, comma-separated; defaults to the GitHub Pages site
 
 const MODELS = {
@@ -33,7 +33,8 @@ module.exports = async (req, res) => {
   const { passcode, role, system, prompt } = body;
 
   if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'The server has no API key yet.' });
-  if (!process.env.PASSCODE || passcode !== process.env.PASSCODE) return res.status(401).json({ error: 'Wrong passcode.' });
+  // Optional: set PASSCODE in Vercel to require one. Leave it unset for an open demo (your spend limit still caps the cost).
+  if (process.env.PASSCODE && passcode !== process.env.PASSCODE) return res.status(401).json({ error: 'Wrong passcode.' });
   if (!MODELS[role]) return res.status(400).json({ error: 'Unknown role.' });
   if (typeof prompt !== 'string' || !prompt || prompt.length + String(system || '').length > MAX_INPUT_CHARS) {
     return res.status(400).json({ error: 'Prompt missing or too long.' });
