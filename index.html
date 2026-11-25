@@ -1361,7 +1361,7 @@ samplePromise.then(s => {
 function renderWarRoomMode() {
   $('wr-players').innerHTML = AI_PLAYERS.map(p => `<span class="pill neutral">${esc(p.name)}</span>`).join(' ') + ' <span class="pill warn">+ 2 newcomers, cast fresh each game</span>';
   const claudeMode = WR_MODE === 'claude';
-  $('wr-pass').closest('.field').hidden = claudeMode;
+  $('wr-pass').closest('.field').hidden = claudeMode || !!$('wr-pass').value.trim();
   $('wr-mode-note').textContent = claudeMode
     ? 'Running on your own Claude account. The first game asks you to allow it; there are no API charges, but the games count toward your plan\'s usage limits.'
     : 'Live games run on Jake\'s Claude API account. Enter the passcode from his email.';
@@ -2170,7 +2170,11 @@ $('wr-print').addEventListener('click', async () => {
   if (dl) { try { await dl.save({ filename, data: html }); $('wr-copymsg').textContent = msg; } catch { $('wr-copymsg').textContent = 'The download was declined or blocked.'; } return; }
   try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' })); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); $('wr-copymsg').textContent = msg; } catch { $('wr-copymsg').textContent = 'The download was blocked.'; }
 });
-try { const p = localStorage.getItem('horizons-pass'); if (p) $('wr-pass').value = p; } catch {}
+try { // a passcode in the emailed link (?code=...) fills itself in, so the reader never sees a passcode box
+  const u = new URL(location.href), c = (u.searchParams.get('code') || '').trim();
+  if (c) { localStorage.setItem('horizons-pass', c); u.searchParams.delete('code'); history.replaceState(null, '', u.pathname + u.search + u.hash); }
+} catch {}
+try { const p = localStorage.getItem('horizons-pass'); if (p) { $('wr-pass').value = p; if (WR_MODE === 'api') $('wr-pass').closest('.field').hidden = true; } } catch {}
 
 function assumptionSummary() {
   const d = defaults();
