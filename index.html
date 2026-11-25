@@ -1237,7 +1237,7 @@ function renderHistory(bt) {
 //  1. On the Claude-hosted copy of this page: the viewer's own Claude account (the "sample" capability). Free for the viewer.
 //  2. On the public site: a private relay that holds Jake's API key (api/agent.js on Vercel), unlocked by a passcode.
 const CLAUDE_COPY = 'https://claude.ai/artifact/YKfZ4PNTEkYSqQitqQpWr8#warroom';
-const WR_BUDGET_MSG = 'The shared AI budget for this demo is used up.';
+const WR_BUDGET_MSG = 'This demo has reached its AI spending limit, so the games stopped. Please let Jake Schmidt know and he will top it up.';
 const AGENT_API = 'https://horizons-strategy-games.vercel.app/api/agent';
 const WR_MODELS = { player: 'claude-haiku-5-5', disney: 'claude-sonnet-5-5', referee: 'claude-sonnet-5-5', analyst: 'claude-opus-5-5' };
 const WR_TIERS = { player: 'quick', disney: 'default', referee: 'default', analyst: 'complex' };
@@ -1417,7 +1417,10 @@ async function relayOnce(role, system, prompt, signal, passcode) {
     .catch(() => { if (signal.aborted) throw new StopError('stopped'); throw new Error('Live AI games are not switched on yet.'); });
   const data = await r.json().catch(() => ({}));
   if (r.status === 401) throw new Error('Wrong passcode.');
-  if (/credit balance|billing|spend(ing)? limit|usage limit|quota/i.test(String(data.error || ''))) throw new Error(WR_BUDGET_MSG);
+  if (r.status === 402 || data.code === 'budget' || /credit balance|billing|spend(ing)? limit|usage limit|quota/i.test(String(data.error || ''))) {
+    WR.budgetHit = true; if (wrAbort) wrAbort.abort(); // stop every game at once instead of skipping answers
+    throw new Error(WR_BUDGET_MSG);
+  }
   if (!r.ok) throw new Error(data.error || 'The AI server did not answer.');
   return data.text || '';
 }
@@ -2001,7 +2004,7 @@ async function runWarRoom(more) {
   const groups = Array.from({ length: nGroups }, () => ({ pair: WR.pairs++ }));
   const plan = groups.map(gr => ({ ...gr, hyp: hyp || null }));
   const start = WR.games.length;
-  wrAbort = new AbortController();
+  wrAbort = new AbortController(); WR.budgetHit = false;
   const signal = wrAbort.signal;
   $('wr-play').disabled = true; $('wr-more').disabled = true; $('wr-stop').hidden = false;
   $('wr-progress').hidden = false;
@@ -2068,7 +2071,10 @@ async function runWarRoom(more) {
     $('wr-status').textContent = `Done in ${Math.max(1, Math.round((Date.now() - wrStart) / 60000))} min.${lost ? ` ${lost} of ${plan.length} games could not finish (see their cards).` : ''}${WR_MISSES ? ` ${WR_MISSES} AI answer${WR_MISSES > 1 ? 's' : ''} failed and ${WR_MISSES > 1 ? 'were' : 'was'} skipped.` : ''}`;
   } catch (e) {
     $('wr-status').textContent = e instanceof StopError ? 'Stopped.' : e.message;
-    if (/budget/.test(e.message)) $('wr-status').innerHTML = `${esc(WR_BUDGET_MSG)} You can still play it free on your own Claude account: <a href="${CLAUDE_COPY}" target="_blank" rel="noopener">open the Claude version</a>.`;
+    if (WR.budgetHit || /spending limit/.test(e.message)) {
+      $('wr-status').innerHTML = `<span role="alert" style="display:block;margin-top:8px;padding:10px 12px;border:1px solid #e0a23a;border-radius:8px;background:rgba(224,162,58,.12);color:inherit"><b>Out of AI budget.</b> ${esc(WR_BUDGET_MSG)}</span>`;
+      try { $('wr-status').scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch {}
+    }
     if (!(e instanceof StopError)) wrAbort.abort();
   } finally {
     $('wr-play').disabled = false; $('wr-more').disabled = false; $('wr-stop').hidden = true; $('wr-progress').hidden = true;

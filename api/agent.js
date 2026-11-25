@@ -55,12 +55,17 @@ module.exports = async (req, res) => {
         messages: [{ role: 'user', content: prompt }],
       }),
     });
+    const data = await r.json().catch(() => ({}));
+    const msg = String(data?.error?.message || '');
+    // Out of credit or over the spend limit you set: tell the page right away, never retry.
+    if (/credit balance|billing|spend(ing)? limit|usage limit|quota/i.test(msg)) {
+      return res.status(402).json({ error: 'This demo has reached its AI spending limit.', code: 'budget' });
+    }
     if (r.status === 429 || r.status === 529) {
       await new Promise(ok => setTimeout(ok, 2000 * (attempt + 1) + Math.random() * 1000));
       continue;
     }
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) return res.status(r.status).json({ error: data?.error?.message || 'Claude API error.' });
+    if (!r.ok) return res.status(r.status).json({ error: msg || 'Claude API error.' });
     const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
     return res.status(200).json({ text, model: data.model, usage: data.usage });
   }
